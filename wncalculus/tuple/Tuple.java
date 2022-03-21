@@ -298,6 +298,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     
     @Override
     public FunctionTuple specSimplify( ) {
+        System.out.println("specSimplify("+this+")"); //debug
         if (isTrue())
             return getTrue(); //new
 
@@ -340,15 +341,16 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         FunctionTuple res = toEquivSimpleSum() /*this*/; 
         if ( res  != this) //the tuple is expanded (because it contains "OR" elements)
             return res;
+        
         // the tuple doesn't contain "OR" elements, neither in filters nor in its components
         // no reduction/replacement carried out on the filter/guard/components of this tuple
-        if ( !this.reduce_guard && (res = TupleSum.factory(toConstSizeSum(equalityMap, And.membMap(simp_g) ), true ) ) != this ) { // questa semplificazione puÃ² essere critica come efficienza
-            //System.out.println("--->\n"+res); //debug
+        if ( !this.reduce_guard && (res = TupleSum.factory(toConstSizeSum(equalityMap, And.membMap(simp_g) ), true ) ) != this ) { // questa semplificazione può essere critica come efficienza
+            //System.out.println("->\n"+res); //debug
             return res;
         }
         for (List<? extends SetFunction> args : getHomSubTuples().values())
             if ( args.stream().anyMatch( f -> f instanceof Intersection && f.zeroCard()) ) 
-                return getFalse(); // ha senso qui e non prima perchÃ¨ viene dopo toConstSizeForm ...
+                return getFalse(); // ha senso qui e non prima perchè¨ viene dopo toConstSizeForm ...
 
         if ( simp_f != null && simp_f.isElemAndForm() ) { 
             equalityMap = And.equalityMap(simp_f);
@@ -359,10 +361,12 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             //the filter is already reduced
             if ( checkNullBound() ) 
                return  getFalse(); 
-
-            return reduceFilterIneqs(equalityMap); // puÃ² essere critica come efficienza
+            System.out.println("reduceFilterIneqs ..."); // debug
+            res = reduceFilterIneqs(equalityMap);// può essere critica come efficienza
+            System.out.println("->\n"+res); //debug
+            
+            return reduceFilterIneqs(equalityMap); 
         }
-        
         
         return this;
     }
