@@ -53,7 +53,7 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     }
     
     /**
-     * * (default implementation to override)
+     * (default implementation to override)
      * @return an elementary linear-combination composed of <tt>this</tt> term 
      * DA TOGLIERE CON NUOVA IMPLEMENTAZIONE DEI BAG?
      */
@@ -170,13 +170,16 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     }
     
     /**
-     * claculates the composition between class-function mapping to sets,
-     * disregarding the variables' indices
+     * calculates the composition between type-set class-functions,
+     * disregarding projection indices (i.e., considering functions as if they were "unary")
      * @param right the function to compose with <tt>this</tt>
-     * @return the composition result; <tt>null</tt> if, for any reasons,
-     * the composition outcome cannot be computed
+     * @return a pair holding the composition result (<tt>null</tt> if, for any reasons,
+     * the composition outcome cannot be derived) and an integer representing a split delimiter
+     * required to solve the composition (in that case a pair (null,intval) would
+     * be returned); if neither the composition outcome nor a split delimiter can be devised a
+     * <code>null</code> pair is returned
      */
-    public SetFunction baseCompose ( SetFunction right) {
+    public Pair<SetFunction,Integer> baseCompose (SetFunction right) {
         return null;
     }
     

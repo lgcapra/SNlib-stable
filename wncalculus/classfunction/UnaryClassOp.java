@@ -54,9 +54,4 @@ public abstract class UnaryClassOp extends SetFunction implements UnaryOp<SetFun
         return buildOp(this.arg.copy(newcc));
     }
     
-    /*@Override
-    public final SetFunction clone (final Domain newdom, final Domain newcd) {
-        return (SetFunction) super.clone(newdom, newcd);
-    }*/
-    
 }

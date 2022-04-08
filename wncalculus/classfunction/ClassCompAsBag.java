@@ -1,7 +1,6 @@
 package wncalculus.classfunction;
 
 import wncalculus.bagexpr.SetComp;
-import wncalculus.expr.Domain;
 
 /**
  * this class represents the bag-composition between set-functions

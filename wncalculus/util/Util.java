@@ -512,14 +512,14 @@ private static Set<Set<Object>> _cartesianProduct(int index, Set<?>... sets) {
  * all pairs of collection elements
  */
 public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collection<? extends E> c2, BiFunction<E,E,E> op) {
-    System.out.println(c1.size()+ " "+c2.size());
+    //System.out.println(c1.size()+ " "+c2.size()); //debug
     HashSet<E> res = new HashSet<>();
     c1.forEach(x -> {
         c2.forEach(y -> {
             res.add(op.apply(x,y));
         });
        });
-    System.out.println("done");
+    //System.out.println("done"); //debug
     
     return res;
 }

@@ -386,27 +386,5 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     public final void setSimplified(boolean simplified) {
         this.simplified = simplified;
     }
-    
-    /**
-     * performs the "difference" between guards knowing that eg == null means eg == true
- p2 is assumed other than true (null)
-     * @param p1 a guard
-     * @param p2 another guard
-     * @return the difference between guards
-    */
-    public static Guard subtr (Guard p1, Guard p2) {
-        return p1 == null ?  Neg.factory(p2) : And.factory(p1, Neg.factory(p2));
-    }
-    
-    /**
-     * performs the "or" between guards knowing that eg == null means eg == true
-     * @param p1 a guard
-     * @param p2 another guard
-     * @return the "OR" between guards 
-    */
-    public static Guard disjoin(Guard p1, Guard p2) {
-        return p1 == null || p2 == null ? null : Or.factory(false, p1,p2);
-    }
-    
-    
+        
 }

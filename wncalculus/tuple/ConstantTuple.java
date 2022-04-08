@@ -43,12 +43,8 @@ public abstract class ConstantTuple implements FunctionTuple {
     }
     
     abstract String symbol();
-    /*
-    creates a map between colors and sub-lists of constants (either All or Empty, depending
-    on the booleam parameter's value) functions, mathcing the specified codomain
-     */
     
-     @Override
+    @Override
     public boolean simplified() {
         return true;
     }

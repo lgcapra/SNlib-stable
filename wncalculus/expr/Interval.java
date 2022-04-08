@@ -81,7 +81,6 @@ package wncalculus.expr;
             return this.lb == this.ub && this.lb == k;
         }
         
-        
         /**
          * 
          * @return <code>true</code> if and only if is not single-valueS
@@ -137,28 +136,14 @@ package wncalculus.expr;
     public Interval sum (Interval other) {
         return unbounded() || other.unbounded() ? new Interval(lb + other.lb) : new Interval(lb + other.lb, ub + other.ub);
     }
-            
+                
     /**
      *
-     * @param delim the split delimiter (if it corresponds to the upper bound it is decreased)
-     * @return a (at most) size-two array of intervals resulting from split; or a size-zero array,
+     * @param delim the split delimiter, i.e., an offset from the interval lower bound
+     * @return a size-two array of intervals resulting from split; size-zero array,
      * if no split is done (e.g., if lb &gt; delim)
      * @throws IllegalArgumentException is the argument is negative
      */
-    public Interval[] splitV0 (int delim) {
-        if (delim < 0)
-            throw new IllegalArgumentException("negative bound");
-
-        if ( this.lb == this.ub || this.lb > delim || this.ub > 0 && this.ub < delim) 
-            return new Interval[0];
-
-        if (delim == this.ub) 
-            return new Interval[]{new Interval(this.lb, delim-1), new Interval(delim, this.ub)};
-
-        return new Interval[]{new Interval(this.lb, delim), unbounded() ? new Interval(delim + 1) : new Interval(delim + 1, this.ub)};
-    }
-    
-    // in this (new) version delim is an offset (from the lb)
     public Interval[] split (final int delim) {
         if (delim < 0)
             throw new IllegalArgumentException("negative offset");

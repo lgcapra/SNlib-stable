@@ -5,6 +5,7 @@ import java.util.*;
 import wncalculus.color.ColorClass;
 import wncalculus.guard.Equality;
 import wncalculus.util.ComplexKey;
+import wncalculus.util.Pair;
 import wncalculus.util.Util;
 
 /**
@@ -89,8 +90,8 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
     
     
     @Override
-    public SetFunction baseCompose(SetFunction right) {
-        return Successor.factory(this.succ, right);
+    public Pair<SetFunction,Integer> baseCompose(SetFunction right) {
+        return new Pair<>(Successor.factory(this.succ, right), null);
     }
 
     /**
@@ -175,9 +176,7 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
     */
     public static int succDelim (int s, ColorClass c) {
        if (s != 0) { //optimization
-         s =  Math.max(0, Math.abs(s)- c.lb() + 1);
-         if (! c.unbounded())
-             s = Math.min(s, c.ub() - c.lb() ); // e.g., if succ is 3 and the constraint is [2,3] returns 1
+         s =  c.setDelim( Math.max(0, Math.abs(s)- c.lb() + 1) );
        }
        return s;
    }

@@ -78,14 +78,8 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
     @Override
     public Map<Sort, Integer> splitDelimiters() {
         Map<Sort, Integer> delimiters  = this.ftuple.splitDelimiters();
-        //if (this.ftuple instanceof Tuple && delimiters.isEmpty() */) {
-            //if (this.monBound == null) 
-            //    this.monBound =  monoBound(getIgraph());    
-
-            //ColorClass.setDelim(delimiters, this.cc, this.monBound);
-            if (this.splitdelim != null) 
+        if (this.splitdelim != null) 
                 ColorClass.setDelim(delimiters, this.cc, this.splitdelim);
-        //}
         //System.out.println("ecco delim di "+this+": "+delimiters); //debug
         return delimiters;   
     }
@@ -162,10 +156,9 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
                                         tp_2 = new TupleProjection(new Tuple (And.factory(args_2), tuple.getHomSubTuples(), guard), this.k);
                         return TupleSum.factory(true, tp_1, tp_2);                        
                     }
-                }
-                else  { // non single-form (therefore, ordered class): we assume that eventually the term becomes non parametric ...
-                    Integer ccard = this.cc.card().singleValue();
-                    if (ccard != null) { // fixed color class card 
+                } else { // the filter is not a simple form
+                    final var ccard = this.cc.fixedSize();
+                    if (ccard > 0) { // fixed-size color class 
                         Iterator<Set<Equality>> ite = Util.mapFeature(inequalities, e -> new Pair<>(e.firstIndex(), e.secondIndex())). values().iterator();
                         Set<Equality> maxsim = ite.next(), next;
                         while (ite.hasNext())
@@ -176,10 +169,11 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
                         args.removeAll(maxsim);
                         Or nested = (Or) Or.factory(Equality.missingOppEqs(maxsim, ccard), true);
                         return new TupleProjection(new Tuple ( ((And)And.factory(args)).distribute(nested), tuple.getHomSubTuples(), guard), this.k);
+                    
                     }
                 }
                  // new! we may direcltly set the split offset
-                 this.splitdelim = this.monBound - minlb + 1; // this quantity is >= 1
+                 this.splitdelim = this.cc.setDelim(this.monBound - minlb + 1) ; // this quantity is >= 1
             }
         }
         return this; 

@@ -301,23 +301,34 @@ public final class ColorClass extends Sort implements Color {
     @Override
     public Map<Boolean, Sort> split2 (final int delim) {
         int toSplit = Math.max(0, this.paramSubcl);
-        //if (toSplit >= 0)  //the class is split and parametric
-        //    delim -= (card().lb() - this.constraints[this.paramSubcl].lb()); // delim minus the sum of sizes of non-parametric subclasses
-        //else 
-        //    toSplit= 0;
         Interval[] split = this.constraints[toSplit].split(delim);//the interval to be split
         if (split.length == 0) // no split
             return Collections.EMPTY_MAP;
+        else {
+            Map<Boolean, Sort> res = new HashMap<>();
+            Interval[] newarrc = this.constraints.clone();//the original constraints is copied
+            newarrc[toSplit] = split[0];
+            res.put(false, setConstraint(newarrc)); //false trands for "0"
+            newarrc = this.constraints.clone();
+            newarrc[toSplit] = split[1];
+            res.put(true, setConstraint(newarrc)); //true stands for "1"
+            return res;
+        }
+    }
+    
+    /**
+     * (possibly) adjusts a pre-calculated split delimiter so that it complies
+     * with the color class bounds
+     * @param d a delimiter offset
+     * @return a (possibly) ajusted value for d
+     */
+    public int setDelim(int d) {
+        //if (! unbounded() ) //more general
+             //d = Math.min(d, ub() - lb() );
+        if (!unbounded() && d == ub() - lb() + 1)
+             d-- ;
         
-        Map<Boolean, Sort> res = new HashMap<>();
-        Interval[] newarrc = this.constraints.clone();//the original constraints is copied
-        newarrc[toSplit] = split[0];
-        res.put(false, setConstraint(newarrc)); //false trands for "0"
-        newarrc = this.constraints.clone();
-        newarrc[toSplit] = split[1];
-        res.put(true, setConstraint(newarrc)); //true stands for "1"
-        
-        return res;
+        return d;
     }
     
                          

@@ -18,7 +18,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
     private final static String OPSYMB = " * ";//the intersection op. symbol
     //hashing 
     private Interval card; 
-    private Integer extended_compl, splitdelim;
+    private Integer extended_compl;
    
     
     private Intersection (Set<? extends  SetFunction> args, boolean check) {
@@ -181,14 +181,14 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
      * separated too (otherwise also this case should be considered here...)
      */
     @Override
-    public SetFunction baseCompose(SetFunction right) {
+    public Pair<SetFunction,Integer> baseCompose(SetFunction right) {
         Interval rcard  = right.card();
         if (rcard != null) {
             //System.out.println("right card:" + rcard); //debug
             if ( rcard.singleValue(1)) { // base case: right's cardinality is one...
                 List<SetFunction> res_args = new ArrayList<>();
                 getArgs().forEach( f -> { res_args.add(new ClassComposition(f, right)); });
-                return Intersection.factory(res_args);
+                return new Pair<>(Intersection.factory(res_args), null);
             } else {
                 ColorClass cc = getSort();    
                 if (cc. isOrdered() ) {
@@ -196,16 +196,16 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
                     final var ecsize = succargs.size();
                     if ( ecsize > 0 ) { 
                         if ( rcard.lb() > ecsize )
-                            return All.getInstance(cc);
+                            return new Pair<>(All.getInstance(cc),null);
                         if ( cc.fixedSize() > 0 ) { // fixed card: the intersection of complements becomes a sum of projection succesors ...    
                             Set<SetFunction> newargs = new HashSet<>();
                             Util.missing(succargs, 0, cc.fixedSize()).forEach(h -> {
                                 newargs.add(Successor.factory(h, right));
                             }); // the composition outcome is directly computed ... we may further optimize using a closed formula? may be at tuple level
-                            return Union.factory(newargs, false); // the obtained sum may not be disjoint
+                            return new Pair<>(Union.factory(newargs, false), null); // the obtained sum may not be disjoint
                         }
                         //else: a split should be done (new)
-                        this.splitdelim = ecsize  - rcard.lb()  + 1; //this amount is > 0  
+                        return new Pair<>(null, ecsize  - rcard.lb()  + 1);
                     }
                 }
             }
@@ -216,21 +216,8 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
     
     @Override
     public int splitDelim () { //new (partial solution)
-        if (this.splitdelim != null) {
-            //System.out.println("delim ("+this+"): "+this.splitdelim);
-            int d = this.splitdelim;
-            this.splitdelim = null; // we reset
-            return d;
-        } else {
-            Interval mycard = card();
-            return  mycard  != null &&  ! mycard.singleton() && mycard.lb() <= 1 ? 1 : super.splitDelim();
-        }
-    }
-    public int splitDelimV0 () { //new
         Interval mycard = card();
-        
-        return  mycard  != null &&  mycard.lb() <= 1 && mycard.ub() != 0 ? 
-             getConstraint().lb(): super.splitDelim();
+        return  mycard  != null &&  ! mycard.singleton() && mycard.lb() <= 1 ? 1 : super.splitDelim();
     }
     
     /**

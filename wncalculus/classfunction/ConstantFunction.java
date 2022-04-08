@@ -2,6 +2,7 @@ package wncalculus.classfunction;
 
 import wncalculus.color.ColorClass;
 import wncalculus.expr.Interval;
+import wncalculus.util.Pair;
 
 /**
  *
@@ -23,18 +24,13 @@ public abstract class ConstantFunction extends ElementaryFunction   {
     }
     
     @Override
-    public SetFunction baseCompose(SetFunction right) {
+    public Pair<SetFunction,Integer> baseCompose(SetFunction right) {
         Interval card = right.card();
+        if (card != null && right.card().lb() > 0)
+            return new Pair<>(this,null);
         
-        return card != null && right.card().lb() > 0 ? this : null;
-       
+        return super.baseCompose(right);     
     }
-  
-   /*@Override
-   public final Integer getIndex() {
-    	return 0;
-   }*/
-   
    
    @Override
    public final ElementaryFunction setDefaultIndex() {

@@ -93,14 +93,16 @@ public interface FunctionTuple extends SetExpr, Transposable /*, SNfunction*/ {
         do {
             merged = false;
             for (ListIterator<Tuple> ite =  l.listIterator() ; ite.hasNext(); ) {
-                Tuple t= ite.next(),  m;
+                var  t= ite.next();
                 int j;
-                for (j = ite.nextIndex() ; j  < l.size() ;  j++ ) 
-                    if ( ( m =  l.get(j) .merge(t) ) != null ) { //merge succeeded!
-                        ite.set(m);
+                for (j = ite.nextIndex() ; j  < l.size() ;  j++ ) { 
+                    var m = l.get(j).merge(t);
+                    if ( m != null ) { //merge succeeded!
+                        ite.set(m); //new
                         merged = true;
                         break; //exits the innermost loop
                     }
+                }
                 if ( merged ) {
                     l.remove(j);
                     break; //exits the outer for loop: this way is safe!

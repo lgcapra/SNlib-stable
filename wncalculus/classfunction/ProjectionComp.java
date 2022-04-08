@@ -6,6 +6,7 @@ import wncalculus.expr.Domain;
 import wncalculus.expr.Interval;
 import wncalculus.guard.Equality;
 import wncalculus.util.ComplexKey;
+import wncalculus.util.Pair;
 
 
 /**
@@ -68,7 +69,7 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
     }
     
     /**
-     * @return the constraint [lb-1,x], where x is either infinity or ub-1
+     * @return the constraint [lrb-1,x], where x is either infinity or ub-1
      */
     @Override
     public Interval card() {
@@ -78,29 +79,26 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
     }
     
            
-    
     @Override
-    public SetFunction baseCompose(SetFunction right) {
-        SetFunction res = null;
+    public Pair<SetFunction,Integer> baseCompose(SetFunction right) {
         Interval rcard = right.card();
         if (rcard != null) {
-            int lb= rcard.lb();
-            if (lb  > 1) 
-                res = All.getInstance(getSort());
-            else if (lb == 1 && rcard.ub() == 1)
-                res = Complement.factory(Successor.factory(getSucc(),right));
-            else {
-                //System.err.println("cannot solve "+this+'.'+right.toStringDetailed()); //debug
+            int lrb= rcard.lb();
+            if (lrb  > 1) 
+                return new Pair<>(All.getInstance(getSort()), null);
+            if (lrb == 1) {
+                if (rcard.ub() == 1)
+                    return new Pair<>(Complement.factory(Successor.factory(getSucc(),right)), null);
+                     //System.err.println("cannot solve "+this+'.'+right.toStringDetailed()); //debug
+                return new Pair<>(null, 1); //split required
             }
         }
-        
-        return res;
+        return super.baseCompose(right);
    } 
     
     @Override
     public int splitDelim() {
         ColorClass c = getSort();
-        
         return c.lb() == 2 && c.ub() != 2  ? 2 : this.pr.splitDelim(); // the function cardinality is 1 and the constraint is [2,..]
     }
     
@@ -123,7 +121,6 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
     @Override
     public ProjectionComp setDefaultIndex() {
     	Projection p = this.pr.setDefaultIndex();
-    	
         return p == this.pr ? this :  (ProjectionComp) factory(p) ;
     } 
     
@@ -144,9 +141,8 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
 
     @Override
     public SetFunction clone(Domain newdom, Domain newcd) {
-            Projection p = (Projection) this.pr.clone(newdom, newcd);
-
-            return p == this.pr ? this : factory(p).cast();
+        Projection p = (Projection) this.pr.clone(newdom, newcd);
+        return p == this.pr ? this : factory(p).cast();
     }
 
 

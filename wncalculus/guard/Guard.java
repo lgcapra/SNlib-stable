@@ -13,6 +13,7 @@ import wncalculus.util.Util;
  * @author Lorenzo Capra
  */
 public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
+
     
     private boolean simplified;
     private Map<? extends ColorClass , List<? extends SetFunction>> right_tuple; // if other than null, marks this guard as a filter of a tuple
@@ -105,6 +106,11 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
           return args.isEmpty() ? True.getInstance(getDomain()) : And.factory(Util.cast(args, Guard.class), false);
       }
       
+      /**
+       * builds an "OR" corresponding to the arg list
+       * @param args
+       * @return an "OR" form corresponding to a (non empty) collection of guards 
+       */
       @Override
       public final Guard orFactory(Collection<? extends LogicalExpr> args, boolean disjoined)  {
           return Or.factory(Util.cast(args, Guard.class), disjoined);
@@ -119,6 +125,17 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     public final Guard orFactory(LogicalExpr arg1, LogicalExpr arg2)  {
         return Or.factory(false, (Guard)arg1, (Guard)arg2);
      }
+    
+    /**
+     * performs the "difference" between guards
+     * @param p1 a guard
+     * @param p2 another guard
+     * @return the difference between guards
+     */
+    public final static Guard subtr(Guard p1, Guard p2) {
+        return And.factory(p1, Neg.factory(p2));
+    }
+    
      
     /**
      * @param g a specified guard
@@ -153,7 +170,6 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     public static <E extends Guard> Set<E> restriction (Collection<? extends E> args, int k) {
         Set<E> res = new HashSet<>();
         args.stream().filter(g ->  Collections.max( g.indexSet() ) <= k ).forEachOrdered(g -> { res.add(g); });
-            
         return res;
     }
     
@@ -237,7 +253,5 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     public Map<ColorClass, Map<Boolean, Set<Membership>>> membMap() {
         return Collections.EMPTY_MAP;
     }
-
-
     
 }

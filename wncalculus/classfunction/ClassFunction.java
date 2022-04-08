@@ -14,7 +14,6 @@ import wncalculus.guard.Equality;
  */
 public interface ClassFunction extends SingleSortExpr {
      
-    
     /**
      * computes the (min) split-delimiter for a collection of (homogenous) ClassFunction,
      * considering both the split-delimiters of terms and the (max positive/negative) successor bounds
@@ -44,28 +43,7 @@ public interface ClassFunction extends SingleSortExpr {
         }
         return delim;
     }
-    public static int splitDelimV0 (Collection<? extends ClassFunction> terms, ColorClass s) {
-        int delim = 0, nd, lb = s.lb();
-        for (ClassFunction f : terms) 
-            if (! (f instanceof Projection) && ColorClass.lessDelim(nd = f.splitDelim(), delim, lb )) //optimization
-                delim = nd;
-        //we find out the max offset between positive and negative successors
-        if (s.isOrdered()) {
-            int max_succ = 0, min_succ = 0, succ; //the "max" (positive/neg.) split delimiters for terminal symbols
-            for (ClassFunction f : terms)
-                if (f instanceof ProjectionBased) {
-                    if ((succ = ((ProjectionBased) f).getSucc()) > 0) 
-                        max_succ = Math.max(max_succ, succ);
-                     else if (succ < 0)
-                         min_succ = Math.min(min_succ, succ);
-                }
-            if (ColorClass.lessDelim(succ = max_succ - min_succ, delim, lb))
-                delim = succ; // the offset between successors of projection-terms
-        }
         
-        return delim;
-    }  
-    
     /**
      * @return  the class-function's colour class
     */
@@ -85,7 +63,6 @@ public interface ClassFunction extends SingleSortExpr {
     public static Set<Integer> indexSet(Collection<? extends ClassFunction> c) {
         Set<Integer> idxset = new HashSet<>();
         c.forEach( f -> { idxset.addAll(f.indexSet()); });
-        
         return idxset;
     } 
     

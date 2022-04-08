@@ -20,6 +20,7 @@ public interface SingleSortExpr extends ParametricExpr {
      */
     int splitDelim();
     
+
     @Override
     default Map<Sort,Integer> splitDelimiters () {
         Map<Sort,Integer> map = new HashMap<>();

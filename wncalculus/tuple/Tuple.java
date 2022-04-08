@@ -1023,9 +1023,9 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             }
         }
         if (!othf.isTrivial()) 
-            diff_list.add( build ( subtr(filter(), othf), myg));
+            diff_list.add( build (Guard.subtr(filter(), othf), myg)); 
         if (!othg.isTrivial()) 
-            diff_list.add( build (f_and_1_2, subtr(myg, othg) ));
+            diff_list.add( build (f_and_1_2, Guard.subtr(myg, othg) ));
             
         return diff_list.isEmpty() ? getFalse() : TupleSum.factory(diff_list, true);
     }
@@ -1080,34 +1080,29 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * @return the tuple resulting form merge, or <tt>null</tt> if no merge has been done
      */
     public Tuple merge (Tuple other) {
+        //System.out.println("merge: "+this + " with "+ other);
         int tsize = size();
         Guard myg = guard(), othg = other.guard(), myf = filter(), othf = other.filter();
         boolean equal_g = myg.equals(othg);
         if ( equal_g  && myf.equals(othf) ) {
             List<? extends SetFunction> args = getComponents(), others = other.getComponents();
-            int i = 0;
-            while (i < tsize-1 && args.get(i).equals(others.get(i))) ++i;
+            int i;
+            for (i = 0; i < tsize-1 && args.get(i).equals(others.get(i)); ++i) {
+            }
             List<? extends SetFunction> tail = args.subList(i+1, tsize);
             if ( tail.equals (others.subList(i+1, tsize) )) { //in particular, set true if tail set empty
                 List<SetFunction> newlist = new ArrayList<>( args.subList(0, i)); //the first 0..i-1 components ..
-                newlist.add ((SetFunction) Union.factory(false, args.get(i), others.get(i)). normalize( ));
+                newlist.add ((SetFunction) Union.factory(false, args.get(i), others.get(i)). normalize());
                 newlist.addAll(tail);
 
                 return build(newlist);
             }
         }
-        else if ( (equal_g || Objects.equals(myf, othf) ) && getComponents().equals(other.getComponents())){
-            Guard g;
+        else if ( (equal_g || myf.equals(othf)) && getComponents().equals(other.getComponents())){
             if (equal_g) {
-                if ( (g = disjoin(myf, othf)) != null )
-                    g = (Guard) g.normalize();
-
-                return build (g,  myg);
+                return build ((Guard) Or.factory(false, myf, othf).normalize(),  myg);
             }
-            if ( (g =  disjoin(myg,  othg))  != null )
-                g = (Guard) g.normalize();
-
-            return build (myf,  g);
+            return build (myf, (Guard) Or.factory(false,myg, othg).normalize());
         }
         
         return null;

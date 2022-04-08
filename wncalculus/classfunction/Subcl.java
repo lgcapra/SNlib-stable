@@ -70,12 +70,8 @@ public final class Subcl extends ConstantFunction {
     
     
     @Override
-    public int splitDelim () { //new (da controllare)
+    public int splitDelim () { //new 
         return card().lb() == 1  && card().ub() != 1 ? 1 : super.splitDelim(); //could be optimized?
-    }
-    public int splitDelimV0 () { //new (da controllare)
-        ColorClass cc = getSort(); 
-        return card().lb() == 1  && card().ub() != 1 ? cc.lb() : super.splitDelim();
     }
     
     /**

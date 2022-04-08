@@ -207,11 +207,10 @@ public interface LogicalExpr extends ParametricExpr  {
             LogicalExpr tx = (LogicalExpr) e;
             if (tx instanceof OrOp ) {
                 OrOp or = (OrOp) tx;    
-                //if ( or. truthEquivalent() ) 
-                    //tx = tx.getTrue();
-                //else 
                 if (todisjoin && ( tx  = or.disjoinAndNormalize() ) instanceof OrOp )
                     tx = ( (OrOp)tx). merge();
+                if ( tx. truthEquivalent() ) 
+                    tx = tx.getTrue();
             }
             terms.add(tx);
         }    

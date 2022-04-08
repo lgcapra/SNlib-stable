@@ -14,6 +14,8 @@ import wncalculus.logexpr.LogComposition;
 public final class ClassComposition extends SetFunction implements LogComposition<SetFunction> {
     
    private final SetFunction left, right;
+   // the following field may be set by the baseCompose method
+   private Integer delim;
     
     /** creates a new basic-composition between class-functions after having possibly checked that the left one is unary
      * @param left the left operand
@@ -78,7 +80,13 @@ public final class ClassComposition extends SetFunction implements LogCompositio
             return Empty.getInstance(getSort()); //optimization(may be removed)
         else {
             var compres = this.left.baseCompose(this.right);
-            return compres == null ? this : compres;
+            if (compres != null) {
+                if (compres.getKey() != null)
+                    return compres.getKey();
+                if (compres.getValue() != null)
+                    this.delim = compres.getValue();
+            }
+            return this;
         }      
     }
 
@@ -109,29 +117,17 @@ public final class ClassComposition extends SetFunction implements LogCompositio
      */
     @Override
     public final int splitDelim () {
-        int delim = this.right.splitDelim();
-        if (! this.left.isConstant() ) 
-            delim =  ColorClass.lessIf2ndNotZero(this.left.splitDelim(), delim); // no optimization..
-        //System.out.println("delim: ("+this+") "+delim); //debug
-        return delim;
-    }
-    public final int splitDelimV0 () {
-        int delim = 0;
-        if (this.left.isConstant()) 
-            delim = this.right.splitDelim();
-        else { // left is injective ...
-            Interval rightcard;
-            int lb  =  getConstraint().lb() , left_gap , right_lb;
-            if ( this.left.card() == null || (rightcard = this.right.card()) == null || rightcard.singleton() )   // left or right's card cannot be computed or the right card is constant...
-                delim =  ColorClass.minSplitDelimiter(this.left.splitDelim() , this.right.splitDelim(), getSort()); // no optimization..
-            else if ( (left_gap = this.left.gap()) > 0 && ( right_lb = rightcard.lb() ) > 0 && right_lb  <= left_gap)  //optimization
-                delim = lb - right_lb + left_gap   ;
+        if (this.delim != null) {
+            return this.delim;
+        } else {
+            var splitdel = this.right.splitDelim();
+            if (! this.left.isConstant() ) 
+                splitdel =  ColorClass.lessIf2ndNotZero(this.left.splitDelim(), splitdel); // no optimization..
+            //System.out.println("splitdel: ("+this+") "+splitdel); //debug
+            return splitdel;
         }
-        //System.out.println("delim: "+delim); //debug
-        return delim; // avoids unnecessary splits ... we argued that the composition res. is S or 0 
     }
     
-  
     @Override
     public ClassFunction setDefaultIndex( ) {
         throw new UnsupportedOperationException("Not supported yet.");

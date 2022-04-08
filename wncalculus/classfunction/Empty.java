@@ -3,6 +3,7 @@ package wncalculus.classfunction;
 import java.util.*;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.Interval;
+import wncalculus.util.Pair;
 
 /**
  * this class defines the empty-set constant function
@@ -49,8 +50,8 @@ public final class Empty extends ConstantFunction  {
     
    
     @Override
-    public SetFunction baseCompose(SetFunction right) {
-        return this;
+    public Pair<SetFunction,Integer> baseCompose(SetFunction right) {
+        return new Pair<>(this,null);
     }
     
     @Override

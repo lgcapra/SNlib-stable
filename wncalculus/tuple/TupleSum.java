@@ -115,7 +115,6 @@ public final class TupleSum extends TupleNaryOp implements OrOp<FunctionTuple> {
         Collection<? extends FunctionTuple> targs = getArgs();
         List<Tuple > pt = Util.copyAndCast(targs, Tuple.class );  
         FunctionTuple.fold(pt);
-        
         return pt.size() < targs.size() ? TupleSum.factory( pt, this.disjoined) : this; //optimization
     }
 
