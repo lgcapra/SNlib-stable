@@ -24,6 +24,27 @@ public interface ClassFunction extends SingleSortExpr {
      * @return the collection's split-delimiter
      */
     public static int splitDelim (Collection<? extends ClassFunction> terms, ColorClass s) {
+        int delim = 0;
+        for (ClassFunction f : terms) 
+            if (! (f instanceof ProjectionBased) ) //optimization
+                delim = ColorClass.lessIf2ndNotZero(f.splitDelim(), delim);
+        //we find out the max offset between positive and negative successors
+        if (s.isOrdered()) {
+            int max_succ = 0, min_succ = 0; //the "max" (positive/neg.) split delimiters for terminal symbols
+            for (ClassFunction f : terms) 
+                if (f instanceof ProjectionBased) {
+                    int succ = ((ProjectionBased) f).getSucc();
+                    if (succ  > 0) 
+                        max_succ = Math.max(max_succ, succ);
+                     else if (succ < 0)
+                         min_succ = Math.min(min_succ, succ);
+                }
+
+            delim = ColorClass.lessIf2ndNotZero(max_succ - min_succ + 1 - s.lb(), delim);// the offset between successors of projection-terms
+        }
+        return delim;
+    }
+    public static int splitDelimV0 (Collection<? extends ClassFunction> terms, ColorClass s) {
         int delim = 0, nd, lb = s.lb();
         for (ClassFunction f : terms) 
             if (! (f instanceof Projection) && ColorClass.lessDelim(nd = f.splitDelim(), delim, lb )) //optimization
@@ -51,8 +72,6 @@ public interface ClassFunction extends SingleSortExpr {
     @Override
     ColorClass getSort();
     
-  
-    
     /**
      * @return the general color constraint associated with <code>this</code> function 
      */
@@ -69,12 +88,6 @@ public interface ClassFunction extends SingleSortExpr {
         
         return idxset;
     } 
-    
-    /** 
-     * @return  the set of projection indexes occurring on this class-function
-     */
-    //Set<Integer> indexSet();
-
     
     /**    
      * creates a clone of <tt>this</tt> class-function, of a colour
@@ -111,12 +124,6 @@ public interface ClassFunction extends SingleSortExpr {
         
         return res;
     } 
-    
-    /*@Override
-    default ClassFunction clone (final Domain newdom, final Domain newcd) {
-        return clone((ColorClass) smap.get( getSort() ));
-    }*/
-    
     
     /**
      * replaces projection symbols in @code{this} function according to the specified

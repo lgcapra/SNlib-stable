@@ -16,9 +16,8 @@ import wncalculus.classfunction.SetFunction;
 public final class TupleIntersection extends TupleNaryOp implements AndOp<FunctionTuple > {
     
     private TupleIntersection (Set<?  extends FunctionTuple> guards, boolean check) {
-        super(guards, /*check*/true);
+        super(guards, check);
     }
-    
     
     /** builds a TupleIntersection from a given collection of operands;
      * if the collection is a singleton then the contained element is returned
@@ -93,7 +92,7 @@ public final class TupleIntersection extends TupleNaryOp implements AndOp<Functi
     public FunctionTuple specSimplify() {
         FunctionTuple res = this;
         Map<Boolean, Set<FunctionTuple>> tmap = Util.mapFeature(getArgs(), t -> t instanceof Tuple);
-        if ( tmap.getOrDefault(true, Collections.EMPTY_SET). size() > 1 ) { // more than one Tuple
+        if ( tmap.getOrDefault(true, Collections.EMPTY_SET). size() > 1 ) { // there are least two Tuple
             Collection<Tuple> tuples = Util.cast(tmap.get(true), Tuple.class);
             Set<Guard> newguards  = new HashSet<>() , newfilters  = new HashSet<>();
             for (Tuple t : tuples ) {
@@ -114,7 +113,7 @@ public final class TupleIntersection extends TupleNaryOp implements AndOp<Functi
                     throw e;
                 } 
             }     
-            res = new Tuple(And.buildAndForm(newfilters), getCodomain(), newcomponents, And.buildAndForm(newguards), getDomain()); // the tuples intersection...
+            res = new Tuple(And.factory(newfilters), newcomponents, And.factory(newguards)); // the tuples intersection...
             Set<FunctionTuple> others = tmap.get(false);
             if (others != null) {//not all operands are tuples
                 others.add(res);

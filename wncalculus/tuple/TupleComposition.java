@@ -58,25 +58,12 @@ public final class TupleComposition implements FunctionTuple, LogComposition<Fun
             ((Tuple)this.left).setReduceGuard(true);
         this.right  = right;
     }
-
-    //@Override
-    public FunctionTuple specSimplifyV0() {
-        //System.out.println("comp: "+toStringDetailed()); //debug
-        //if (this.right instanceof EmptyTuple) //shortcut
-           //return getInstance(getCodomain() , getDomain() );     
-        
-        FunctionTuple res = this.left.baseCompose(this.right);
-        //System.out.println("res: "+ res); // debug
-        if ( res instanceof Tuple) //the composition has been solved
-            ((Tuple)res).setReduceGuard(false); // default condition (not needed?)
-        
-        return res != null ? res : this;
-    }
     
+    @Override
     public FunctionTuple specSimplify() {
         if ( left instanceof FilteredTuple ) {
             FilteredTuple ft = (FilteredTuple) left;
-            return new FilteredTuple(ft.guard(), new TupleComposition(ft.withoutFilter(), right));
+            return FilteredTuple.factory(ft.guard(), new TupleComposition(ft.expr(), right));
         } else { 
             //System.out.println("***\n"+this);
             FunctionTuple res;

@@ -6,7 +6,7 @@ import wncalculus.color.ColorClass;
 import wncalculus.expr.Domain;
 import wncalculus.expr.IllegalDomain;
 import wncalculus.util.ComplexKey;
-import wncalculus.util.Pair;
+import wncalculus.util.Util;
 
 /**
  * this class represents predicates checking for the (in)equality of two
@@ -62,7 +62,7 @@ public  static final Map< ComplexKey, Equality> VALUES = new HashMap<>();
         checkIndex(p2, dom);
         
         int exp = p1.getSucc(), exp2 = p2.getSucc();
-        if (!op && cc.isOrdered() && cc.ccSize( ) == 2) { // in this case we invert both the sign and the 2nd successor
+        if (!op && cc.isOrdered() && cc.fixedSize() == 2) { // in this case we invert both the sign and the 2nd successor
             op = true;
             exp2 = exp2 == 0 ? 1 : 0;
         }
@@ -107,7 +107,7 @@ public  static final Map< ComplexKey, Equality> VALUES = new HashMap<>();
     
     @Override
     public int splitDelim () {
-        return getArg2().splitDelim(); // the equality is in canonical form
+        return getArg2().splitDelim(); // because the equality is in canonical form
     }
     
     @Override
@@ -224,57 +224,7 @@ public  static final Map< ComplexKey, Equality> VALUES = new HashMap<>();
     public boolean isInEquality() {
         return ! sign() ;
     }
-    
-    /**
-     * given a collection of (in)equalities, assumed of the same (ordered) colour, computes
-     * the maximal offset between successors for each projection index, considering that a symbol
-     * X^i can appear both as left and right member of an (in)equality;
-     * for example, if we have X^1 != !X^2, X^2!=!X^3 the offset, as for X^2, is 2 (1 - -1)
-     * @param elist a collection of (in)equalities
-     * @return the max offset between successors of each projection index in @param elist
-     */
-    public static int succOffset(Collection<? extends Equality> elist) {
-        int offset = 0;
-        for (Pair<Integer, Integer> p : succBounds(elist).values())
-            offset = Math.max(offset, p.getValue() - p.getKey());
-        //System.out.println("max succ offset of : " + elist +"\n"+offset); // debug
-        return offset;
-    }
-    /**
-     * given a collection of (in)equalities, assumed of the same (ordered) colour, computes
-     * the minimal and maximal successors for each projection index, considering that a symbol
-     * X^i can appear both as left and right member of an (in)equality
-     * for example if we have X^1 != !X^2, X^2!=!X^3
-     * the min and max, as for 2 (X^2), are -1 and +1
-     * @param elist a collection of (in)equalities
-     * @return a map of pairs holding the min and max successor of each projection index in @param elist
-     */
-    public static Map<Integer, Pair<Integer, Integer>> succBounds(Collection<? extends Equality> elist) {
-        Map<Integer, Pair<Integer, Integer>> succmap = new HashMap<>();
-        elist.forEach(eq -> {
-            int succ = eq.getArg2().getSucc();
-            Pair<Integer, Integer> s1, s2;
-            if ( (s1 = succmap.putIfAbsent(eq.getArg1().getIndex(), new Pair<>(-succ, -succ))) != null)
-                set_Min_Max(s1, -succ);
-            if ((s2 = succmap.putIfAbsent(eq.getArg2().getIndex(), new Pair<>(succ, succ))) != null)  
-                set_Min_Max(s2, succ);
-        });
         
-        return succmap;
-    }
-    
-    /**
-     * sets-up a pair of integer values, representing a minimum and a maximum, w.r.t.
-     * a new value (if the current pair is not <code>null</code>
-     * @param p a pair of values, representing (in the order) a minimum and a maximum
-     * @param v a new (minimum/maximum) value
-     */
-    private static void set_Min_Max(Pair<Integer, Integer> p, int v) {
-        if (p.getKey() > v) 
-            p.setKey(v);
-        if (p.getValue() < v) 
-            p.setValue(v);
-    }
 
     /**
      * compare <code>this</code> equality to another considering the variables indices first
@@ -309,6 +259,12 @@ public  static final Map< ComplexKey, Equality> VALUES = new HashMap<>();
     @Override
     public Guard copy(ColorClass cc, Domain newdom) {
         return Equality.builder(getArg1().copy(cc), getArg2().copy(cc), sign(), newdom);
+    }
+    
+    //new
+    @Override
+    public Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap() {
+        return Collections.singletonMap(getSort(), Collections.singletonMap(sign(), Util.singleton(this, null)));
     }
 
 }

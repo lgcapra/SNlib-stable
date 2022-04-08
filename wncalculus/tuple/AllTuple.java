@@ -10,7 +10,7 @@ import wncalculus.util.ComplexKey;
 
 /**
  * "singleton-like" class implementing universe-set tuples (that is, constant function-tuples
- mapping to U) of given size
+ mapping to U) of given fixedSize
  * @author lorenzo capra
  */
 //def da rivedere: integrare con FunctionTuple.buildConstantTuple
@@ -67,10 +67,6 @@ public final class AllTuple extends ConstantTuple {
         return getInstance(newcd, newdom);
     }
     
-    @Override
-    public FunctionTuple baseCompose(FunctionTuple right) {
-        return asTuple().baseCompose(right)/*right.differentFromZero() ? getInstance(getCodomain(), right.getDomain()) : null*/; 
-    }
 
     @Override
     public boolean differentFromZero() {
@@ -83,8 +79,7 @@ public final class AllTuple extends ConstantTuple {
      */
     @Override
     public Tuple asTuple() {
-        Domain cd = getCodomain();
-        Tuple res = new Tuple( null, cd, toMap(cd), null, getDomain()) ;
+        Tuple res = new Tuple(toMap(getCodomain()), getDomain()) ;
         res.setSimplified(true);
         
         return res;

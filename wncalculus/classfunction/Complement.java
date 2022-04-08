@@ -45,21 +45,24 @@ import wncalculus.expr.Interval;
         return "comp";
     }
   
-    /** this smart implementation allows card to be computed either if the
-     * argument's card is fixed, or it corresponds to the color class cardinality
-     * @return  */
+    /**smart implementation which allows card to be computed either if the
+     * argument's cardinality is fixed or corresponds to the color class cardinality
+     * @return  the (possibly) parametric cardinality of <code>this</code>
+     */
     @Override
     public Interval card() {
-        Interval mycard = getArg().card(), res = null;
+        Interval mycard = getArg().card();
         if (mycard != null) {
             Interval in = getConstraint();
             if ( mycard.equals(in) ) 
-                res = new Interval(0,0);
-            else if (mycard.singleValue()) 
-                res = in.unbounded() ? new Interval(in.lb()- mycard.lb() ) : new Interval(in.lb()- mycard.lb(), in.ub()- mycard.ub());
+                return new Interval(0,0);
+            
+            Integer card = mycard.singleValue();
+            if (card != null) 
+               return in.unbounded() ? new Interval(in.lb()- card ) : new Interval(in.lb()- mycard.lb(), in.ub()- card );
         }
         
-        return res;
+        return null;  
     }
     
     @Override

@@ -383,7 +383,7 @@ public class Graph<E> {
      * @param vlist a list of nodes
      * @return <code>true</code> if and only if the graph is modified
      */
-    public boolean removeAllVertices (Collection<? extends E> vlist) {
+    public boolean removeVertices (Collection<? extends E> vlist) {
         boolean changed = this.adjlist.keySet().removeAll(vlist);
         if (changed) {
             this.adjlist.values().forEach( x -> { x.removeAll(vlist); });

@@ -74,21 +74,13 @@ public final class ClassComposition extends SetFunction implements LogCompositio
 
     @Override
     public SetFunction specSimplify() {
-        SetFunction compres;
-        Interval rcard = this.right.card(); 
-        if (rcard != null && rcard.ub() == 0) 
-            compres = Empty.getInstance(getSort());
-        else if ( (compres = this.left.baseCompose(this.right) ) == null) 
-            compres = this;
-        
-        return compres;
+        if (this.right.zeroCard())
+            return Empty.getInstance(getSort()); //optimization(may be removed)
+        else {
+            var compres = this.left.baseCompose(this.right);
+            return compres == null ? this : compres;
+        }      
     }
-
-    
-   /*@Override
-    public SetFunction clone (final Domain newdom, final Domain newcd) {
-        return  (SetFunction) super.clone(newdom, newcd);
-    }*/
 
     @Override
     public SetFunction left() {
@@ -117,16 +109,23 @@ public final class ClassComposition extends SetFunction implements LogCompositio
      */
     @Override
     public final int splitDelim () {
+        int delim = this.right.splitDelim();
+        if (! this.left.isConstant() ) 
+            delim =  ColorClass.lessIf2ndNotZero(this.left.splitDelim(), delim); // no optimization..
+        //System.out.println("delim: ("+this+") "+delim); //debug
+        return delim;
+    }
+    public final int splitDelimV0 () {
         int delim = 0;
         if (this.left.isConstant()) 
             delim = this.right.splitDelim();
         else { // left is injective ...
             Interval rightcard;
-            int lb  =  getConstraint().lb() , left_gap =  this.left.gap(), right_lb;
-            if ( left_gap < 0 || (rightcard = this.right.card()) == null || rightcard.singleValue() )   // intuitively: left or right's card cannot be computed or the right card is constant...
+            int lb  =  getConstraint().lb() , left_gap , right_lb;
+            if ( this.left.card() == null || (rightcard = this.right.card()) == null || rightcard.singleton() )   // left or right's card cannot be computed or the right card is constant...
                 delim =  ColorClass.minSplitDelimiter(this.left.splitDelim() , this.right.splitDelim(), getSort()); // no optimization..
-            else if ( left_gap > 0 && ( right_lb = rightcard.lb() ) > 0 && right_lb  <= left_gap)  //optimization
-               delim = lb - right_lb + left_gap   ;
+            else if ( (left_gap = this.left.gap()) > 0 && ( right_lb = rightcard.lb() ) > 0 && right_lb  <= left_gap)  //optimization
+                delim = lb - right_lb + left_gap   ;
         }
         //System.out.println("delim: "+delim); //debug
         return delim; // avoids unnecessary splits ... we argued that the composition res. is S or 0 

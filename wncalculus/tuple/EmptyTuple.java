@@ -3,7 +3,6 @@ package wncalculus.tuple;
 import java.util.*;
 import wncalculus.expr.Domain;
 import wncalculus.expr.ParametricExpr;
-import wncalculus.expr.Sort;
 import wncalculus.util.ComplexKey;
 
 /**
@@ -57,10 +56,6 @@ public final class EmptyTuple extends ConstantTuple {
         return nd.equals(getDomain()) ? this : getInstance(getCodomain(), nd);
     }
 
-    @Override
-    public FunctionTuple baseCompose(FunctionTuple right) {
-        return getInstance(getCodomain() , right.getDomain() ); //optimization - shortcut
-    }
 
     @Override
     public boolean differentFromZero() {

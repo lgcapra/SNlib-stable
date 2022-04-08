@@ -64,4 +64,8 @@ public abstract class ConstantGuard extends Guard  {
        return clone(newdom);    
     }
     
+    @Override
+    public final boolean elementary() {
+        return false;
+    }
 }

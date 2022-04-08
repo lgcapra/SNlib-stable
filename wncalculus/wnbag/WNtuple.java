@@ -19,15 +19,24 @@ import wncalculus.util.Util;
 public final class WNtuple extends AbstractTuple<LinearComb>  {
 
     /**
-     * base constructor: creates a <tt>WNtuple</tt> from a list of class-functions
+     * base constructor: creates a <tt>WNtuple</tt> from a list of linear comb. of class-functions
      * @param f the tuple's filter
-     * @param l the tuple's components (possibly, linear combinations)
+     * @param l the tuple's components
      * @param g the tuple's guard
-     * @param dom the tuple's domain
      * @param check domain-check flag
      */
-    public WNtuple(Guard f, List<? extends LinearComb> l, Guard g, Domain dom, boolean check) {
-        super(f, l, g, dom, check);
+    public WNtuple(Guard f, List<? extends LinearComb> l, Guard g, boolean check) {
+        super(f, l, g, check);
+    }
+    
+    /**
+     * creates a <tt>WNtuple</tt> with a deafult filter from a list of linear comb. of class-functions
+     * @param l the tuple's components
+     * @param g the tuple's guard
+     * @param check domain-check flag
+     */
+    public WNtuple(List<? extends LinearComb> l, final Guard g, boolean check) {
+        super(l, g, check);
     }
     
     /**
@@ -39,13 +48,26 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
      * @param g the tuple's guard
      * @param dom  the tuple's domain
      */
-    public WNtuple(Guard f, Domain codom, SortedMap<ColorClass, List <? extends LinearComb>> m, Guard g, Domain dom) {
-        super(f, codom, m, g, dom);
+    public WNtuple(Guard f, SortedMap<ColorClass, List <? extends LinearComb>> m, Guard g) {
+        super(f, m, g, false);
+    }
+    
+    /**
+     * creates an ordinary <tt>WNtuple</tt> from a map of colors to class-functions;
+     * no check is done
+     * @param f the tuple's filter
+     * @param codom the tuple's codomain
+     * @param m a (sorted) map of colors to corresponding lists of functions
+     * @param g the tuple's guard
+     * @param dom  the tuple's domain
+     */
+    public WNtuple(SortedMap<ColorClass, List <? extends LinearComb>> m, Guard g) {
+        super(m, g, false);
     }
 
     @Override
-    public WNtuple build(Guard filter, Guard guard, Domain domain) {
-        return new WNtuple(filter, getCodomain(), getHomSubTuples(), guard, getDomain());
+    public WNtuple build(Guard filter, Guard guard) {
+        return new WNtuple(filter, getHomSubTuples(), guard);
     }
 
     
@@ -95,19 +117,21 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
      * should be invoked on single-color tuples, otherwise, it raises an exception
      * it build on <tt>expand()</tt>
      */
+    // a cosa serve?
     public Set<? extends WNtuple> singleIndexComponentsTuples() {
     	HashSet<WNtuple> tset = new HashSet<>();
     	Set<Collection<Entry<Integer, Map<ElementaryFunction, Integer>>>> expansion = expand();
     	if (expansion.size() == 1)
             return Collections.singleton(this); //optimization
         
+        //System.out.println("expansion:\n"+expansion);
         ColorClass cc = getSort(); // the tuple is assumed-single color
     	for (Collection<Entry<Integer, Map<ElementaryFunction, Integer>>> lx : expansion) {
             List<LinearComb> lc = new ArrayList<>();
             lx.forEach(x -> { lc.add(new LinearComb(x.getValue())); });
-            tset.add(new WNtuple (null, getCodomain(), Util.singleSortedMap(cc, lc), guard() /*null*/, getDomain()));
+            tset.add(new WNtuple ( Util.singleSortedMap(cc, lc), guard() ));
     	}
-    	
+    	//System.out.println("tset:\n"+tset); //debug
     	return tset;		
     }
     
@@ -133,8 +157,8 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
 			if (m == null)
 				for (Entry<Set<Integer>, LinkedHashMap<Integer, LinearComb>> entry :  imap.entrySet() ) 
 					if (entry.getKey().containsAll( indexSet ) ) { // indexset should be a singleton or empty
-		    			 m = entry.getValue();
-		    			 break;
+                                            m = entry.getValue();
+                                            break;
 		    		}
 			if ( m ==  null ) 
 				imap.put(l.indexSet(), m = new LinkedHashMap<>());
@@ -151,8 +175,7 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
      */
     public Map<Set<Integer>, LinkedHashMap<Integer,LinearComb> > independentComponents () {
     	Guard g = guard();
-    	return independentComponents(g != null ? ((And) g).igraph().get( getSort()).connectedIndices()
-    			                        : Collections.emptySet());
+    	return independentComponents( !g.isTrivial()  ? ((And) g).igraph().get( getSort()).connectedIndices(): Collections.emptySet());
     }
     
     /*
@@ -189,8 +212,7 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
      */
     public Map<Set<Integer>, LinkedHashSet<Integer>> independentComponentsV2 () {
     	Guard g = guard();
-    	return independentComponentsV2(g != null ? ((And) g).igraph().get( getSort()).connectedIndices()
-    			                        : Collections.emptySet());
+    	return independentComponentsV2(!g.isTrivial() ? ((And) g).igraph().get( getSort()).connectedIndices(): Collections.emptySet());
     }
     
 }

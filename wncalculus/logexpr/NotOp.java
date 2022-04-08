@@ -46,8 +46,7 @@ public interface NotOp<E extends LogicalExpr> extends UnaryOp<E>, LogicalExpr {
                 ((N_aryOp<E>) arg). getArgs().forEach( e -> { nargs.add( buildOp(e).cast() );  });//casts Expression to E
                 res = (arg instanceof AndOp ? orFactory(nargs, false) : andFactory(nargs)).cast();   
             }
-        }
-       
+        }   
         //System.out.println("(NotOp) -->\n"+res); //debug
         return res;
     }
@@ -62,9 +61,5 @@ public interface NotOp<E extends LogicalExpr> extends UnaryOp<E>, LogicalExpr {
        return getArg().isFalse();
     }
     
-    /*@Override
-    default E clone (final Domain newdom, final Domain newcd, final Map<Sort,Sort> smap) {
-        return buildOp(getArg().clone(newdom, newcd, smap).cast());
-    }*/
 
 }

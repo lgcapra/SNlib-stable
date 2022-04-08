@@ -1,9 +1,6 @@
 package wncalculus.expr;
 
 import java.util.*;
-import wncalculus.logexpr.LogicalExprs;
-import wncalculus.logexpr.OrOp;
-import wncalculus.util.Util;
 
 /**
  * this interface is the root of the whole hierarchy, and represents the super-type
@@ -131,6 +128,10 @@ public interface Expression {
      default boolean terminal() {
         return !( this instanceof NonTerminal ) ;
     }
+     
+     default boolean elementary() {
+         return terminal();
+     }
     
      /**
       * @param e an expression

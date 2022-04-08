@@ -139,8 +139,8 @@ public interface LogicalExpr extends ParametricExpr  {
      
      /**
       * build a "NOT" operator
-     * @param arg the operand
-     * @return a "NOT" operator with the specified operand
+      * @param arg the operand
+      * @return a "NOT" operator with the specified operand
       */
       LogicalExpr notFactory(LogicalExpr arg);
       
@@ -152,6 +152,8 @@ public interface LogicalExpr extends ParametricExpr  {
      * build an "AND" operator
      * @param args a collection of operands
      * @return an "AND" operator for the collection of operands
+     * if the specified collection is empty, its behaviour depends on the particular type
+     * of logical expression
      * @throws wncalculus.expr.IllegalDomain if the operands' domain are different
      */  
        LogicalExpr andFactory(Collection<? extends LogicalExpr> args);

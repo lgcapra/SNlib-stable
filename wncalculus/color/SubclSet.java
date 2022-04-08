@@ -13,6 +13,8 @@ public final class SubclSet implements Color {
     private final Set<? extends Subcl> subclasses;
     private final ColorClass cc; // the corresponding color class
     
+    private Interval card;
+    
     /**
      * build a color type from a proper, non empty subset of static subclasses
      * @param set a set of static subclasses
@@ -50,12 +52,14 @@ public final class SubclSet implements Color {
     
     @Override
     public Interval card() {
-        Iterator<? extends Subcl> it = this.subclasses.iterator();
-        Interval res = it.next().card();
-        while (it.hasNext())
-            res = res.sum(it.next().card());
+        if (this.card == null) {
+            Iterator<? extends Subcl> it = this.subclasses.iterator();
+            this.card = it.next().card();
+            while (it.hasNext())
+                this.card = this.card.sum(it.next().card());
+        }
         
-        return res;
+        return this.card;
     }
     
     @Override

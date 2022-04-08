@@ -1,6 +1,7 @@
 package wncalculus.logexpr;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 import wncalculus.expr.MultiArgs;
 import wncalculus.expr.N_aryOp;
 import wncalculus.tuple.FunctionTuple;
@@ -49,6 +50,7 @@ public interface AndOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E> {
     default boolean isAndForm( ) {
         return true ;
     }
+   
     
     /**
      * @return true if and only if <code>this</code> operator is formed solely by terminals
@@ -74,7 +76,7 @@ public interface AndOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E> {
         if (res instanceof AndOp) { 
             E False = getFalse().cast();
             AndOp<E> aop = (AndOp<E>) res;
-            Collection<E> args = aop.getArgs();
+            Collection<? extends E> args = aop.getArgs();
             if ( args. contains(False) || ! type().equals( FunctionTuple.class) && checkComplementary(args))
                 return False;
             

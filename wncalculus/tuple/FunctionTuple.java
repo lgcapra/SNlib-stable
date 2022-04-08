@@ -29,21 +29,7 @@ public interface FunctionTuple extends SetExpr, Transposable /*, SNfunction*/ {
     default TupleTranspose buildTransp() {
         return new TupleTranspose(this);
     }
-    
-    /**
-     * gets the basic composition between this and a specified FunctionTuple,
-     * assumed already simplified w.r.t. domain-specific rules
-     * @param right the specified FunctionTuple to be right composed with this
-     * @return the result of the composition this \circle right; <code>null</code>
-     * if such a composition cannot be performed, due to the form of either
-     * the left (this) or the right term needs further simplifications
-     * @throws wncalculus.expr.IllegalDomain
-     * default implementation
-     */
-    default FunctionTuple baseCompose ( FunctionTuple right) {
-        return null;
-    }
-    
+        
         
       @Override
       default FunctionTuple notFactory(LogicalExpr arg) {
@@ -146,7 +132,7 @@ public interface FunctionTuple extends SetExpr, Transposable /*, SNfunction*/ {
      * with the applied filter, cannot be computed
      */
     default Pair<Integer,FunctionTuple> applyFilter(Guard f) {
-        FunctionTuple fx = (FunctionTuple) new FilteredTuple(f, this).normalize(true);
+        FunctionTuple fx = (FunctionTuple) FilteredTuple.factory(f, this).normalize(true);
         Integer c = fx.cardLb();
         if (c != null)
             return new Pair<>(c,fx);

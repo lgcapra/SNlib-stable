@@ -98,9 +98,9 @@ public class Expressions {
                 if (l.size() > 1) {
                    HashMap<E,List<Sort>> sorts_map = new HashMap<>(); //map between terms and their sorts (the list are ordered)
                    l.forEach( t -> { sorts_map.put(t, t.getSorts()); });
-                   Comparator<E> tcomp = (t1, t2) -> { //comparator for ordered list of sorts (of the same size)
+                   Comparator<E> tcomp = (t1, t2) -> { //comparator for ordered list of sorts (of the same fixedSize)
                        int cmp = 0;
-                       List<Sort> l1 = sorts_map.get(t1), l2 = sorts_map.get(t2); //l1 and l2 should have the same size
+                       List<Sort> l1 = sorts_map.get(t1), l2 = sorts_map.get(t2); //l1 and l2 should have the same fixedSize
                        for (int i = 0; i < l1.size() && (cmp = l1.get(i).compareTo(l2.get(i))) == 0 ; ++i) {}
                        
                        return cmp;
@@ -153,13 +153,13 @@ public class Expressions {
     }
     
    /**
-    * checks the co-domains of a collection of expressions; in the case the flag <code>size</code> is set,
+    * checks the co-domains of a collection of expressions; in the case the flag <code>fixedSize</code> is set,
     * checks also the co-domains
     * @param terms a collection of expressions
     * @throws IllegalDomain if the co-domains  of the expressions are not congruent
     */
     public static void checkArity(Collection<? extends Expression> terms) {
-        Util.checkProperty(terms, Expression::sameArity, e-> "dom: "+e.getDomain()+" codom: "+e.getCodomain(), IllegalDomain.class);
+        Util.checkProperty(terms, Expression::sameArity, e-> ("dom: "+e.getDomain()+"\ncodom: "+e.getCodomain()), IllegalDomain.class);
     }
      
 }   

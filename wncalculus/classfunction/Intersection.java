@@ -18,7 +18,8 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
     private final static String OPSYMB = " * ";//the intersection op. symbol
     //hashing 
     private Interval card; 
-    private Integer extended_compl;
+    private Integer extended_compl, splitdelim;
+   
     
     private Intersection (Set<? extends  SetFunction> args, boolean check) {
         super(args,check);
@@ -30,7 +31,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
      * @param arglist the collection of operands
      * @param check the color check flag
      * @return a either an intersection or a class-function, depending on whether
-     * the collection's size is greater than or equal to one
+ the collection's fixedSize is greater than or equal to one
      * @throws IllegalDomain if the functions have different colors
      * @throws NoSuchElementException if the passed collection is empty 
      */
@@ -44,7 +45,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
      * checking the function's color-classes
      * @param arglist  the collection of operands
      * @return a either an intersection or a class-function, depending on whether
-     * the collection's size is greater than or equal to one
+     * the collection's fixedSize is greater than or equal to one
      */
     public static SetFunction factory(Collection<? extends SetFunction> arglist) {
         return factory(arglist, true);
@@ -55,7 +56,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
      * @param check the color check flag
      * @param args the list of functions
      * @return a either an intersection or a class-function, depending on whether
-     * the list's size is greater than or equal to one
+ the list's fixedSize is greater than or equal to one
      */
     public static SetFunction factory (boolean check, SetFunction ... args)  {
         return factory(Arrays.asList(args), check); 
@@ -66,7 +67,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
      * checking the function's color-classes
      * @param args the list of functions
      * @return a either an intersection or a class-function, depending on whether
-     * the list's size is greater than or equal to one
+     * the list's fixedSize is greater than or equal to one
      */
     public static SetFunction factory (SetFunction ... args)  {
         return factory(Arrays.asList(args), false); 
@@ -82,20 +83,12 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
         return Intersection.OPSYMB;
     }
 
-    /**
-     * @return <tt>true</tt> if and only if <code>this</code> intersection only
-     * contains elementary set-functions
-     * (the "empty" and "all" functions are not considered elementary)
-     */
-    public boolean isElementary() {
-       return size() ==  congruent(true).size() + congruent(false).size() + subclSize() ;
-    }    
- 
     /** 
      * @return the "cardinality" of this intersection term, if it is formed exclusively by ProjectionComp(s)
      * and possibly one Subcl
-     * CAREFUL assumes that the intersection-form is "simple" (constant-size), i.e., for each pair S - X_i, S- X_j,
-     * i != j,  X_i != X_j; it also checks the presence of the Empty function; if card cannot be computed it returns null  
+     * CAREFUL assumes that the intersection-form is "simple" (constant-fixedSize), i.e., for each pair S - X_i, S- X_j,
+     * i != j,  X_i != X_j; it also checks the presence of the Empty function;
+     * if card cannot be computed returns <code>null</code>  
      */ 
     @Override
     public Interval card() {
@@ -177,45 +170,63 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
     }        
     
     
-    /** this version assumes that the left operand (this) is
+    /** 
+     * this version assumes that the left operand (this) is
      * a simplified single-indexed, pure generalised complement (defined on an ordered class);
      * @param right the right operand
      * @return the composition result between <code>this</code> (assumed a
      * unary function) and <code>right</code>
-     * NOTE the case S-X_1 \cap S_{1,k} is not considered given that, when separating
+     * IMPORTANT NOTE the case S-X_1 \cap S_{1,k} is not considered given that, when separating
      * a left-composed tuple in an intersection of single-index tuples, constants factors are
-     * separated too (otherwise this case should be considered here...)
+     * separated too (otherwise also this case should be considered here...)
      */
     @Override
     public SetFunction baseCompose(SetFunction right) {
-        int size ;
-        SetFunction res = null;
         Interval rcard  = right.card();
-        ColorClass cc;
-        if (rcard != null)
-            if (rcard.singleValue(1)) { // right's cardinality is exactly one...
+        if (rcard != null) {
+            //System.out.println("right card:" + rcard); //debug
+            if ( rcard.singleValue(1)) { // base case: right's cardinality is one...
                 List<SetFunction> res_args = new ArrayList<>();
                 getArgs().forEach( f -> { res_args.add(new ClassComposition(f, right)); });
-                res = Intersection.factory(res_args);
-            }
-            else if ((cc = getSort()). isOrdered() ) {
-                Set<Integer> succargs = extendedComplSucc(); // the successor arguments...
-                if ( (size = succargs.size()) != 0 ) 
-                    if ( rcard.lb() > size )
-                        res = All.getInstance(cc);
-                    else if ( (size = cc.ccSize()) != 0 ) { // fixed card: the intersection of complements becomes a sum of projection succesors ...    
-                        Set<SetFunction> newargs = new HashSet<>();
-                        for (int h : Util.missing(succargs, 0, size)) // the composition outcome is directly computed ...
-                            newargs.add(Successor.factory(h, right));
-                        res = Union.factory(newargs, false); // the obtained sum may be not disjoint
+                return Intersection.factory(res_args);
+            } else {
+                ColorClass cc = getSort();    
+                if (cc. isOrdered() ) {
+                    Set<Integer> succargs = extendedComplSucc(); // the successor arguments...
+                    final var ecsize = succargs.size();
+                    if ( ecsize > 0 ) { 
+                        if ( rcard.lb() > ecsize )
+                            return All.getInstance(cc);
+                        if ( cc.fixedSize() > 0 ) { // fixed card: the intersection of complements becomes a sum of projection succesors ...    
+                            Set<SetFunction> newargs = new HashSet<>();
+                            Util.missing(succargs, 0, cc.fixedSize()).forEach(h -> {
+                                newargs.add(Successor.factory(h, right));
+                            }); // the composition outcome is directly computed ... we may further optimize using a closed formula? may be at tuple level
+                            return Union.factory(newargs, false); // the obtained sum may not be disjoint
+                        }
+                        //else: a split should be done (new)
+                        this.splitdelim = ecsize  - rcard.lb()  + 1; //this amount is > 0  
                     }
+                }
             }
+        }
         
-        return res;
+        return null;
     }
     
     @Override
-    public int splitDelim () { //new
+    public int splitDelim () { //new (partial solution)
+        if (this.splitdelim != null) {
+            //System.out.println("delim ("+this+"): "+this.splitdelim);
+            int d = this.splitdelim;
+            this.splitdelim = null; // we reset
+            return d;
+        } else {
+            Interval mycard = card();
+            return  mycard  != null &&  ! mycard.singleton() && mycard.lb() <= 1 ? 1 : super.splitDelim();
+        }
+    }
+    public int splitDelimV0 () { //new
         Interval mycard = card();
         
         return  mycard  != null &&  mycard.lb() <= 1 && mycard.ub() != 0 ? 
@@ -248,34 +259,36 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
         return Intersection.factory(ClassFunction.setDefaultIndex( getArgs() ));
     }
            
-    
+     
     @Override
-    public Set<? extends Pair<? extends SetFunction, ? extends Guard> > toSimpleFunctions (Set<? extends Equality> ineqlist, Map<Projection, Subcl> inmap, Map<Projection, Set<Subcl>> notinmap, Domain domain) {
+    public Set<? extends Pair<? extends SetFunction, ? extends Guard> > toSimpleFunctions (final Set<? extends Equality> ineqlist, final Map<Projection, Subcl> inmap, final Map<Projection, Set<Subcl>> notinmap, Domain domain) {
         //System.out.println("Intersection.toSimpleFunctions (1)\n"+this);
-        HashSet< Pair <SetFunction , Guard> > res = new HashSet<>();
+        Set< Pair <SetFunction , Guard> > res = new HashSet<>();
         //if (  hasSimplifiedForm() ) { // is an intersection in simplified form
         Projection pr;
         Set<? extends SetFunction> operands = getArgs();
         if ( congruent(true).isEmpty() ) {  // no Projection in the operands' list - only ProjectionComp(s) and (at most) one Subcl
             HashSet<SetFunction> red_args ;
             boolean reduced = false;
-            Set<Subcl> constset = subclasses();
-            if ( ! constset.isEmpty() ) {  // there is a subclass
-                Subcl f = constset.iterator().next();    
+            Set<Subcl> subclasses = subclasses();
+            if (subclasses.size() > 1)
+                throw new IllegalArgumentException("intersection with more subclasses! (should be empty)"); //added for safety reasons!
+            if ( ! subclasses.isEmpty() ) {  // there is one subclass
+                final Subcl subc = subclasses.iterator().next();    
                 for (SetFunction x : operands) {
                     Subcl sc ; // the (possiby null) subclass associated with the arg X_i (pr) of pc by an "in" clause
-                    if (f.equals(x) || f.equals(sc = inmap.get(pr = ((ProjectionComp) x).getArg() ) ) ) // the i-th sublist contains only ProjectionComp
+                    if (subc.equals(x) || subc.equals(sc = inmap.get(pr = ((ProjectionComp) x).getArg() ) ) ) // the i-th sublist contains only ProjectionComp
                         continue;
-                    //  there is no the clause X_i in f
+                    //System.out.println(this+", "+inmap+ ", "+notinmap); //  there is no the clause X_i in subc
                     red_args = new HashSet<>(operands);
-                    red_args.remove(x); // S - X_i  (pc) is erased from the copy of args of f
+                    red_args.remove(x); // S - X_i  (pc) is erased from the copy of args of subc
                     SetFunction redf = Intersection.factory(red_args); 
-                    if (sc != null || notinmap.getOrDefault(pr, Collections.EMPTY_SET).contains(f) ) // there is either X_i in sc, sc != f, or X_i notin f 
-                        res.add(new Pair<>(redf, null));  // (null means true) the pc's arg refers to a subclass other than f ...
-                    else { // neither the pc's arg X_i belongs to any subclass != f nor there is X_i notin f
-                        if ( f.card().ub() != 1 ) // f is not a singleton subclass
-                            res.add(new Pair<>(this, Membership.build(pr, f, domain))); // S - X_i \cap f [X_i in f] -> 0 if |f| = 1 (optimization)
-                        res.add(new Pair<>(redf, Membership.build(pr, f, false, domain)));
+                    if (sc != null || notinmap.getOrDefault(pr, Collections.EMPTY_SET).contains(subc) ) // there is either X_i in sc, sc != subc, or X_i notin subc 
+                        res.add(new Pair<>(redf, True.getInstance(domain)));  // the pc's arg refers to a subclass other than subc ...
+                    else { // neither the pc's arg X_i belongs to any subclass != subc nor there is X_i notin subc
+                        if ( subc.card().ub() != 1 ) // subc is not a singleton subclass
+                            res.add(new Pair<>(this, Membership.build(pr, subc, domain))); // S - X_i \cap subc [X_i in subc] -> 0 if |subc| = 1 (optimization)
+                        res.add(new Pair<>(redf, Membership.build(pr, subc, false, domain)));
                     }
                     reduced = true;
                     break;
@@ -318,11 +331,11 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
             for (Subcl s : subclasses()) // new memberships
                 new_guards.add (Membership.build(pr, s, domain)); 
 
-            res.add(new Pair<>(pr, And.buildAndForm(new_guards)));
+            res.add(new Pair<>(pr, And.factory(new_guards)));
         } 
         //}
         //System.out.println("ecco torightcompset: "+res);
-        return res.isEmpty() ? super.toSimpleFunctions (null, null, null,null) : res;
+        return res; 
     }
     
     
@@ -336,6 +349,10 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
         
         return notinmap.getOrDefault(p2, Collections.EMPTY_SET).contains(sc1) || notinmap.getOrDefault(p1, Collections.EMPTY_SET).contains(sc2);
     }
-
+    
+    @Override
+    public boolean elementary() {
+        return getArgs().stream().allMatch(e -> elementary());
+    }
     
 }

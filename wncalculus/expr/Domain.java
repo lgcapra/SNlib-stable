@@ -65,7 +65,7 @@ public final class Domain {
     
     /**
      * 
-     * @return the domain's size, i.e., the size of its support  
+     * @return the domain's fixedSize, i.e., the fixedSize of its support  
      */
     public int size() {
         return this.domain.size();

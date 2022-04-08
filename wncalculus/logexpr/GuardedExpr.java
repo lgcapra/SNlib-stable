@@ -30,25 +30,21 @@ public interface GuardedExpr<E extends LogicalExpr> extends NonTerminal {
      * @throws ClassCastException if the concrete type of <code>guard</code> is not
      * the expected one
      */
-    GuardedExpr<E> build(E expr, LogicalExpr guard);
+    E build(E expr, LogicalExpr guard);
     
     
     @Override
     default Expression genSimplify() {
-        LogicalExpr g = guard();
+        LogicalExpr g = guard().normalize();
         E e = expr();
-        if (g == null || ( g = g.normalize() ).isTrue() )
+        if (g.isTrue() )
             return e;
         
         if ( g.isFalse() )
-        	return e.getFalse();
+           return e.getFalse();
         
         LogicalExpr f = e.normalize();
-        if (f.isFalse())
-        	return f;
-        
-        
-        return  build(f.cast(), g);
+        return f.isFalse() ?  f : build(f.cast(), g);
     }
     
 }

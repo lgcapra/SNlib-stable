@@ -8,6 +8,7 @@ import wncalculus.expr.Interval;
 import wncalculus.expr.NonTerminal;
 import wncalculus.guard.Equality;
 import wncalculus.util.Util;
+import static wncalculus.classfunction.Projection.*;
 
 /**
  *
@@ -21,33 +22,42 @@ public final class InequalityGraph extends  Graph<Projection> {
     private HashMap<Integer, HashSet<Projection>> imap; // the "index" map of this graph ("hashing")
     
     /**
-     * builds an empty graph of inequalities
+     * builds an empty graph of inequalities (private)
      */
-    public InequalityGraph () {
-        this.imap = new HashMap<>();
+    /*private*/public InequalityGraph () {
     }
     
+    private static InequalityGraph Empty; //empty 
     
-    /** builds an inequation graph from a collection of inequalities (assumed
-     * of the same colour) by adding (if needed) the implicit ones
-     * the resulting graph has a "minimal" form, possibly different from the "canonical" form of inequations
-     * if any inequation (edge) cannot be added, typically because some further rewriting is needed,
-     * then a <code>null</code> graph is built
-     * @param c a collection of inequalities 
-     * @param  
-     * @throws NoSuchElementException in the case of an empty collection
-     * @throws Error if the inequality graph's building fails
+    /**
+     * @param cc a color class
+     * @return an empty inequality graph
+     */
+    public static InequalityGraph Empty(ColorClass cc) {
+        if (Empty == null) {
+            Empty = new InequalityGraph();
+            Empty.cc = cc;
+        } 
+        return Empty;
+    }
+    
+    /** builds an inequation graph from a (non-empty) set of inequalities (assumed of the same colour)
+     *  by adding (if needed) the implicit ones
+     *  the resulting graph has a "minimal" form, possibly different from the "canonical" form of inequations
+     *  @param c a collection of inequalities 
+     *  @throws NoSuchElementException in the case of an empty set
+     *  @throws Error if the graph'X building fails
      */
     public InequalityGraph (Set<? extends Equality> c)  {
-            this();
-            this.cc = c.iterator().next().getSort();
-            Function<Equality,Boolean> addEdge = this.cc.isOrdered() ?  e -> addOrdIneq(e) : e -> addIneq(e);
-            for (Equality eq : c) 
-                if (! addEdge.apply(eq) ) {
-                    System.out.println("failed adding: "+eq.toStringDetailed()+ " "+eq.hashCode());
-                    System.out.println("from set: "+c);
-                    throw new Error("inequality graph building failed\n:"+c);
-                }
+        this.cc = c.iterator().next().getSort();
+        this.imap = new HashMap<>();
+        Function<Equality,Boolean> addEdge = this.cc.isOrdered() ?  e -> addOrdIneq(e) : e -> addIneq(e);
+        for (Equality eq : c) 
+            if (! addEdge.apply(eq) ) {
+                System.out.println("failed adding: "+eq.toStringDetailed()+ " "+eq.hashCode());
+                System.out.println("from set: "+c);
+                throw new Error("inequality graph building failed\n:"+c);
+            }
     }
     
     
@@ -76,7 +86,7 @@ public final class InequalityGraph extends  Graph<Projection> {
    
     /**
      * add an arc to <code>this</code> graph preserving node minimality (it means that,
-     * in the case of an ordered class, projection's successors may be rearranged)
+     * in the case of an ordered class, projection'X successors may be rearranged)
      * and adding possible implicit inequalities between nodes with the same index
      * (conjecture: calculates a vertex-minimal graph)
      * @param v1 first vertex
@@ -128,14 +138,13 @@ public final class InequalityGraph extends  Graph<Projection> {
     
     
     /**
-     * computes the difference mod-n (considering the graph's colour class size
-     * in the non-parametric case)
+     * computes the difference mod-n (considering the colour class constant size in the non-parametric case)
      * @param a a value
      * @param b a value
      * @return computes the difference (a-b) mod-n (considering the graph's colour class)
      */
     private int offset(int a, int b) {
-        int size = this.cc.ccSize(), diff = a - b;
+        int size = this.cc.fixedSize(), diff = a - b;
         if (size > 0) // the color class is non-parametric
             diff = Util.valueModN(diff, size);
         
@@ -196,12 +205,12 @@ public final class InequalityGraph extends  Graph<Projection> {
     
     /**     
      * destructively removes a set of nodes from this inequation graph
-     * builds on <code>Graph.removeAllVertices</code>
+     * builds on <code>Graph.removeVertices</code>
      * @param vlist a set of nodes to be removed
      * @return <code>this</code>
      */
     public InequalityGraph removeAll (Collection<? extends Projection> vlist) {
-        removeAllVertices(vlist);
+        removeVertices(vlist);
         vlist.forEach( v -> {
             int k = v.getIndex();
             Set<Projection> x = this.imap.get(k);
@@ -214,7 +223,7 @@ public final class InequalityGraph extends  Graph<Projection> {
     
     /**
      * 
-    * @return the index-set of graph's vertices  
+    * @return the index-set of graph'X vertices  
      */
     public Set<? extends Integer> indexSet () {
         return this.imap.keySet();
@@ -222,8 +231,8 @@ public final class InequalityGraph extends  Graph<Projection> {
     
     /**
      * 
-     * @param k a specified position (it usually denotes the original size of an extended tuple..)
-     * @return the set of graph's vertex indexes greater than k  
+     * @param k a specified position (it usually denotes the original fixedSize of an extended tuple..)
+     * @return the set of graph'X vertex indexes greater than k  
      */
     public Set<Integer> indexSetGt (int k) {
         Set<Integer> iset = new HashSet<>();
@@ -234,16 +243,15 @@ public final class InequalityGraph extends  Graph<Projection> {
         
     
     /**
-     * computes the cardinality of the sum of tuple's components (representing variable domains)
-     * that are referred to by inequalities
+     * computes the cardinality of the sum of tuple'X components (representing variable domains)
+ that are referred to by inequalities
      * @param t the right-tuple, in the form of a list
      * @return the cardinality of the sum of components; <code>null</code> if it cannot be computed.
      * @throws ClassCastException if any term in t is not a SetFunction
      */
     public Interval ineqDomainCard (List<? extends ClassFunction> t)  {
        Set<SetFunction> comps = new HashSet<>(); //tuple components corresponding to inequalities
-       vertexSet().forEach(p -> { comps.add (Successor.factory(p.getSucc() , (SetFunction) t.get( p.getIndex() - 1 ))); 
-       });
+       vertexSet().forEach((var p) -> { comps.add (Successor.factory(p.getSucc() , (SetFunction) t.get( p.getIndex() - 1 ))); });
        SetFunction u = Union.factory(comps,false);
        if (u instanceof NonTerminal) //optimization
            u =  (SetFunction) u.normalize( );
@@ -252,9 +260,9 @@ public final class InequalityGraph extends  Graph<Projection> {
     }
    
     /**
-     * return the "cumulative" degree of this graph's vertexes
-     * with the specified index (disregarding by the way implicit
-     * relations between similar vertices)
+     * return the "cumulative" degree of this graph'X vertexes
+ with the specified index (disregarding by the way implicit
+ relations between similar vertices)
      * @param i the vertices' index
      * @return the cumulative degree of vertexes with index <code>i</code>
      * @throws NullPointerException if there are no such vertices
@@ -273,9 +281,9 @@ public final class InequalityGraph extends  Graph<Projection> {
     }
     
     /**
-     @return <code>true</code> if and only if the corresponding guard is a single form
+     @return <code>true</code> if and only if the corresponding guard is a simple form
     */
-    public boolean isSingleForm() {
+    public boolean isSimpleForm() {
         return ! this.cc.isOrdered() || this.imap.values().stream().allMatch( e -> e.size() == 1 ) ;
     }
     
@@ -290,7 +298,7 @@ public final class InequalityGraph extends  Graph<Projection> {
     /*
     public boolean isClique (int k) {
         Collection<? extends Projection> restriction = vertexSetLe(k);
-        if (restriction.size() > 1) { // the singleton/empty graphs are cliques
+        if (restriction.fixedSize() > 1) { // the singleton/empty graphs are cliques
             Set<Projection> copy = new HashSet<>(restriction);
             restriction.remove(copy.iterator().next()); //optimization: it is sufficient to consider all nodes but one ...
             for (Projection p : restriction) {
@@ -335,6 +343,7 @@ public final class InequalityGraph extends  Graph<Projection> {
      */
     @Override
     public InequalityGraph clone () {
+
         InequalityGraph copy = (InequalityGraph) super.clone(); // deep copy of the graph structure
         copy.cc = this.cc;
         copy.imap = new HashMap<>(); // deep copy
@@ -345,30 +354,24 @@ public final class InequalityGraph extends  Graph<Projection> {
         
     @Override
     public String toString () {
-        return super.toString() +'\n'+this.cc+ (isSingleForm() ? "\nsingle form" : "")+'\n'+this.imap;
+        return super.toString() +'\n'+this.cc+ (isSimpleForm() ? "\nsingle form" : "")+'\n'+this.imap;
     }
     
     /**
      * 
-     * @param l the (possibly null) associated right-tuple
+     * @param l the (possibly null) associated tuple
      * @return the split-delimiter of the corresponding inequality-set, that is,
      * the maximal offset between successors (with the same index ?)
      */
     public int splitDelimiter(List<? extends ClassFunction> l) {
-        int delim = 0, min = Integer.MAX_VALUE, max = Integer.MIN_VALUE, s;
-        if ( ! isSingleForm() ) {  
-            for (Projection v : vertexSet()) { // too weak ...
-                min = Math.min(min, s = v.getSucc());
-                max = Math.max(max, s);
-            }
-            delim = max - min;
-        }
-        if (l != null && delim < this.cc.lb()   /*&& this.cc.isOrdered() */) { //may be we can limit to ordered classes
+        int delim = isSimpleForm() ? 0 : succDelim(maxSuccOffset(vertexSet(), this.cc), this.cc);
+        if (delim == 0 && l != null) { //may we restrict to ordered classes?
            Interval ineqCard = ineqDomainCard(l);
            if (ineqCard == null)
-               ineqCard = this.cc.card(); // if cannot be computed we consider the "worst" case
-           if ( (s = chromaticNumber() ) >= ineqCard.lb() )
-               delim = s;
+               ineqCard = this.cc.card(); // if the variables "domains" cannot be computed we consider the "worst" case
+           var X = chromaticNumber() - ineqCard.lb();
+           if ( X  > 0)
+               delim = X;
         }
         //System.out.println("splitdelim di "+this+": "+delim);
         return delim;
@@ -382,12 +385,11 @@ public final class InequalityGraph extends  Graph<Projection> {
     public Set<HashSet<Integer>> connectedIndices () {
     	Set<HashSet<Integer>> i_set = new HashSet<>();
     	for (Set<Projection> x : connectedComponents() ) {
-    		HashSet<Integer> i_x = new HashSet<>();
-    		for (Projection p : x)
-    			i_x.add(p.getIndex());
-    		i_set.add(i_x);
+            HashSet<Integer> i_x = new HashSet<>();
+            x.forEach(p -> { i_x.add(p.getIndex()); });
+            i_set.add(i_x);
     	}
-    	
+   
     	return i_set;
     }
     

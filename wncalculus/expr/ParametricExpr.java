@@ -85,9 +85,9 @@ public interface ParametricExpr extends Expression {
       */
      default boolean isParametric() {
          Set<Sort> supp = getDomain().support();
-         boolean par = supp.stream().anyMatch(s ->  s.ccSize() == 0 );
+         var par = supp.stream().anyMatch(s ->  ! s.hasFixedSize()  );
          if (!par)
-             par = getCodomain().support().stream().anyMatch(s ->  supp.contains(s) && s.ccSize() == 0 );
+             par = getCodomain().support().stream().anyMatch(s ->  supp.contains(s) && ! s.hasFixedSize()  );
          
          return par; 
      }

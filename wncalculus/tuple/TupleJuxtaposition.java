@@ -25,7 +25,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
     private TupleJuxtaposition (List<? extends FunctionTuple> tuples, boolean check)  {
         //if (check)
             Expressions.checkDomain(tuples);
-        this.codom  = buildCodomain( tuples );
+        this.codom  =  buildCodomain( tuples );
         this.tuples =  Collections.unmodifiableList(tuples);
     }
     
@@ -147,12 +147,10 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
            for (FunctionTuple x : this.tuples ) {
                Tuple t = x instanceof AllTuple ? ((AllTuple)x).asTuple() : (Tuple) x;
                t_list.addAll( t.getComponents());
-               if (t.filter() != null)  //optimization
-                   f.add(t.filter().clone(cd));  // the domains of the inner filters are different from the terms's codomain...
-               if (t.guard() != null) 
-                   g.add(t.guard());
+               f.add(t.filter().clone(cd));  // the domains of the inner filters are different from the terms's codomain...
+               g.add(t.guard());
            }
-           res = new Tuple(And.buildAndForm(f), cd, t_list, And.buildAndForm(g, d), d);
+           res = new Tuple(And.factory(f), t_list, And.buildAndFormWithD(g, d));
        }
        else if ((t_pos = Util.indexOf(this.tuples, TupleSum.class)) >= 0) {
             TupleSum t_op = (TupleSum) this.tuples.get(t_pos);

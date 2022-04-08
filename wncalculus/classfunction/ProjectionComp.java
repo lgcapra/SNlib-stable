@@ -36,7 +36,7 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
     */
     public static ProjectionBased factory (Projection pr) {
         ColorClass cc = pr.getSort();
-        if (cc.isOrdered() && cc.ccSize( ) == 2) 
+        if (cc.isOrdered() && cc.fixedSize( ) == 2) 
             return pr.setExp(pr.getSucc() == 0 ? 1 : 0);
         
         ProjectionComp pc;
@@ -49,13 +49,13 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
     
     
     @Override
-    public Integer getIndex() {
+    public int getIndex() {
         return this.pr.getIndex();
     }
 
    
     @Override
-    public Integer getSucc() {
+    public int getSucc() {
         return this.pr.getSucc();
     }
       
@@ -87,8 +87,11 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
             int lb= rcard.lb();
             if (lb  > 1) 
                 res = All.getInstance(getSort());
-            else if (lb == 1 && rcard.singleValue())
+            else if (lb == 1 && rcard.ub() == 1)
                 res = Complement.factory(Successor.factory(getSucc(),right));
+            else {
+                //System.err.println("cannot solve "+this+'.'+right.toStringDetailed()); //debug
+            }
         }
         
         return res;

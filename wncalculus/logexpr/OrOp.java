@@ -1,7 +1,6 @@
 package wncalculus.logexpr;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import wncalculus.expr.Expression;
 import wncalculus.expr.N_aryOp;
@@ -90,7 +89,7 @@ public interface OrOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E>  {
         if (res instanceof OrOp ) {
             E True = getTrue().cast();
             OrOp<E> orop = (OrOp<E>) res;
-            Collection<E> args = orop. getArgs(); 
+            Collection<? extends E> args = orop. getArgs(); 
             if ( args. contains(True) || ! type().equals( FunctionTuple.class) && checkComplementary(args) )
                 return True ;
             //new

@@ -144,7 +144,7 @@ public final class Membership extends ElementaryGuard  {
     
     @Override
     public int splitDelim() {
-        return getArg1().splitDelim();
+        return getArg2().splitDelim();
     }
     
     @Override
@@ -211,5 +211,12 @@ public final class Membership extends ElementaryGuard  {
         
         return Membership.build(getArg1().clone(cc), sc, sign(), newdom);
     }
+    
+    //new
+    @Override
+    public Map<ColorClass, Map<Boolean, Set<Membership>>> membMap() {
+        return Collections.singletonMap(getSort(), Collections.singletonMap(sign(), Collections.singleton(this)));
+    }
+
     
 }

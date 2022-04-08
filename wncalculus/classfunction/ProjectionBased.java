@@ -14,14 +14,14 @@ public interface ProjectionBased extends SingleSortExpr {
       * 
       * @return the function's index
       */
-     Integer getIndex() ;
+     int getIndex() ;
   
     /**
      *
      * @return the successor parameter of <tt>this</tt> function
      * (0 if the function's color-class is not ordered)
      */
-    Integer getSucc();
+    int getSucc();
     
     /**
      * 

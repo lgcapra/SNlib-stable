@@ -39,7 +39,6 @@ public class Main {
                      c1 = new ColorClass(1,i3/*i5*/,true),
                      c1bis = new ColorClass(1,i4,true), //compatible with c1
                      c2 = new ColorClass(2,new Interval[] {i2,i2,i7}), // split
-                     c0ord = new ColorClass(2,new Interval[] {i6,i2,i2}, true), // split and ordered
                      c3 = new ColorClass(3,i4),
                      c4 = new ColorClass(4,i5),
                      c5 = new ColorClass(5,i5,false),
@@ -49,7 +48,7 @@ public class Main {
                      X = new ColorClass("X",i,true), 
                      c6 = new ColorClass(6,i6,true), // a fixed-k color class of card 4;
                      C = new ColorClass("C",new Interval[] {i,i}),
-                     c_neutral = new ColorClass("N", new Interval[] {i2}); // neutral class
+                     c_neutral = new ColorClass("N", i2); // neutral class
     
     
      /*
@@ -105,9 +104,9 @@ public class Main {
         
         test0();
         
-        testBag();
-        //if (true) return;
+        //testBag();
         
+        System.out.println("\n*** testGuard *** ");
         testGuard();
         Util.getChar();
         //test of new, possibly ordered, split classes
@@ -276,10 +275,10 @@ public class Main {
         System.out.println("normalizzo\n"+ f7+ "\n"+Expressions.toStringDetailed(f7.simplify()));
         Tuple t1,t2,t3;
         Domain d2 = new Domain(c2,c2), d1;
-        t1 = new Tuple(null, null, d2, f6); t2 = new Tuple(null, null, d2, f7);
+        t1 = new Tuple(d2, f6); t2 = new Tuple(d2, f7);
         TupleSum ts = (TupleSum) TupleSum.factory(false,t1,t2);
         System.out.println("semplifico\n"+ ts+ "\n"+Expressions.toStringDetailed(ts.simplify()));
-        t1 = new Tuple(null, null, d2,f1); t2 = new Tuple(null, null,d2,f2);
+        t1 = new Tuple(d2,f1); t2 = new Tuple(d2,f2);
         
         ts = (TupleSum) TupleSum.factory(false,t1,t2);
         System.out.println("semplifico\n"+ ts.toStringDetailed()+ "\n"+Expressions.toStringDetailed(ts.simplify()));
@@ -320,7 +319,7 @@ public class Main {
         System.out.println("diff between: "+b1+" and "+b2+'\n'+BagDiff.build(b1,b2).normalize());
         Util.getChar();
         
-        t3 = new Tuple(null, null,d2, f6, f7);
+        t3 = new Tuple(d2, f6, f7);
         b3 = new FunctionTupleBag(Util.singleMap(t3, 2));
         BagComp<FunctionTuple> mset_c = new BagComp<>(b2,b3);
         System.out.println("compose: "+mset_c+"\nsemplifico:");
@@ -328,7 +327,7 @@ public class Main {
         System.out.println(b);
         Util.getChar();
         
-        Tuple t4 = new Tuple(null, null,d2, f2, pc1), t5 = new Tuple(null, null,d2, f1, f2), t6;
+        Tuple t4 = new Tuple(d2, f2, pc1), t5 = new Tuple(d2, f1, f2), t6;
         //System.out.println("T4: "+t4);
         LogicalBag<FunctionTuple> b4 = (LogicalBag<FunctionTuple>) mset_c.build(t4, t4, t5);
         System.out.println("b4: "+b4);
@@ -336,11 +335,11 @@ public class Main {
         System.out.println("map guardie-> max coeff: "+b4.mapGuardsToMaxCoefficients());
         Equality e1 = (Equality) Equality.builder((Projection) f1, (Projection)f2, true, d2),
                  e2 = e1.opposite();
-        LogicalBag<FunctionTuple> b5 = (LogicalBag<FunctionTuple>) mset_c.build(new FilteredTuple(e1,t4), new FilteredTuple(e1,t4), new FilteredTuple(e1,t5));
+        LogicalBag<FunctionTuple> b5 = (LogicalBag<FunctionTuple>) mset_c.build(FilteredTuple.factory(e1,t4), FilteredTuple.factory(e1,t4), FilteredTuple.factory(e1,t5));
         System.out.println("b5: "+b5);
         System.out.println("b5 normalizzato: "+ (b5 = (LogicalBag<FunctionTuple>) b5.normalize()));
         System.out.println("map guardie-> max coeff: "+b5.mapGuardsToMaxCoefficients());
-        t6 = new Tuple(null, null,d2, f2, f2);
+        t6 = new Tuple(d2, f2, f2);
         LogicalBag<FunctionTuple> b6 = (LogicalBag<FunctionTuple>) mset_c.build(t4, t4, t6);
         System.out.println("b6: "+b6);
         System.out.println("b6 normalizzato: "+b6.normalize());
@@ -357,7 +356,7 @@ public class Main {
         System.out.println("semplifico\n"+ f5.toStringDetailed()+ "\n");
         System.out.println(f5.simplify());
         //Util.getChar();
-        Tuple tx = new Tuple(null, Collections.singletonList(f5), null, d2);
+        Tuple tx = new Tuple(Collections.singletonList(f5), d2);
         System.out.println("semplifico\n"+ tx+ "\n"+Expressions.toStringDetailed(tx.simplify()));
         Util.getChar();
         
@@ -422,8 +421,8 @@ public class Main {
         f11 = Complement.factory(f17);
         System.out.println("semplifico\n"+ f11+"\n"+Expressions.toStringDetailed(f11.simplify()));
         
-        System.out.println("---testing bags---");
-        testBag();
+        //System.out.println("---testing bags---");
+        //testBag();
         
     }
     
@@ -484,14 +483,14 @@ public class Main {
         FunctionTuple in , f_t;
         TupleSum sum;
         Projection p1_bis  = Projection.builder (1,c2), p2_bis  = Projection.builder (2,c2);
-        Tuple t1  = new Tuple(null, null,d1,inter1,sc3,p1_1,p2,Intersection.factory(false,p4c,p3,sc3),/*new Unionp3,*/p4/*)*/),
-              t0_1 = new Tuple(null, null,d1, p3c, all, p3c), t0_2 = new Tuple(null, null,d1, p3,  all, p3c);
+        Tuple t1  = new Tuple(d1,inter1,sc3,p1_1,p2,Intersection.factory(false,p4c,p3,sc3),/*new Unionp3,*/p4/*)*/),
+              t0_1 = new Tuple(d1, p3c, all, p3c), t0_2 = new Tuple(d1, p3,  all, p3c);
         System.out.println(t0_1 + "(codom) " + t0_1.getCodomain()+ " (dom) " + t0_1.getDomain());
         Equality eq = (Equality) Equality.builder(p1_bis/*p3*/,p2_bis,true, t0_1.getCodomain());
-        Tuple t0_0 = new Tuple(/*f1.andFactory(*/eq/*,eq.opposite())*/,null,d1, p1_bis, p1_bis, p1_bis),
-              t0_3 = new Tuple(eq.opposite(), null, d1, ProjectionComp.factory(p1_bis).cast() ,ProjectionComp.factory(p1_bis).cast(), (SetFunction) p1_1.andFactory(p4,p3)),
-              t0_4 = new Tuple(/*eq.opposite()*/null, null, d1, all ,all, p3),
-              t0_5 = new Tuple(null, null,t0_3.getCodomain(), ProjectionComp.factory(p1_bis).cast(),ProjectionComp.factory(p2_bis).cast());
+        Tuple t0_0 = new Tuple(d1, p1_bis, p1_bis, p1_bis),
+              t0_3 = new Tuple(d1, ProjectionComp.factory(p1_bis).cast() ,ProjectionComp.factory(p1_bis).cast(), (SetFunction) p1_1.andFactory(p4,p3)),
+              t0_4 = new Tuple(d1, all ,all, p3),
+              t0_5 = new Tuple(d1, ProjectionComp.factory(p1_bis).cast(),ProjectionComp.factory(p2_bis).cast());
         
         System.out.println("trasposta di\n"+t0_3.toStringDetailed());
         System.out.println(t0_3.transpose().simplify());
@@ -534,11 +533,11 @@ public class Main {
         
         //System.exit(0);
         
-        TupleComposition tc = new TupleComposition(t0_5,t0_3);
+        TupleComposition tc = new TupleComposition(t0_5,new TupleTranspose(t0_3));
         System.out.println("\ncomposizione: "+tc);
         System.out.println("semplificazione:\n"+Expressions.toStringDetailed(tc.simplify()));
         
-        t0_5 = new Tuple(null, null,t0_3.getCodomain(),ProjectionComp.factory(p1_bis).cast(),ProjectionComp.factory(p1_bis).cast(),ProjectionComp.factory(/*p3*/p1_bis).cast());
+        t0_5 = new Tuple(t0_3.getCodomain(),ProjectionComp.factory(p1_bis).cast(),ProjectionComp.factory(p1_bis).cast(),ProjectionComp.factory(/*p3*/p1_bis).cast());
         tc = new TupleComposition(t0_5,t0_3);
         System.out.println("\ncomposizione: "+tc.toStringDetailed());
         System.out.println("semplificazione:\n"+Expressions.toStringDetailed(tc.simplify()));
@@ -560,7 +559,7 @@ public class Main {
         //System.out.println("ecco lo split di t1: "+Util.toStringDetailed(t1.split()));
         
         inter1 = (Intersection) p1_1.andFactory(p2c,p1c);
-        Tuple t2 = new Tuple(null, null,d1,inter1,sc3,p1_1,p2,
+        Tuple t2 = new Tuple(d1,inter1,sc3,p1_1,p2,
                 Intersection.factory(false,p4c,p3,sc3), (SetFunction)p1_1.andFactory(p3,p4));
         System.out.println("\necco t2\n"+t2);
         System.out.println("ecco t1 - t2");
@@ -571,8 +570,8 @@ public class Main {
         System.out.println("\necco somma\n"+sum);
         System.out.println("semplificazione:\n"+sum.simplify());
          
-        Tuple gt1 = new Tuple(Equality.builder(p1_1,p2,true, t1.getCodomain()), t1.getComponents(),null, t1.getDomain()),
-              gt2 = new Tuple (Equality.builder(p1_1,p2,false,t1.getCodomain()),t2.getComponents(), null, t1.getDomain()), gt3;
+        Tuple gt1 = new Tuple(Equality.builder(p1_1,p2,true, t1.getCodomain()), t1.getComponents(),t1.getDomain()),
+              gt2 = new Tuple (Equality.builder(p1_1,p2,false,t1.getCodomain()),t2.getComponents(), t1.getDomain()), gt3;
         System.out.println("\necco gt1\n"+gt1);
         System.out.println("ecco gt1 semplificata\n"+gt1.simplify());
         
@@ -604,8 +603,8 @@ public class Main {
         
         System.out.println("\n**** composizione fra tuple ***** ");
         
-        Tuple t4 = new Tuple(null, null,d1,inter1,sc3,p1_1,Diff.factory(sc3,p4), (SetFunction) p1_1.andFactory(p4c,sc3),p3,p4),
-              t3 = new Tuple(null, null,t4.getCodomain(), (SetFunction) p1_1.andFactory(p0c,p1c),p2c, (SetFunction) p1_1.andFactory(p1_1,p2),p4,p4);
+        Tuple t4 = new Tuple(d1,inter1,sc3,p1_1,Diff.factory(sc3,p4), (SetFunction) p1_1.andFactory(p4c,sc3),p3,p4),
+              t3 = new Tuple(t4.getCodomain(), (SetFunction) p1_1.andFactory(p0c,p1c),p2c, (SetFunction) p1_1.andFactory(p1_1,p2),p4,p4);
         
         FunctionTuple comp_res, res;
         //for (WNFunctionTuple t : simplify(t4))
@@ -632,8 +631,8 @@ public class Main {
         for (ColorClass cc : th_list.keySet()) {
             at[j++] = th_list.get(cc).toArray(new SetFunction[0]);
         }
-        t3_1 = new Tuple(null, Arrays.asList(at[0]), null, t3.getDomain()); 
-        t3_2 = new Tuple(null, Arrays.asList(at[1]), null, t3.getDomain());
+        t3_1 = new Tuple(Arrays.asList(at[0]), t3.getDomain()); 
+        t3_2 = new Tuple(null, Arrays.asList(at[1]), t3.getDomain());
         ft = TupleJuxtaposition.factory (true, t3_1,t3_2);
         System.out.println("giustapposizione delle parti omogenee di t3\n"+ ft );
         System.out.println("ecco la semplificazione ..\n"+ ft.simplify() );
@@ -641,7 +640,7 @@ public class Main {
               eq1_f = Equality.builder(p1_0,p2,false,t3_1.getCodomain()), eq2_f = Equality.builder(p1_1,p2,false,t3_1.getCodomain()),
               eq3_f , f3 = (Guard) eq1.andFactory(eq1_f, eq2_f/*,eq3_f*/);
         
-        gt3 = new Tuple(f3, t3_1.getComponents(),eq1,null);
+        gt3 = new Tuple(f3, t3_1.getComponents(),eq1);
         TupleProjection tp = new TupleProjection (gt3,2);
         System.out.println("\necco tp\n"+tp);
         System.out.println("semplifichiamo:\n"+Expressions.toStringDetailed(tp.simplify()));
@@ -651,18 +650,18 @@ public class Main {
         cf.set(1, ProjectionComp.factory(p1_0).cast());
         cf.set(2, ProjectionComp.factory(p1_0).cast());
        
-        gt3 = new Tuple(gt3.filter(), cf, gt3.guard(),null);
+        gt3 = new Tuple(gt3.filter(), cf, gt3.guard());
         System.out.println("\necco tp\n"+tp);
         System.out.println("semplifichiamo:\n"+Expressions.toStringDetailed(tp.simplify()));
         
         cf = new ArrayList<>(gt3.getComponents());
         cf.add(ProjectionComp.factory(p1_0).cast());
-        Tuple t0 = new Tuple(null, cf, null, d1);
+        Tuple t0 = new Tuple(cf, d1);
         eq1_f = Equality.builder(p1_0,p2,false,t0.getCodomain());
         eq2_f = Equality.builder(p1_0,p3_0,false,t0.getCodomain());
         eq3_f = Equality.builder(p3_0,p2,false,t0.getCodomain());
         f3 = And.factory(eq1_f,eq2_f,eq3_f);
-        tp = new TupleProjection(new Tuple(f3, t0.getComponents(),null, t0.getDomain()),2);
+        tp = new TupleProjection(new Tuple(f3, t0.getComponents(),t0.getDomain()),2);
         System.out.println("\necco tp\n"+tp);
         System.out.println("semplifichiamo:\n"+Expressions.toStringDetailed(tp.simplify()));
         System.out.println("semplifichiamo e compattiamo:\n"+tp.simplify());
@@ -708,7 +707,7 @@ public class Main {
         
         filter = (And) And.factory(eq1, ineq1, ineq2, ineq3 );
         guard  = (And) And.factory(eq2,ineq4);
-        Tuple t = new Tuple(filter,guard,d3,in1,in2,in1);
+        Tuple t = new Tuple(filter,guard,in1,in2,in1);
         TupleProjection tp = new TupleProjection(t,2);
         
         System.out.println(tp);
@@ -728,13 +727,13 @@ public class Main {
         
         List<SetFunction> args = Collections.nCopies(5, (SetFunction)p1c);
         args.set(1, Intersection.factory(false,p1c,ProjectionComp.factory(a1.setExp(1)).cast()));
-        Tuple sx = new Tuple(null,args,null, new Domain(A));
+        Tuple sx = new Tuple(args, new Domain(A));
         //sx.setComponent(1, a1);
         //sx.setComponent(2, Intersection.factory(false,p1c,ProjectionComp.factory(a1.setExp(1))));
         //sx.setComponent(3, Intersection.factory(false,p1c,ProjectionComp.factory(a1.setExp(1))));
         //sx.setComponent(4, a1);
         System.out.println("\nsx\n"+sx);
-        System.out.println(new TupleComposition(sx, new Tuple(null, Collections.singletonList(p1c),null,new Domain(A))).simplify());
+        System.out.println(new TupleComposition(sx, new Tuple(Collections.singletonList(p1c),new Domain(A))).simplify());
         //System.exit(0);
     }
     
@@ -745,8 +744,9 @@ public class Main {
         Projection p1,p2,p3,p4,p5;
         Subcl sc1,sc2,sc3,sc4;
         Guard g0,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,g11,g12;
-        p1= Projection.builder(1,-2,c1);
+        p1 = Projection.builder(1,-2,c1);
         p2 = Projection.builder(2,1,c1);
+        p3 = Projection.builder(3,-1,c1);
         g1 = Equality.builder(p1,p2,false,new Domain(c1,c1));
         g2 = Equality.builder(p2,p1,false,new Domain(c1,c1));
         if (!g1.equals(g2)) {
@@ -756,13 +756,15 @@ public class Main {
         
         System.out.println("ecco g1\n"+g1+" "+g1.getDomain());
         System.out.println("ecco g1 semplificato\n"+Expressions.toStringDetailed(g1.simplify()));
+        System.out.println("ecco g2\n"+g2+" "+g2.getDomain());
+        System.out.println("ecco g2 semplificato\n"+Expressions.toStringDetailed(g2.simplify()));
         p4 = Projection.builder(2,c1);
-        g2 =  Equality.builder(p1,p4,true,new Domain(c1,c1));
-        //g11 = And.factory(g1,g2,new True(g1.getDomain()));
-        //System.out.println("ecco g11\n"+g11);
-        //System.out.println("ecco g11 semplificato\n"+Expressions.toStringDetailed(simplify(g11)));
+        g2 =  Equality.builder(p1,p4,false,new Domain(c1,c1));
+        g11 = And.factory(Equality.builder(p1,p3,false,new Domain(c1,c1,c1)),Equality.builder(p2,p1,false,new Domain(c1,c1,c1)));
+        System.out.println("ecco g11\n"+g11);
+        System.out.println("ecco g11 semplificato\n"+Expressions.toStringDetailed(g11.simplify()));
         //System.out.println("ecco g11 semplificato (solo specSimplify)\n"+g11.specSimplify());
-        
+        //System.exit(0);
         sc1 = Subcl.factory(1, c2);
         sc2 = Subcl.factory(2, c2);
         sc3 = Subcl.factory(3, c2);
@@ -915,9 +917,9 @@ public class Main {
               g1_1 = Membership.build(c_1, S_1, true, d1),
               g1_2 = Membership.build(c_1, S_2, true, d1);
         Tuple t, tc1 , tc2;
-        t =  new Tuple(null, And.factory(g1,g2),null,c_2, c_1);
-        tc1 =new Tuple(g1_1, g1, null, c_1);
-        tc2 =new Tuple(g1_1, g1, null, c_2);
+        t =  new Tuple(And.factory(g1,g2),c_2, c_1);
+        tc1 =new Tuple(g1_1, g1, c_1);
+        tc2 =new Tuple(g1_1, g1, c_2);
         LogicalBag<FunctionTuple> I, t_bag;
         FunctionTuple[] a = new FunctionTuple[]{tc1,tc1,tc2};
         I = new FunctionTupleBag(Util.asMap(Arrays.asList(a)));
@@ -933,8 +935,8 @@ public class Main {
         System.out.println(t_bag.mapGuardsToMaxCoefficients());
         Util.getChar();
         
-        tc1 = new Tuple(g1_2, g1, null,  c_1);
-        tc2 = new Tuple(g1_2, g1, null, c_2);
+        tc1 = new Tuple(g1_2, g1, c_1);
+        tc2 = new Tuple(g1_2, g1, c_2);
         a = new FunctionTuple[]{tc1,tc1,tc2};
         I = new FunctionTupleBag(Util.asMap(Arrays.asList(a)));
         I_comp_t = new BagComp<>(I,new FunctionTupleBag(Util.singleMap(t, 1)));
@@ -946,7 +948,7 @@ public class Main {
         System.out.println("-->\n"+transp.normalize());
         Util.getChar();
         
-        tc2 = new Tuple(g1_1, g1, null, c_2);
+        tc2 = new Tuple(g1_1, g1, c_2);
         I = new FunctionTupleBag(Util.singleMap(tc2, 1));
         I_comp_t = new BagComp<>(I,new FunctionTupleBag(Util.singleMap(t, 1)));
         System.out.println("normalizzo:\n"+I_comp_t);
@@ -991,11 +993,12 @@ public class Main {
                  eq2 = (Equality) Equality.builder(c_2,c_4,false,d4);
         And ng1 = (And) And.factory(eq1,eq2);
         System.out.println(ng1.getSort());
-        wnt = new WNtuple(null,lb,ng1,d4, true);
-        System.out.println("expansion of "+wnt);
+        wnt = new WNtuple(lb,ng1,true);
+        System.out.println("\nexpansion of "+wnt);
+        var count = 0;
         for (WNtuple tx : wnt.singleIndexComponentsTuples()) {
-        	System.out.println("->\n"+tx);
-        	System.out.println("independent subtuples of"+tx+"->\n"+tx.independentComponentsV2());
+        	System.out.println("-> (\n"+ ++count +") "+tx);
+        	System.out.println("independent subtuples of "+tx+"->\n"+tx.independentComponentsV2());
             
         }
         /*BagComp<ElementaryFunction> bc = new BagComp<>(l,l1);
@@ -1031,8 +1034,8 @@ public class Main {
         Guard g1 = Membership.build(d_1, sd2, true, dom); // guard d_1 \in D{2}
         Tuple t1 , t2, t3;
         t1 = new Tuple(dom, c_1, comp_c_1, c_2, d_1); // <c_1,S-c_1,!c_2,d_1>
-        t2 = new Tuple(null, g1, dom, comp_c_1, c_2 , inter); // <S-c_1,!c_2,(S-d_1 * S_D{2})>[d_1 in D{2}]
-        t3 = new Tuple(null, g1, dom, comp_c_1, c_2 , d_1); // <S-c_1,!c_2,d_1 >[d_1 in D{2}]
+        t2 = new Tuple(g1, comp_c_1, c_2 , inter); // <S-c_1,!c_2,(S-d_1 * S_D{2})>[d_1 in D{2}]
+        t3 = new Tuple(g1, comp_c_1, c_2 , d_1); // <S-c_1,!c_2,d_1 >[d_1 in D{2}]
         System.out.println(t1+"\n (abstract) "+t1.toStringAbstract());
         System.out.println(t2+"\n (abstract) "+t2.toStringAbstract());
         System.out.println(t3+"\n (abstract) "+t3.toStringAbstract());

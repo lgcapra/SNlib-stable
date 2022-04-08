@@ -145,7 +145,7 @@ public final class TupleSum extends TupleNaryOp implements OrOp<FunctionTuple> {
     @Override
     public final Integer cardLb() {
         if (! this.disjoined ) {
-            System.err.println("non disgiunto: "+this);
+            System.err.println("non disjoined: "+this);
             return null;
         }
         

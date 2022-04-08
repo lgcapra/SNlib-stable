@@ -63,7 +63,7 @@ public interface N_aryOp<E extends ParametricExpr> extends MultiArgs<E,E>  {
        
     default E distribute ( Class<? extends N_aryOp> typenested ) {
         N_aryOp<E> nestedop1 = null, nestedop2 = null;
-        Collection<E> args = getArgs();
+        Collection<? extends E> args = getArgs();
         for (E e : args) 
             if (typenested.isInstance(e)) {
                 if (nestedop1 == null)

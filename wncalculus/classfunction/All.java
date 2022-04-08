@@ -2,9 +2,7 @@ package wncalculus.classfunction;
 
 import java.util.*;
 import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
 import wncalculus.expr.Interval;
-import wncalculus.expr.ParametricExpr;
 
 /**
  * this class defines diffusion class-functions (denoted by S)
@@ -72,5 +70,8 @@ public final class All extends ConstantFunction  {
         return getInstance(newcc);
     }
 
-    
+    @Override
+    public boolean elementary() {
+        return false;
+    }
 }

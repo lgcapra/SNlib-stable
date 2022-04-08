@@ -49,7 +49,7 @@ public final class FunctionTupleBag extends LogicalBag<FunctionTuple> implements
     @Override
     public FunctionTupleBag applyFilter(Guard f) {
         Map<FunctionTuple, Integer> mx = new HashMap<>();
-        asMap().entrySet().forEach(e -> { mx.put(new FilteredTuple(f, e.getKey()), e.getValue()); });
+        asMap().entrySet().forEach(e -> { mx.put(FilteredTuple.factory(f, e.getKey()), e.getValue()); });
         
         return new FunctionTupleBag(mx, disjoined());
     }

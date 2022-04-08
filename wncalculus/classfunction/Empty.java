@@ -42,6 +42,11 @@ public final class Empty extends ConstantFunction  {
         return new Interval(0,0);
     }
     
+    @Override
+    public boolean zeroCard () {
+        return true;
+    }
+    
    
     @Override
     public SetFunction baseCompose(SetFunction right) {
@@ -62,6 +67,11 @@ public final class Empty extends ConstantFunction  {
     @Override
     public SetFunction copy(ColorClass newcc) {
        return getInstance(newcc); 
+    }
+    
+    @Override
+    public boolean elementary() {
+        return false;
     }
     
 }

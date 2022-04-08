@@ -16,6 +16,7 @@ public interface SingleArg<E extends ParametricExpr, F extends ParametricExpr> e
     default F genSimplify() {
         //System.out.println("\nunary op genSimplify of " + this+':'+getClass()); //debug
         E s_arg = getArg().normalize(). cast(); 
+        // System.out.println("arg simplified:\n" + s_arg); //debug
         return s_arg != getArg() ? buildOp(s_arg) : cast();
     }
      

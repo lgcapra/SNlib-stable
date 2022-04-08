@@ -58,13 +58,16 @@ public class TestForSode {
               t3 = new Tuple(d2, x2, x2),  // t3: <x2, x2>
               t4 = new Tuple(d2, sc1, x2), // t4: <S{C1}, x2>
               t5 = new Tuple(d2, x1, x3), // t5: <x1, x3>
-              t6 = new Tuple(g, flist, e3,null); // t6: [x_1 in X{1},x_2 in X{2}]<S-x1,S-x1>[x_1 != x_2]
-        FilteredTuple ft1 = new FilteredTuple(e1, t1); // ft1: [x1 = x2] (<x2, S-x1>)
+              t6 = new Tuple(g, flist, e3); // t6: [x_1 in X{1},x_2 in X{2}]<S-x1,S-x1>[x_1 != x_2]
+        FunctionTuple ft1 = FilteredTuple.factory(e1, t1); // ft1: [x1 = x2] (<x2, S-x1>)
+        FunctionTuple ft2 = FilteredTuple.factory(e1,t2); // ft1: [x1 = x2] (<x2, S-x1>)
         
         
-        FilteredTuple ft2 = new FilteredTuple(e1,t2), // ft1: [x1 = x2] (<x2, S-x1>)
-                      ft3 = new FilteredTuple(g,t4), // ft2: [x1 = x2] (<x1, x2>)
-                      ft4 = new FilteredTuple(g,t5); // ft3: [x1 in C{1}, x2 notin C{1}](<S{C1}, x2>)
+        FunctionTuple ft3 = FilteredTuple.factory(g,t4); // ft2: [x1 = x2] (<x1, x2>)
+         // ft3: [x1 in C{1}, x2 notin C{1}](<S{C1}, x2>)
+        
+        
+         FunctionTuple ft4 = FilteredTuple.factory(g,t5); // ft3: [x1 in C{1}, x2 notin C{1}](<S{C1}, x2>)
         // arc-functions (bags)
         FunctionTupleBag builder = new FunctionTupleBag(t1,1);
         LogicalBag<FunctionTuple> in1 = (LogicalBag<FunctionTuple>) builder.build(t1, t1, t2), // in1: 2<x2, S-x1> + 1<x1, x2>

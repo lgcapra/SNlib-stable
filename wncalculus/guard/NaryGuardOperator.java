@@ -3,6 +3,7 @@ package wncalculus.guard;
 import java.util.*;
 import wncalculus.logexpr.AndOp;
 import wncalculus.classfunction.Projection;
+import static wncalculus.classfunction.Projection.*;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.*;
 import wncalculus.logexpr.LogicalExprs;
@@ -40,7 +41,8 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @return the (possibly empty) map of equalities included in <tt>this</tt> guard, grouped
      * by color (first) and sign
      */
-    public Map<ColorClass, Map <Boolean, SortedSet<Equality> > > equalityMap() {
+    @Override
+    public final Map<ColorClass, Map <Boolean, SortedSet<Equality> > > equalityMap() {
         if ( this.eq_map == null) 
             this.eq_map = Collections.unmodifiableMap( setEqualityMap() );
         
@@ -53,7 +55,8 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @return the (possibly empty) map of memberships included in <tt>this</tt> guard, grouped
      * by color (first) and sign
      */
-    public Map<ColorClass, Map <Boolean, Set<Membership> > > membershipMap() {
+    @Override
+    public final Map<ColorClass, Map <Boolean, Set<Membership> > > membMap() {
         if ( this.memb_map == null) 
             this.memb_map = Collections.unmodifiableMap( setMemberMap() );
         
@@ -134,8 +137,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      */
     public final Set<Membership> congruentMemb(ColorClass cc, boolean congr) {
         Map<Boolean, Set<Membership>> cmap;
-        
-        return !cc.isSplit() || (cmap = membershipMap().get(cc)) == null ? Collections.EMPTY_SET 
+        return !cc.isSplit() || (cmap = membMap().get(cc)) == null ? Collections.EMPTY_SET 
                   :  cmap.getOrDefault(congr == this.congrsign, Collections.EMPTY_SET); //efficient
     }
     
@@ -147,8 +149,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * specified sign (in/notin) and color
      */
     public final Set<Membership> membership (ColorClass cc, boolean sign) {
-        Map<Boolean, Set<Membership>> map = membershipMap().get(cc);
-        
+        Map<Boolean, Set<Membership>> map = membMap().get(cc);
         return map != null ? map.getOrDefault(sign, Collections.EMPTY_SET) : Collections.EMPTY_SET;
     }
             
@@ -161,7 +162,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     }
        
    @Override
-   public final Set</*? extends*/ Guard> getArgs() {
+   public final Set<? extends Guard> getArgs() {
         return this.args;
     }
    
@@ -175,7 +176,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
             eset.addAll(x.getOrDefault(false, Collections.emptySortedSet()));
         }
         
-        for (Map<Boolean, Set<Membership>> y : membershipMap().values()) {
+        for (Map<Boolean, Set<Membership>> y : membMap().values()) {
             eset.addAll(y.getOrDefault(true, Collections.emptySortedSet()));
             eset.addAll(y.getOrDefault(false, Collections.emptySortedSet()));
         }
@@ -216,18 +217,20 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     public Map<Sort, Integer> splitDelimiters ( ) {    
         Map<Sort, Integer> delimiters = new HashMap<>();
         if ( simple() ) // needed ?
-            equalityMap().entrySet().forEach( e -> {
+            equalityMap().entrySet().forEach( (var e) -> {
                 ColorClass cc = e.getKey();
-                if (cc.isOrdered()) { //may be it is sufficient consider equalities?
-                    Map<Boolean, SortedSet<Equality>> value = e.getValue();
-                    ColorClass.setDelim(delimiters, cc , Equality.succOffset(value.getOrDefault(true,  Collections.emptySortedSet())));
-                    ColorClass.setDelim(delimiters, cc , Equality.succOffset(value.getOrDefault(false, Collections.emptySortedSet())));
+                if (cc.isOrdered() && cc.parametric()) {
+                    Collection<Projection> cp = new HashSet<>();
+                    e.getValue().getOrDefault(true, Collections.emptySortedSet()).forEach(x -> { 
+                        cp.add(x.getArg2()); });
+                    e.getValue().getOrDefault(false,Collections.emptySortedSet()).forEach(x -> {
+                        cp.add(x.getArg2()); });
+                    ColorClass.setDelim(delimiters, cc, succDelim(maxSuccOffset(cp, cc), cc));
                 }
             });
-        
-        return delimiters;
-    }
-    
+           return delimiters;
+         }
+ 
     @Override
     public Guard specSimplify() {
         //System.out.println("NaryGuardOperator (218)\n"+this); //debug
@@ -276,7 +279,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      */
    private Guard reduceMemberships () {
         Set<Guard> guards = null; // (light) copy of the operands
-        for (Map.Entry<ColorClass, Map<Boolean, Set<Membership>>> em : membershipMap().entrySet()) {
+        for (Map.Entry<ColorClass, Map<Boolean, Set<Membership>>> em : membMap().entrySet()) {
             ColorClass cc = em.getKey();
             final int n = cc.subclasses();
             if (n > 1) { // partitioned class
@@ -363,27 +366,27 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
                 if (to_split)
                     continue;
                 //similar congruents lists of color cc are singletons: we consider the non congruent lists    
-                boolean fixed_size = cc.ccSize() != 0;
+                final boolean fixed_size = cc.hasFixedSize();
                 for (Map.Entry<Pair<Integer, Integer>, List<? extends Equality>> sim_nc : similarCongrEqMap(cc, false).entrySet()) {
                     List<? extends Equality> poset = sim_nc.getValue(); //list of non congruent, similar terms
                     size = poset.size();
                     if ( fixed_size && size  == lb)  
                         return (Guard) getZero(); // the outcome is either 0 or S ...
-                    { //else
-                     final Pair<Integer, Integer> key = sim_nc.getKey();
-                     final int exp, min, max;
-                     boolean one_missing = fixed_size && size == lb -1;
-                     List<? extends Equality> singlet; // the corresponding congruent singleton list   
-                     if (cmap == null/*this.congrsign*/)
-                         cmap = similarCongrEqMap(cc, true);
-                     if ( one_missing || ( singlet = cmap.get( key )) != null && 
-                        (max = poset.get(size - 1).getSucc()) - (min = poset.get(0).getSucc()) < lb && Math.abs((exp = singlet.get(0).getSucc()) - min) < lb && Math.abs(exp  - max) < lb) { 
-                            argscopy = Util.lightCopy(argscopy, this.args);
-                            argscopy.removeAll(poset);
-                            if (one_missing) 
-                                argscopy.add(Equality.builder(Projection.builder(key.getKey(), cc), Projection.builder(key.getValue(), Util.missingNext(poset, Equality::getSucc, 0), cc), this.congrsign, getDomain()));
-                        }
-                   }
+                    else { 
+                        final Pair<Integer, Integer> key = sim_nc.getKey();
+                        final int exp, min, max;
+                        boolean one_missing = fixed_size && size == lb -1;
+                        List<? extends Equality> singlet; // the corresponding congruent singleton list   
+                        if (cmap == null/*this.congrsign*/)
+                            cmap = similarCongrEqMap(cc, true);
+                        if ( one_missing || ( singlet = cmap.get( key )) != null && 
+                           (max = poset.get(size - 1).getSucc()) - (min = poset.get(0).getSucc()) < lb && Math.abs((exp = singlet.get(0).getSucc()) - min) < lb && Math.abs(exp  - max) < lb) { 
+                               argscopy = Util.lightCopy(argscopy, this.args);
+                               argscopy.removeAll(poset);
+                               if (one_missing) 
+                                   argscopy.add(Equality.builder(Projection.builder(key.getKey(), cc), Projection.builder(key.getValue(), Util.missingNext(poset, Equality::getSucc, 0), cc), this.congrsign, getDomain()));
+                           }
+                      }
                 }
             } 
        }
@@ -422,7 +425,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      */
     public final ColorClass getSort() {
         Map<ColorClass, Map<Boolean, SortedSet<Equality>>> c_e = equalityMap();
-		Map<ColorClass, Map<Boolean, Set<Membership>>> c_m = membershipMap();
+		Map<ColorClass, Map<Boolean, Set<Membership>>> c_m = membMap();
         int n1 = c_e.size(), n2 = c_m.size(), s;
         if (n1 < 2 && n2 < 2 && (s = n1 + n2) > 0 && (s < 2 || c_e.keySet().equals(c_m.keySet())) )  {
 	        ColorClass cc = n1 == 1 ? c_e.keySet().iterator().next() : c_m.keySet().iterator().next();

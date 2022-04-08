@@ -107,19 +107,26 @@ public abstract class Sort implements Comparable<Sort> {
      *
      * @return <code>true</code> if and only if the sorts' constraint is unbounded
      */
-    public final boolean unbounded() {
+    public boolean unbounded() {
         return card().unbounded();
     }
     
     /**
      *
-     * @return a value greater than 0, corresponding to its size, if the colour-class is not parametric
-     * zero otherwisee
+     * @return a positive int, corresponding to the interval fixedSize,
+     * if the colour-class is not parametric; -1 otherwisee
      */
-    public final int ccSize() {
-        Interval card = card();
-        
-        return card.singleValue() ? card.lb() : 0;
+    public final int fixedSize() {
+        Integer card = card().singleValue();
+        return card == null ? -1 : card;
+    }
+    
+    /**
+     * 
+     * @return <code>true</code> if and only the sort size is constant 
+     */
+    public boolean hasFixedSize() {
+        return fixedSize() >= 0;
     }
     
      @Override

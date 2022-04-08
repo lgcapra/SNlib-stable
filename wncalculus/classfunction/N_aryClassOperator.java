@@ -35,14 +35,14 @@ public abstract class N_aryClassOperator  extends SetFunction implements N_aryOp
     }
     
     /**
-     * @return the size of the operation
+     * @return the fixedSize of the operation
      */
     public final int size () {
         return this.args.size();
     }
 
     @Override
-    public final Set<SetFunction> getArgs() {
+    public final Set<? extends SetFunction> getArgs() {
         return this.args;
     }
     
@@ -71,14 +71,13 @@ public abstract class N_aryClassOperator  extends SetFunction implements N_aryOp
      */
     public final Set<Subcl> subclasses () {
         if (this.subcls == null) 
-            this.subcls = getSort().isSplit() ? Collections.unmodifiableSet(Util.getType(this.args, Subcl.class) ) 
-                            : Collections.EMPTY_SET;
+            this.subcls = getSort().isSplit() ? Collections.unmodifiableSet(Util.getType(this.args, Subcl.class) ) : Collections.EMPTY_SET;
         
         return this.subcls;    
     }
             
     Map<Integer, SortedSet<ProjectionBased>> similarCongrMap(boolean congr)  {
-        return Util.mapFeature(congruent(congr), ProjectionBased::getIndex, (f1,f2)-> f1.getSucc().compareTo(f2.getSucc()) );
+        return Util.mapFeature(congruent(congr), ProjectionBased::getIndex, (f1,f2)-> ((Integer)f1.getSucc()).compareTo(f2.getSucc()) );
     }
      
     /**
@@ -165,18 +164,17 @@ public abstract class N_aryClassOperator  extends SetFunction implements N_aryOp
         if ( to_split )
             return this;
         //similar congruents sets are singletons: we finally consider non congruent sets of similar terms
-        boolean fixed_size = cc.ccSize() != 0;
+        final var fixed_size = cc.hasFixedSize();
         Set<SetFunction> argscopy = null;
         for (Map.Entry<Integer, SortedSet<ProjectionBased>> sim_nc : similarCongrMap(false).entrySet()) {
             SortedSet<ProjectionBased> poset = sim_nc.getValue(); // a set of non-congruent, simila terms
-            final int size = poset.size();
-            if ( fixed_size && size == lb)  
+            final var posize = poset.size();
+            if ( fixed_size && posize == lb)  
                 return (SetFunction) getZero(); // the outcome is either 0 or S ...
-
-            { //else
+            else { 
                 final int key = sim_nc.getKey(), exp, min, max;
                 SortedSet<ProjectionBased> singlet; // the corresponding congruent singleton
-                boolean one_missing = fixed_size && size == lb -1;
+                final var one_missing = fixed_size && posize == lb -1;
                 if ( one_missing || ( singlet = cmap.get( key )) != null && 
                         (max = poset.last().getSucc()) - (min = poset.first().getSucc()) < lb && Math.abs((exp = singlet.first().getSucc()) - min) < lb && Math.abs(exp  - max) < lb) {
                     argscopy = Util.lightCopy(argscopy, this.args);
@@ -226,8 +224,4 @@ public abstract class N_aryClassOperator  extends SetFunction implements N_aryOp
         return buildOp((ClassFunction.copy(this.args, newcc)));
      }
      
-    /*@Override
-    public final SetFunction clone (final Domain newdom, final Domain newcd) {
-        return (SetFunction) super.clone(newdom, newcd);
-    }*/
 }

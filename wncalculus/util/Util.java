@@ -216,7 +216,13 @@ public class Util  {
     */ 
    public static <E> List<E> copyAndCast(Collection<?> c, Class<E> t) {
        List<E> l = new ArrayList<>();
-       c.forEach( x -> { l.add(t.cast(x)); });
+       c.forEach( x -> 
+            { try{l.add(t.cast(x)); } 
+                catch (ClassCastException e) {
+                System.err.println(e.toString());
+                throw new ClassCastException();
+            } 
+       });
        
        return l;
    }
@@ -485,12 +491,12 @@ private static Set<Set<Object>> _cartesianProduct(int index, Set<?>... sets) {
     if (index == sets.length) {
         ret.add(new HashSet<>());
     } else {
-        for (Object obj : sets[index]) {
+        sets[index].forEach(obj -> {
             for (Set<Object> set : _cartesianProduct(index+1, sets)) {
                 set.add(obj);
                 ret.add(set);
             }
-        }
+        });
     }
     return ret;
 }
@@ -544,8 +550,8 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
         HashSet<Integer> numbers = new HashSet<>();
         for (int i = lower; i < upper; i++) 
             numbers.add(i);
-        numbers.removeAll(c);
         
+        numbers.removeAll(c);
         return numbers;
     }    
     
@@ -608,7 +614,7 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
                 if ( ! check.apply(first, next = ite.next()) ) 
                     if (ex != null) {
                         try {
-                            System.err.println(first + " and " + next + " don't match the samee property:" + textprop.apply(first)+ " vs " + textprop.apply(next)); //error message
+                            System.err.println(first + " and " + next + " don't match the samee property:\n" + textprop.apply(first)+ "\nvs\n" + textprop.apply(next)); //error message
                             throw ex.newInstance();
                         } 
                         catch (InstantiationException | IllegalAccessException ex1) {

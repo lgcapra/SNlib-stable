@@ -133,18 +133,24 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
      * @return <tt>true</tt> if and only if this function has zero cardinality 
      */
     public boolean zeroCard () {
-        Interval card = card();
-        
-        return card != null && card.ub() == 0;
+        var constr = card();
+        if (constr == null) {
+            //System.err.println(toStringDetailed()+": null card");
+            //throw new NullPointerException();
+            return false;
+        }
+        var card = constr.singleValue();
+        return card != null && card == 0;
     }
     
     /**
      *
-     * @return the difference between the lower bounds of <tt>this</tt> function's color-class cardinality
-     * and the size (cardinality) of the function; -1 if, for any reasons, it cannot be computed
+     * @return the difference between the lower bounds of <tt>this</tt> function's color-dom cardinality
+     * and the function's size (cardinality), if the respective bounds are "congruent";
+     * 0 if, for any reasons, it cannot be computed
      */
     public final int gap () {
-        int gap = -1;
+        int gap = 0; // before -1
         Interval mycard = card() , constr;
         if (mycard != null && mycard.size() == ( constr = getConstraint() ).size()) //  card and constr either unbounded or "congruent" 
               gap = constr.lb() - mycard.lb();
@@ -180,20 +186,21 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     }
     
     /**
-     * puts an intersection-form to an equivalent set (i.e., sum) of simple (guarded) class-functions
+     * puts a funaction to an equivalent set (sum) of simple (guarded) class-functions
      * this default version must be redefined if needed; it assumes that basic reductions have been
-     * carried out; the arguments encode the basic predicates associated with the function, when it is
-     * embedded in a tuple
+     * carried out; the arguments encode the basic predicates (guard) associated with the tuple in which
+     * the function is embedded
+     * Default implementation (to override)
      * @param ineqlist the inequalities 
      * @param inmap a map describing the membership "in" predicates
      * @param domain the guard domain
      * @param notinmap a map describing the membership "notin" predicates (there may be many, for a given variable)
      * @return if <tt>this</tt> is an "elementary" intersection-form, an equivalent
-     * set (sum) of simple (guarded) class-functions, represented by <tt>Pair</tt>s; otherwise the
-     * <tt>Pair</tt> (<tt>this</tt>,<tt>null</tt>)
+     * set (sum) of simple (guarded) class-functions, represented by <tt>Pair</tt>s (if any);
+     * otherwise, an empty-set
     */ 
     public Set<? extends Pair<? extends SetFunction, ? extends Guard> > toSimpleFunctions (Set<? extends Equality> ineqlist, Map<Projection, Subcl> inmap, Map<Projection, Set<Subcl>> notinmap, Domain domain) {
-         return Collections.singleton (new Pair<>(this, null));
+         return Collections.EMPTY_SET;
     }
     
     

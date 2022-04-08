@@ -22,17 +22,28 @@ public final class FilteredTuple implements FunctionTuple, GuardedExpr<FunctionT
      * @param f a filter
      * @param expr a function-tuple
      */
-    public FilteredTuple (Guard f, FunctionTuple expr) {
+    private FilteredTuple (Guard f, FunctionTuple expr) {
         if (expr == null)
             throw new NullPointerException("null expression!!");
             
-        if (f != null && ! expr.getCodomain().equals(f.getDomain() ) ) 
+       if (f == null)
+            throw new NullPointerException("null filter!!");
+        
+        if (! expr.getCodomain().equals( f.getDomain() ) ) 
             throw new IllegalDomain("filter's domain must be the same as function'co-domain");    
         
         this.filter = f;
         this.expr   = expr;
     }
     
+    /**
+     * creates a <tt>FilteredTuple</tt> skipping a trivial filter
+     * @param f a filter
+     * @param expr a function-tuple
+     */
+    public static FunctionTuple factory (Guard f, FunctionTuple expr) {
+        return f instanceof True ? expr : new FilteredTuple (f, expr);
+    }
     
     @Override
     public Domain getDomain() {
@@ -46,59 +57,53 @@ public final class FilteredTuple implements FunctionTuple, GuardedExpr<FunctionT
     
     @Override
     public FunctionTuple specSimplify() {
-        if (this.expr instanceof AllTuple) {
-            Domain codom = getCodomain();
-            return new Tuple(this.filter, codom, AllTuple.toMap( codom), null, getDomain());
-        }
+        if (this.expr instanceof AllTuple) 
+            return new Tuple(this.filter, AllTuple.toMap( getCodomain()), getDomain());
                     
         if (this.expr instanceof TupleSum ) {
-            TupleSum orexpr = (TupleSum ) this.expr;
+            var orexpr = (TupleSum ) this.expr;
             Collection<FilteredTuple> cgf = new ArrayList<>();
             orexpr.getArgs().forEach(fx -> { cgf.add(new FilteredTuple (this.filter, fx)); });
-
             return TupleSum.factory(cgf, orexpr.disjoined());
         }
 
         if (this.expr instanceof FilteredTuple ) { //new
-           FilteredTuple g_expr = (FilteredTuple ) this.expr;
-           
-           return new FilteredTuple(Tuple.join(this.filter, g_expr.filter), g_expr.expr);
+           var g_expr = (FilteredTuple ) this.expr;
+           return new FilteredTuple(And.factory(this.filter, g_expr.filter), g_expr.expr);
         }
 
         if (this.expr instanceof Tuple) 
             return  ((Tuple) this.expr).joinFilter(this.filter);
-            //new Tuple(Tuple.join(this.filter, tuple.filter()), getCodomain(), tuple.getHomSubTuples(), tuple.guard(), getDomain());
         
         return this;     
     }
     
     @Override
     public FilteredTuple clone(Domain newdom, Domain newcd) {
-        return new FilteredTuple (this.filter != null ? (Guard) this.filter.clone(newcd,null) : null, (FunctionTuple) this.expr.clone(newdom,newcd));
+        return new FilteredTuple ((Guard)this.filter.clone(newcd,null), (FunctionTuple) this.expr.clone(newdom,newcd));
     }
 
     
     @Override
     public  boolean isFalse() {
-        return this.filter != null && this.filter.isFalse() || this.expr.isFalse();
+        return this.filter.isFalse() || this.expr.isFalse();
     }
 
     @Override
     public boolean differentFromZero() {
-        return (this.filter == null || this.filter.differentFromZero()) && this.expr.differentFromZero();
+        return this.filter.differentFromZero() && this.expr.differentFromZero();
     }
 
     @Override
     public boolean isTrue() {
-        return this.filter == null && this.expr.isTrue();
+        return this.filter.isTrue() && this.expr.isTrue();
     }
 
     @Override
     public Map<Sort, Integer> splitDelimiters() {
         Map<Sort,Integer>  delims  =  new HashMap<>();
-        if (this.filter != null)
-            delims.putAll(this.filter.splitDelimiters());
-        ColorClass.joinDelims(delims ,  this.expr.splitDelimiters());
+        delims.putAll(this.filter.splitDelimiters());
+        ColorClass.joinDelims(delims , this.expr.splitDelimiters());
         
         return delims;
     }
@@ -131,21 +136,10 @@ public final class FilteredTuple implements FunctionTuple, GuardedExpr<FunctionT
     
     @Override
     public String toString () {
-        return (this.filter == null ? "" : ( "["+this.filter+']' )) + '('+this.expr+')' ;
+        return "["+this.filter+']' + '('+this.expr+')' ;
     }
         
-    /**
-     * @return a copy of <code>this</code> with a trivial filter
-     * <code>this</code> if the filter is trivial
-     */
-    public FilteredTuple withoutFilter () {
-        return  this.filter == null ? this : new FilteredTuple(null, this.expr);
-    }
-
-    @Override
-    public FunctionTuple baseCompose(FunctionTuple right) {
-        return new FilteredTuple(this.filter, new TupleComposition(withoutFilter(), right));
-    }
+    
 
     @Override
     public String symb() {
@@ -163,8 +157,8 @@ public final class FilteredTuple implements FunctionTuple, GuardedExpr<FunctionT
     }
 
     @Override
-    public FilteredTuple build(FunctionTuple expr, LogicalExpr guard) {
-        return new FilteredTuple((Guard) guard, expr); 
+    public FunctionTuple build(FunctionTuple expr, LogicalExpr guard) {
+        return factory((Guard) guard, expr); 
     }
 
     @Override

@@ -47,7 +47,7 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
         if (succ != 0 && !cc.isOrdered()) 
             throw new IllegalDomain("cannot build a projection successor in case of unordered color class!");
         
-        if ( cc.ccSize() != 0 ) 
+        if ( cc.hasFixedSize()  ) 
             succ = Util.valueModN(succ , cc.lb()) ;    
         ComplexKey k = new ComplexKey(cc, index, succ);
         Projection p;
@@ -71,13 +71,13 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
      
     
     @Override
-    public final Integer getIndex() {
+    public final int getIndex() {
         return this.index;
     }
 
  
     @Override
-     public final Integer getSucc() {
+     public final int getSucc() {
         return this.succ;
     }
      
@@ -159,11 +159,47 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
       return Projection.builder(this.index, this.succ, s); 
     }
     
+    /**
+     * builds on @see succDelim
+     * @return the split-delimiter, taking into account the successor
+     */
     @Override
     public int splitDelim() {
-       return Math.abs(getSucc() );
+       return succDelim(this.succ, getSort());
    }
     
+   /**
+    * @param s a (possibly negative) successor
+    * @param c a color class
+    * @return the split-delimiter, taking into account the successor and the color-class bounds
+    */
+    public static int succDelim (int s, ColorClass c) {
+       if (s != 0) { //optimization
+         s =  Math.max(0, Math.abs(s)- c.lb() + 1);
+         if (! c.unbounded())
+             s = Math.min(s, c.ub() - c.lb() ); // e.g., if succ is 3 and the constraint is [2,3] returns 1
+       }
+       return s;
+   }
+   
+    /**
+     * 
+     * @param l a list of projections
+     * @param c the list color class 
+     * @return the difference between max-succ and min-succS
+     */
+   public static int maxSuccOffset (Collection<? extends Projection> l, ColorClass c) {
+       if ( c.isOrdered() ) {
+            int min = 0, max = 0; //matters: we assume 0 present
+            for (Projection v : l) {
+                 min = Math.min(min, v.succ);
+                 max = Math.max(max, v.succ);
+             }
+             return max -min;
+       }
+       return 0;
+   }
+   
     /** 
      * @return  the set of projection indexes occurring on this class-function
      */

@@ -36,6 +36,11 @@ public final class True extends ConstantGuard  {
     }
     
     @Override
+    public boolean isTrivial() {
+        return true;
+    }
+    
+    @Override
     public String toString() {
         return SYMBOL;
     }

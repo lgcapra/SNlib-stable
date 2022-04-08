@@ -16,7 +16,7 @@ public interface MultiArgs<E extends ParametricExpr, F extends ParametricExpr> e
      * @return the (unmodifiable) collection of arguments of this operator
      * @throws UnmodifiableCollectionException
      */
-     Collection</*? extends*/ E> getArgs();
+     Collection<? extends E> getArgs();
      
     /**
      * (to be overridden if needed)

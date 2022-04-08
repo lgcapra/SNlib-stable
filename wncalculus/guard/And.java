@@ -42,34 +42,6 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * an empty map, if the guard doesn't match an elementary "AND"-form
      */
 
-    public static Map<ColorClass, Map<Boolean, Set<Membership>>> membMap(Guard g) {
-        if (g instanceof Membership) {
-            Membership m = (Membership) g;
-            
-            return Collections.singletonMap(m.getSort(), Collections.singletonMap(m.sign(), Collections.singleton(m)));
-        }
-        
-        return g instanceof And ? ((And) g).membershipMap() : Collections.EMPTY_MAP;
-    }
-
-    /**
-     * derives the equality map, color by color, for a guard which is assumed an elementary "AND"-form
-     * if not, returns an empty map
-     * @param g a guard
-     * @return the equality map, color by color, for a guard which is assumed an elementary "AND"-form;
-     * an empty map, if the guard doesn' match this form
-     */
-
-    public static Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap(Guard g) {
-        if (g instanceof Equality) {
-            Equality e = (Equality) g;
-            
-            return Collections.singletonMap(e.getSort(), Collections.singletonMap(e.sign(), Util.singleton(e, null)));
-        }
-        
-        return g instanceof And ? ((And) g).equalityMap() : Collections.EMPTY_MAP;
-    }
-   
     private Map<Color, InequalityGraph> igraph; // cashing: the (possibly empty) map between colors and corresponding inequality graphs
     
     private And (Set<? extends Guard> guards, boolean check) {
@@ -132,20 +104,21 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     public Map<Sort, Integer> splitDelimiters ( ) {    
         Map<Sort, Integer> delimiters = super.splitDelimiters();
         //System.out.println("ecco delims: "+delimiters); //debug
-        if (simple() && delimiters.isEmpty() ) 
+        if (simple() ) 
             igraph().entrySet().forEach(e -> {
                 Color s = e.getKey();
                 Interval card = s.card(); //s is either a color class or a Subcl(Set)
                 InequalityGraph g = e.getValue();
-                int X = g.chromaticNumber() , lb = card.lb(), ub;
+                int X = g.chromaticNumber() , lb = card.lb();
                 ColorClass cc = (ColorClass) s.getSort(); // significant is s is a Subcl(Set)
-                if ( lb < X && ( ( ub = card.ub() ) < 0 || ub >= X) ) {  // lb < X <= ub
+                if ( lb < X && ( card.unbounded() || X <= card.ub() ) ) {  // we first consider the predicate alone (disregarding if it is a tuple's filter)
                     //System.out.println("setChromaticBound "+(lb -card.lb() + X)); // debug    
-                    ColorClass.setDelim(delimiters, cc, cc.lb() - lb + X - 1 /*new Delimiter(cc.lb() - lb + X - 1, false)*/);
+                    //ColorClass.setDelim(delimiters, cc, cc.lb() - lb + X - 1 ); // old
+                    ColorClass.setDelim(delimiters, cc, X - lb);
                 }
-                else {
-                    List<? extends ClassFunction> rt = getRightTuple() != null ? getRightTuple().get(cc) : null;
-                    ColorClass.setDelim(delimiters, cc, g.splitDelimiter(rt));
+                else { // we check whether the predicate is a filter (i.e., associated to a tuple)
+                    var tuple = getRightTuple();
+                    ColorClass.setDelim(delimiters, cc, g.splitDelimiter(tuple != null ? tuple.get(cc) : null));
                 }
         });
         
@@ -156,22 +129,22 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     /**
      * for each colour of <code>this</code> and form, maps the associated "domain"
      * (either a color class or a subclass) into the associated inequality graph;
-     * @return a map between the "colours" of inequalities in this guard 
-     * and corresponding graphs
+     * @param checkdom flag to check that (in the event of spit classes) the variable domains are subclasses
+     * @return a map between the "colours" of inequalities in this guard and corresponding graphs
      *
      * NOTE this version assumes that for each colour the corresponding inequalities form
      * an independent set
      */
-    public Map<Color, InequalityGraph> igraph () {
+    public Map<Color, InequalityGraph> igraph (boolean checkdom) {
         if (this.igraph == null) {
             this.igraph = new HashMap<>();
             equalityMap().entrySet().forEach(e -> {
                 ColorClass cc = e.getKey();
                 SortedSet<Equality> inequalities = e.getValue().get(false);
-                if (inequalities != null) { 
+                if (! (inequalities == null || inequalities.isEmpty() ) ) { 
                     InequalityGraph g = new InequalityGraph(inequalities );
                     Color c = cc;
-                    if ( cc.isSplit() ) { // memberships clauses may be present...
+                    if ( checkdom && cc.isSplit() ) { // memberships clauses may be present...
                         SubclSet sdom = checkDomain(g.vertexSet(), cc);
                         if (sdom != null)
                             c = sdom;
@@ -181,8 +154,36 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
             });
         }
         //System.out.println("igraph di "+this +": "+this.igraph); //debug
+        return Collections.unmodifiableMap(this.igraph);
+    }
+    
+    /**
+     * default version
+     * @return a map between the "colours" of inequalities in this guard and corresponding graphs
+     */
+    public Map<Color, InequalityGraph> igraph () {
+        return igraph(true);
+    }
+    
+    
+    /***
+     * overloaded (simplified) version of igraph for single-color And
+     * no check for variable mebership to subclasses done
+     * @param cc the (pre-calculated) color class of the And 
+     * @return a singleton map from the color to the inequality graph
+     */
+    public Map<Color, InequalityGraph> igraph (ColorClass cc) {
+        if (this.igraph == null) {
+            SortedSet<Equality> inequalities = equalityMap().get(cc).get(false);
+            if (! (inequalities == null || inequalities.isEmpty() ) )  
+                this.igraph =  Util.singleMap(cc, new InequalityGraph(inequalities ));
+            else
+                this.igraph = Collections.EMPTY_MAP;
+        }
+        //System.out.println("igraph di "+this +": "+this.igraph); //debug
         return this.igraph;
     }
+    
     
     
     /**
@@ -194,7 +195,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * <code>null</code> if for any reasons the check fails, or there are no memebership clauses
      */
     private SubclSet checkDomain (Set<? extends Projection> vset, ColorClass cc) {
-        Map<Boolean, Set<Membership>> m = membershipMap().get(cc);
+        Map<Boolean, Set<Membership>> m = membMap().get(cc);
         if (m != null) {
             Set<Membership> in    = m.getOrDefault(true,Collections.emptySortedSet()), 
                             notin = m.getOrDefault(false, Collections.emptySortedSet());
@@ -220,34 +221,21 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     
     
     /**
-     * safely builds an "and" form from a list of guards and a domain ... (see the overloaded method);
-     * @param eg_set the specified list, possibly containing <code>null</code> terms (standing for <code>true</code>)
-     * @param dom a specified domain
-     * @return an "And" corresponding to the list, with the specified domain; in the case the list is a singleton,
-     * the  contained guard; <code>null</code> if the specified list is <code>null</code> or empty
-     * (modulo <code>null</code>-terms erasure)
-     * @throws IllegalDomain if the operands' domains are different
+     * builds an "and" form from a collection of guards and a domain
+     * @param eg_set the specified collection
+     * @param dom a (non-null) domain
+     * @return a corresponding "And" form, with the specified domain; if the collection is a singleton,
+     * the  (only) contained guard; if it is empty, a True constant
+     * @throws IllegalDomain if the operands' domains are different from the given one
+     * @throws IllegalArgumentException if the domain is null.
      */
-    public static Guard buildAndForm (Collection<? extends Guard> eg_set, Domain dom) {
-        if (eg_set == null )
-            return null ;
-        
-        eg_set.removeAll(Collections.singleton(null));
-        if (eg_set.isEmpty()) 
-            return null ;
-        
-        return And.factory(dom == null || eg_set.iterator().next().getDomain().equals(dom) ? eg_set : NaryGuardOperator.cloneArgs(eg_set, dom));
+    public static Guard buildAndFormWithD (Collection<? extends Guard> eg_set, Domain dom) {
+        if (dom == null)
+            throw new IllegalArgumentException("expected a non-null domain");
+            
+        return eg_set.isEmpty() ? True.getInstance(dom) : And.factory(NaryGuardOperator.cloneArgs(eg_set, dom));
     }
     
-    /**
-     * safely builds an "and" form from a list of guards (see the overloaded method);
-     * @param eg_set the specified list
-     * @return an And term corresponding to the list; in the case the list is a singleton,
-     * the  contained guard; if the specified list is <code>null</code> or empty then returns <code>null</code>;
-     */
-    public static Guard  buildAndForm (Collection<? extends Guard> eg_set) {
-        return  buildAndForm(eg_set, null);
-    }
             
     /**
      * replace symbols in an ordered set of equalities, leading to the canonical form
@@ -485,7 +473,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
                     else if (done)
                         replaced = true;
                 }
-                Map<Boolean, Set<Membership>> mm = membershipMap().get(e.getKey());
+                Map<Boolean, Set<Membership>> mm = membMap().get(e.getKey());
                 if (mm != null) // there exists some memebership clauses of the same color ...
                     for (Map.Entry<Boolean, Set<Membership>> x : mm.entrySet()) {
                         Set<Membership> ms = x.getValue();
@@ -521,7 +509,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     private Guard reduceRedundanciesAndSetVarDomain () {
         Set<Guard> oplist = null; // (light) copy of the operands        
         boolean changed = false;    
-        for (Map.Entry<ColorClass, Map<Boolean, Set<Membership>>> e : membershipMap().entrySet()) {
+        for (Map.Entry<ColorClass, Map<Boolean, Set<Membership>>> e : membMap().entrySet()) {
             ColorClass cc = e.getKey();
             Map<Boolean, SortedSet<Equality>> eqmap = equalityMap().get(cc);
             if ( eqmap != null) { 

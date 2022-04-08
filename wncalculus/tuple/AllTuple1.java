@@ -69,10 +69,6 @@ public final class AllTuple1  implements FunctionTuple {
     }
     
 
-    @Override
-    public FunctionTuple baseCompose(FunctionTuple right) {
-        return right.differentFromZero() ? getInstance(getCodomain(), right.getDomain()) : null; 
-    }
 
     @Override
     public boolean differentFromZero() {

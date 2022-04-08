@@ -17,6 +17,13 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     private boolean simplified;
     private Map<? extends ColorClass , List<? extends SetFunction>> right_tuple; // if other than null, marks this guard as a filter of a tuple
     
+    /**
+     * 
+     * @return <code>true</code> if and only if the guard is the constant True 
+     */
+    public boolean isTrivial() {
+        return false;
+    } 
     
     @Override
     public final boolean simplified () {
@@ -46,7 +53,6 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     public Map<? extends ColorClass , List<? extends SetFunction>> getRightTuple() {
         return this.right_tuple;
     }
-    
     
     
     @Override
@@ -89,10 +95,14 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
       
       //the following methods return the passed argument, in the case the collection is a singleton
 
-  
+      /**
+       * safely builds an "AND" corresponding to the arg list
+       * if the list is empty builds a constant True with the same domain as <code>this</code>
+       * @param args
+       * @return an "AND" form corresponding to a (possibly empty) collection of guards  */
       @Override
       public final Guard andFactory(Collection<? extends LogicalExpr> args)  {
-          return And.factory(Util.cast(args, Guard.class), false);
+          return args.isEmpty() ? True.getInstance(getDomain()) : And.factory(Util.cast(args, Guard.class), false);
       }
       
       @Override
@@ -140,8 +150,8 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
      * @param k the projection index used as restriction bound
      * @return a sub-list of guards, of the same type as the input list, which contains the restriction
      */
-    public static <E extends Guard> List<E> restriction (Collection<? extends E> args, int k) {
-        List<E> res = new ArrayList<>();
+    public static <E extends Guard> Set<E> restriction (Collection<? extends E> args, int k) {
+        Set<E> res = new HashSet<>();
         args.stream().filter(g ->  Collections.max( g.indexSet() ) <= k ).forEachOrdered(g -> { res.add(g); });
             
         return res;
@@ -207,5 +217,27 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
      
     @Override
     public abstract Guard clone(Domain nd);
+    
+    //news
+    
+    /**
+     * 
+     * @return the equalities' map associated to a guard
+     * this default implementation has to be redefined 
+     */
+    public Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap() {
+        return Collections.EMPTY_MAP;
+    }
+    
+    /**
+     * 
+     * @return the memberships' map associated to a guard
+     * this default implementation has to be redefined 
+     */
+    public Map<ColorClass, Map<Boolean, Set<Membership>>> membMap() {
+        return Collections.EMPTY_MAP;
+    }
+
+
     
 }

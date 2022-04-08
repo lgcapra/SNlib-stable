@@ -28,7 +28,7 @@ public abstract class TupleNaryOp  implements FunctionTuple , N_aryOp<FunctionTu
     }
     
     @Override
-    public final Set</*? extends*/ FunctionTuple> getArgs() {
+    public final Set<? extends FunctionTuple> getArgs() {
         return this.args;
     }
     

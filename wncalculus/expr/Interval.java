@@ -14,8 +14,11 @@ package wncalculus.expr;
      * @param ub the interval's upper bound
      */    
         public Interval (int lb, int ub) {
-           if (lb < 0 || lb > ub) 
-                throw new IllegalArgumentException("incorrect interval bounds!");
+           if (lb < 0) 
+                throw new IllegalArgumentException("negative lb!");
+           
+           if (lb > ub ) 
+                throw new IllegalArgumentException("incorrect bounds: " + lb +','+ub);
            
            this.lb=lb;
            this.ub=ub;
@@ -64,10 +67,10 @@ package wncalculus.expr;
         }
               
         /**
-         * @return <code>true</code> if and only the interval is composed of one element
+         * @return a non-null <code>Integer</code> if and only the interval is size-1
          */
-        public boolean singleValue () {
-            return this.lb == this.ub;
+        public Integer singleValue () {
+            return this.lb == this.ub ? this.lb : null;
         }
         
         /**
@@ -78,18 +81,20 @@ package wncalculus.expr;
             return this.lb == this.ub && this.lb == k;
         }
         
+        
+        /**
+         * 
+         * @return <code>true</code> if and only if is not single-valueS
+         */
+        public boolean singleton() {
+            return this.lb == this.ub;
+        }
+        
         /**
          * @return the size of the interval; -1 is the interval is unbounded 
          */
         public int size () {
-            return unbounded() ? -1 : isEmpty () ? 0 : this.ub - this.lb +1 ;
-        }
-        
-        /**
-         * @return <tt>true</tt> if and only if <tt>this</tt> interval is [0,0] 
-         */
-        public boolean isEmpty () {
-            return this.lb == 0 && this.ub == 0;
+            return unbounded() ? -1 : this.ub - this.lb +1 ;
         }
         
         @Override
@@ -136,22 +141,34 @@ package wncalculus.expr;
     /**
      *
      * @param delim the split delimiter (if it corresponds to the upper bound it is decreased)
-     * @return a size-two array of intervals resulting from split; or a size-zero array,
+     * @return a (at most) size-two array of intervals resulting from split; or a size-zero array,
      * if no split is done (e.g., if lb &gt; delim)
      * @throws IllegalArgumentException is the argument is negative
      */
-    public Interval[] split (int delim) {
-            if (delim < 0)
-                throw new IllegalArgumentException("negative bound");
-            
-            if ( singleValue() || this.lb > delim || this.ub > 0 && this.ub < delim) 
-                return new Interval[0];
-            
-            if (delim == this.ub) 
-                return new Interval[]{new Interval(this.lb, delim-1), new Interval(delim, this.ub)};
-          
-            return new Interval[]{new Interval(this.lb, delim), unbounded() ? new Interval(delim + 1) : new Interval(delim + 1, this.ub)};
-        }
+    public Interval[] splitV0 (int delim) {
+        if (delim < 0)
+            throw new IllegalArgumentException("negative bound");
+
+        if ( this.lb == this.ub || this.lb > delim || this.ub > 0 && this.ub < delim) 
+            return new Interval[0];
+
+        if (delim == this.ub) 
+            return new Interval[]{new Interval(this.lb, delim-1), new Interval(delim, this.ub)};
+
+        return new Interval[]{new Interval(this.lb, delim), unbounded() ? new Interval(delim + 1) : new Interval(delim + 1, this.ub)};
+    }
+    
+    // in this (new) version delim is an offset (from the lb)
+    public Interval[] split (final int delim) {
+        if (delim < 0)
+            throw new IllegalArgumentException("negative offset");
+
+        final int nb = delim+this.lb;
+        if (delim == 0 || this.lb == this.ub || this.ub > 0 && this.ub < nb  ) 
+            return new Interval[0];
+        // lb < nb <= ub
+        return new Interval[]{new Interval(this.lb, nb-1), unbounded() ? new Interval(nb) : new Interval(nb, this.ub)};
+    }
         
     @Override
         public String toString() {
@@ -167,7 +184,7 @@ package wncalculus.expr;
     public String toString( String color) {
             String card = '|' + color + '|';
             
-            return singleValue() ? card + " = " + lb : lb + " <= "+card + (this.unbounded() ? "<= n" : "<= "+ub);
+            return this.lb == this.ub ? card + " = " + this.lb : this.lb + " <= "+card + (this.unbounded() ? "<= n" : "<= "+this.ub);
         }
     
     @Override

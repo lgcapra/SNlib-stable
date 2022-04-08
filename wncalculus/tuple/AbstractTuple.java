@@ -14,130 +14,189 @@ import wncalculus.util.Util;
  * @param <E> the tuple's elements' type (either BoolFunction or BagFunction)
  */
 public abstract class AbstractTuple<E extends ClassFunction> implements Expression, Transposable  {
-
-    //careful: we assume that the tuple's components color-classes are consistent: c1.equals(c2) <-> c1.compareTo(c2) (i.e. different colors must have different names)
-    private          SortedMap<ColorClass , List<? extends E>> hom_parts ; // the map between colors and homogenous sub-tuples composing this tuple 
-    private          Guard   filter,   guard; //null means true!
-    private final    Domain  codomain, domain; // can be different from one another - the codomain is inferred by the tuple form
     
+    //we assume that tuple's components color-classes are consistent: c1.equals(c2) <-> c1.compareTo(c2) (i.e. different colors must have different names)
+    private  final    SortedMap<ColorClass , List<? extends E>> hom_parts ; // the map between colors and homogenous sub-tuples composing this tuple 
+    private  final    Guard   filter, guard; 
+    
+    //cache
     private String   str; // caching (to get efficiency when ordering)
     private List</*? extends*/ E>  components; //caching
     private boolean  simplified;
+    
+    
+    /* checks for the tuple's parameters*/
+    private void checkPar(final Guard f, final SortedMap<ColorClass, List<? extends E>> m, final Guard g) {
+        String msg = "";
+        if (f == null)
+            msg += "the tuple's filter is null! cannot create it; ";   
+        if (g == null)
+            msg += "the tuple's guard is null! cannot create it; ";
+        if (m == null)
+            msg +=  "the tuple's component map is null! cannot create it!";
+        if (!msg.isEmpty())
+            throw new IllegalArgumentException(msg);
+    }
+    
+    /* checks for the tuple's parameters (the filter is trivial) */
+    private void checkPar(final SortedMap<ColorClass, List<? extends E>> m, final Guard g) {
+        String msg = "";
+       if (g == null)
+            msg += "the tuple's guard is null! cannot create it; ";
+       if (m == null)
+            msg +=  "the tuple's component map is null! cannot create it!";
+       if (!msg.isEmpty())
+            throw new IllegalArgumentException(msg);
+    }
         
     /**
-     * base constructor (the only that should be used from outside the library at parsing time):
-     * builds a tuple from a list of class-functions; functions are grouped by colour, only the relative
-     * order of functions of the same color actually matters, the order among different colours (based non names)
-     * just allows for an easier, "standard" (in some sense, canonical) descritpiom;
-     * what is important, the tuple's codomain is inferred; either the tuple's domain or the tuple's guard must be specified,
-     * otherwise a NullPointerException is raised; if the specified filter (guard) values(s) is (are) null, then
-     * a trivial filter (guard) is (are) associated with this tuple
-     * projection or_indexes occurring on the tuple must correctly range over the corresponding
+     * base constructor (the others mostly build on it): creates a tuple from a map of colors to corresponding class-function lists;
+     * only the relative order of functions of the same color actually matters, the order among different colours (based non names)
+     * the tuple's codomain is inferred, the tuple's guard (and consequently the tuple's domain)
+     * must be specified; projection or_indexes occurring on the tuple must correctly range over the corresponding
      * colour bounds of the domain, otherwise an exception is raised
      * creates an unmodifiable data structures so any attempt to modify the tuple will raise an exception 
-     * @param f the specified tuple'fc filter
-     * @param g the specified tuple'fc guard
-     * @param l the specified list of class-functions 
-     * @param dom the tuple'fc domain
-     * @param check domain check flag
-     * @throws NullPointerException if both the given domain and guard are <tt>null</tt>
-     * @throws IllegalDomain if the domain doesn't match the guard, or some variable index
-     * is out of the tuple range
+     * @param f the tuple filter
+     * @param g the tuple guard
+     * @param m the colors-subtuples map  
+     * @param check domain-checkPar flag
+     * @throws IllegalDomain if the checkPar flag is set and there are some incongruences on the domains
+     * @throws IllegalArgumentException if some argument is <code>null</code>
      */
-    public AbstractTuple (Guard f, List<? extends E> l, Guard g, Domain dom, boolean check) {
-        if ( dom == null && g == null )  
-            throw new NullPointerException("either the domain or the guard of a tuple must be specified!");
+    public AbstractTuple (final Guard f, final SortedMap<ColorClass, List<? extends E>> m, final Guard g, /*final*/ boolean check) {
+        //checkPar(f, m, g);
+        check = true;
+        HashMap<ColorClass, Integer> tcd = buildTupleCodom(m, check ? g.getDomain() : null);
+        //if (check && !tcd .equals( f.getDomain().asMap()))  // the tuple's codomain and the filter domain must coincide
+            //throw new IllegalDomain (tcd+" and "+f.getDomain()+ ": (co)domains are incompatible!");
         
-        if (dom == null) 
-            dom = g.getDomain();
-        else if ( g != null && !dom.equals(g.getDomain()) ) 
-            throw new IllegalDomain (" guard and tuple domains are incompatible!");
-        // tuple's co-domain is derived        
-        /*Sorted*/HashMap<ColorClass, Integer> cd = new /*Tree*/HashMap<>(); // the codomain's structure
-        SortedMap<ColorClass , List<? extends E>> map = Util.sortedmapFeatureToList(l, ClassFunction::getSort);
-        for (Map.Entry<ColorClass, List<? extends E> > entry  : map.entrySet()) {
-            List<? extends E>    st = entry.getValue();
-            ColorClass cc = entry.getKey();
-            if (check) {
-                Set<? extends Integer> idxset = ClassFunction.indexSet(st); // the projection or_index set of st
-                if ( ! idxset.isEmpty() && Collections.max(idxset)  > dom.mult(cc) )
-                    throw new IllegalDomain("failed tuple's building:\nincorrect domain specification: projection index outside the range of color "+cc+
-                        "\ntuple components: "+st+", domain: "+dom);
-            }
-            cd.put(cc, st.size());
-        } 
-        
-        this.codomain = new Domain(cd);
-        if (check && f != null && ! this.codomain.equals(f.getDomain())) {
-            System.err.println("lista funzioni: "+l+"\nfiltro: "+f.toStringDetailed());
-            throw new IllegalDomain (this.codomain+" and "+f.getDomain()+ ": (co)domains are incompatible!");
-        }
-        
-        this.hom_parts = Collections.unmodifiableSortedMap(map);
-        this.domain = dom;
-        setGuard(g);
-        setFilter(f); 
+        this.filter = f != null ? f : True.getInstance(new Domain(tcd)); //messo per compatibilità con cli ...
+        this.guard  = g;
+        this.hom_parts = Collections.unmodifiableSortedMap(m);
+    }
+    
+    
+    /**
+     * builds a tuple from a map of colors to corresponding class-function lists with a default guard 
+     * @param f the tuple's filter
+     * @param m the map
+     * @param g the tuple' domain
+     */
+    public AbstractTuple (final Guard f, final SortedMap<ColorClass, List<? extends E>> m, final Domain d, final boolean check) {
+      this(f, m, True.getInstance(d), check);
+    }
+    
+    
+   /**
+     * this constructor should be used from outside the library, at expression parsing time:
+     * builds a tuple from a list of class-functions; functions are grouped by colour, only the relative
+     * order of functions of the same color actually matters, the order among different colours (based non names)
+     * the tuple's codomain is inferred: note that the tuple's guard (and consequently the tuple's domain)
+     * must be specified; projection or_indexes occurring on the tuple must correctly range over the corresponding
+     * colour bounds of the domain, otherwise an exception is raised
+     * creates an unmodifiable data structures so any attempt to modify the tuple will raise an exception 
+     * @param f the tuple's filter
+     * @param g the tuple's guard
+     * @param l the list of class-functions 
+     * @param check domain checkPar flag
+     * @throws IllegalDomain if the checkPar flag is set and there are some incongruences on the domains
+     * @throws IllegalArgumentException if some argument is <code>null</code>
+     */
+    public AbstractTuple (final Guard f, final List<? extends E> l, Guard g, final boolean check) { 
+        this(f, Util.sortedmapFeatureToList(l, ClassFunction::getSort), g, true);   
     }
     
     /**
-     * efficiently builds a tuple from a map of colors to corresponding class-function lists;
-     * it doesn't perform any check and true copy, it provides an unmodifiable view of the passed map
-     * @param filter the tuple'fc filter (<code>null</code> means TRUE)
-     * @param codomain the tuple'fc codomain (necessary only if filter is <code>null</code>)
-     * @param map the specified map
-     * @param guard the tuple'fc guard (<code>null</code> means TRUE)
-     * @param domain the tuple'fc domain (necessary only if guard is <code>null</code>)
+     * builds a tuple with a default guard from a list of class-functions
+     * 
+     * @param f the tuple's filter
+     * @param d the tuple's domain
+     * @param l the list of class-functions 
+     * @param check domain checkPar flag 
      */
-    public AbstractTuple (Guard filter, Domain codomain, SortedMap<ColorClass, List<? extends E>> map, Guard guard, Domain domain) {
-        if (filter != null)
-            this.codomain  = filter.getDomain();
-        else if (codomain != null)
-              this.codomain  = codomain ;
-        else 
-            throw new IllegalDomain("canno built a tuple with null codomain!");
-        
-        if (guard != null)
-            this.domain  = guard.getDomain();
-        else if (domain != null)
-              this.domain  = domain ;
-        else 
-            throw new IllegalDomain("canno built a tuple with null domain!");
-        
-        setFilter(filter);
-        setGuard(guard);
-        this.hom_parts = map;
+    public AbstractTuple (final Guard f, final List<? extends E> l, Domain d, final boolean check) { 
+        this(f, l, True.getInstance(d), check);   
     }
     
-    
-    private void setFilter(Guard filter) {
-        if (! (filter instanceof True) )
-            this.filter =filter;
+    /**
+     * base constructor (2) : creates a tuple from a map of colors to corresponding class-function lists,
+     * with a default filter (i.e., an ordinary tuple of functions);
+     * @param g the tuple guard
+     * @param m the colors-subtuples map  
+     * @param check domain-checkPar flag
+     * @throws IllegalDomain if the checkPar flag is set and there are some incongruences on the domains
+     * @throws IllegalArgumentException if some argument is <code>null</code>
+     */
+    public AbstractTuple (final SortedMap<ColorClass, List<? extends E>> m, final Guard g, /*final*/ boolean check) {
+        checkPar(m,g);
+        check = true;
+        var tcd = buildTupleCodom(m, check ? g.getDomain() : null); 
+        this.filter =  True.getInstance(new Domain(tcd));
+        this.guard  =  g;
+        this.hom_parts = Collections.unmodifiableSortedMap(m);
     }
     
-    private void setGuard(Guard guard) {
-        if (! ( guard instanceof True) )
-            this.guard = guard;
-    }    
+    /**
+     * creates a tuple from a map of colors to corresponding class-function lists,
+     * with a default filter (i.e., an ordinary tuple of functions) and a default guard, with the specified domain;
+     */ 
+    public AbstractTuple (final SortedMap<ColorClass, List<? extends E>> m, final Domain d, final boolean check) {
+        this(m, True.getInstance(d), check);
+    }
+    
+    /**
+     * creates a tuple from a list of class-functions, with a default filter 
+     * and a default guard, with the specified domain;
+     */
+    public AbstractTuple(List<? extends E> l, final Domain d, boolean check) {
+        this(Util.sortedmapFeatureToList(l, ClassFunction::getSort), d, check);
+    }
+    
+    /**
+     * creates a tuple from a list of class-functions, with a default filter 
+     * and a given guard;
+     */
+    public AbstractTuple(List<? extends E> l, final Guard g, boolean check) {
+        this(Util.sortedmapFeatureToList(l, ClassFunction::getSort), g, check);
+    }
+    
+     
+     /**
+      * infers the tuple's codomain from a map colors-(sub)tuples possibly checking the map againts a color domain
+      * representing the entire tuple's domain
+      * if the specified tuple's domain is <code>null</code> skips the checkPar
+      * @param <E> the type of tuple components
+      * @param map the map
+      * @param dom the tuple'd domain
+      * @return the tuple's codomain (as a map)
+      * @throws IllegalDomain if some variable index doesn't match the specified (non-null) domain
+      */
+     static <E extends ClassFunction> HashMap<ColorClass, Integer> buildTupleCodom (final SortedMap<ColorClass , List<? extends E>> map, final Domain dom) {
+            /*Sorted*/HashMap<ColorClass, Integer> tcd = new /*Tree*/HashMap<>(); // the tcd's structure
+            map.entrySet().forEach((var entry) -> {
+                var st = entry.getValue();
+                var cc = entry.getKey();
+                if (dom != null) {
+                    Set<? extends Integer> idxset = ClassFunction.indexSet(st); // the projection or_index set of st
+                    if (! idxset.isEmpty() && Collections.max(idxset)  > dom.mult(cc) )
+                        throw new IllegalDomain("failed tuple's building:\nincorrect domain specification (projection index outside the range of color "+cc+
+                                "\ntuple components: "+st+"), domain: "+dom);
+                }
+                tcd.put(cc, st.size());
+           });
+        return tcd; 
+     }
+     
     
     /**
      * builder method: build a tuple with the same components as <tt>this</tt>
      * @param filter a guard representing a filter
      * @param guard a guard
-     * @param domain the tuple's domain
      * @return a tuple with the same components as <tt>this</tt> and the specified
      * filter, guard, domain
      */
-    public abstract <T extends AbstractTuple> T build (Guard filter, Guard guard, Domain domain);    
+    public abstract <T extends AbstractTuple> T build (final Guard filter, final Guard guard);    
     
-    @Override
-    public final Domain getDomain() {
-        return this.domain;
-    }
-
-    @Override
-    public final Domain getCodomain() {
-        return this.codomain;
-    }
     
     /**
      *
@@ -155,12 +214,23 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
         return this.filter;
     }
     
+    @Override
+    public final Domain getDomain() {
+        return this.guard.getDomain();
+    }
+
+    @Override
+    public final Domain getCodomain() {
+        return this.filter.getDomain();
+    }
+    
+    
     /** 
      * @return <tt>true</tt> if and only if the filter and the guard are
      * the constant true
      */
     public final boolean hasTrivialFilters() {
-        return this.guard == null && this.filter == null;
+        return this.guard.isTrivial() && this.filter.isTrivial();
     }
     
     /**
@@ -217,7 +287,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
         
     @Override
     public final boolean isConstant() {
-        return ClassFunction.indexSet(getComponents()).isEmpty() && (this.guard == null || this.guard.isConstant());
+        return ClassFunction.indexSet(getComponents()).isEmpty() && this.guard.isConstant();
      }
         
     /**
@@ -226,10 +296,10 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      * <code>this</code> if the filter is trivial
      */
     public final <T extends AbstractTuple> T withoutFilter () {
-        if (this.filter == null)
+        if (this.filter.isTrivial())
             return cast();
         
-        T copy = build (null, this.guard, this.domain);
+        T copy = build (True.getInstance(getCodomain()), this.guard);
         copy.setSimplified( simplified() );
         
         return copy;
@@ -240,10 +310,10 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      * or <code>this</code> if the guard is trivial
      */
     public final <T extends AbstractTuple> T withoutGuard() {
-        if (this.guard == null)
+        if (this.guard.isTrivial())
             return cast();
         
-        T copy = build (this.filter, null, this.domain);
+        T copy = build (this.filter, True.getInstance(getDomain()));
         copy.setSimplified( simplified() );
         
         return copy;
@@ -255,14 +325,12 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      * @return a tuple with the new filter; <tt>this</tt> tuple if the new filter coincides with the current one
      */
     public final <T extends AbstractTuple> T joinFilter(Guard f) {
-        Guard  nf = join(this.filter, f);
-        return nf != this.filter ? build(nf, this.guard, this.domain) : cast();
+        return build(And.factory(this.filter, f), this.guard) ;
         
     }
     
     public final <T extends AbstractTuple> T joinGuard(Guard g) {
-        Guard  ng = join(this.guard, g);
-        return ng != this.guard ? build(this.filter, ng, this.domain) : cast();
+        return build(this.filter, And.factory(this.guard, g));
     }
     
     /**
@@ -273,7 +341,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      */
     @Override
     public final AbstractTuple clone(Domain nd) {
-        return nd.equals(getDomain()) ? this : build (filter(), guard() != null ? guard().clone(nd) : null, nd);
+        return nd.equals(getDomain()) ? this : build(filter(), guard().clone(nd) );
     }
     
     @Override
@@ -282,7 +350,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
             String t = "<";
             t = getComponents().stream().map( x -> x.toString() + ',').reduce(t, String::concat);
             t = t.substring(0,t.length()-1)+'>';
-            this.str = (filter == null ? "" : "[" + filter + ']')  + t + (guard == null ? "" : "[" +guard + ']');
+            this.str = (filter.isTrivial() ? "" : "[" + filter + ']')  + t + (guard.isTrivial() ? "" : "[" +guard + ']');
         }
         
         return this.str;
@@ -293,7 +361,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
         boolean res = super.equals(o);
         if (! res && o != null && getClass().equals( o.getClass() ) )  {
             AbstractTuple t = (AbstractTuple)o;
-            res =   Objects.equals(t.guard,this.guard) && Objects.equals(t.filter,this.filter) && Objects.equals(t.hom_parts,this.hom_parts);
+            res =  t.guard.equals(this.guard) && t.filter.equals(this.filter) && Objects.equals(t.hom_parts,this.hom_parts);
         }
         
         return res;
@@ -317,21 +385,6 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     @Override
     public final void setSimplified(boolean simplified) {
         this.simplified = simplified;
-    }
-    
-    /**performs the "and" between guards knowing that eg == null means eg == true
-     * @param p1 a guard
-     * @param p2 another guard
-     * @return the "AND" between guards
-    */
-    public static Guard join(Guard p1, Guard p2) {
-        if (p1 == null)
-            return p2;
-        
-        if (p2 == null)
-            return p1;
-        
-        return And.factory(p1,p2);
     }
     
     /**
