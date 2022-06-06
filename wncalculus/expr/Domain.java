@@ -4,6 +4,7 @@ import java.util.*;
 import wncalculus.util.Util;
 
 //SI POTREBBE DEFINIRE COME GENERICA RISPETTO AL TIPO DI SORTE
+//si potrebbero usare metodi builder
 
 /**
  * this class defines a domain (i.e., Cartesian product) of sorts;
@@ -22,18 +23,21 @@ public final class Domain {
      * note that, since an hash-map is used, different sorts should have different names
      * to avoid any confusion/incongruence (no check is done aboout that)
      * @param sm an hash-map of sorts to integers
+     * @throws IllegalDomain if the map is empty or contains value 0
      */
     public Domain(HashMap<? extends Sort,Integer> sm) {
         if (sm.isEmpty())
-            throw new IllegalDomain("you cannot build an empty domain!");
+            throw new IllegalDomain("empty domain!");
+        if (sm.values().contains(0))
+            throw new IllegalDomain("zero multiplicity!");
         
         this.domain = Collections.unmodifiableMap(sm); //this cast is just syntactical
     }
     
     /**
-     * build a single-sort domain
-     * @param s the domain's sort
-     * @param k the sort mult
+     * build a single-getSort domain
+     * @param s the domain's getSort
+     * @param k the getSort mult
      */
     public Domain(Sort s, int k) {
         this(Util.singleMap(s,k));
@@ -72,8 +76,8 @@ public final class Domain {
     }
     
     /**
-     * @param sort a sort
-     * @return the multiplicity of the sort; 0 if the sort is not mapped
+     * @param sort a getSort
+     * @return the multiplicity of the getSort; 0 if the getSort is not mapped
      */
     public int mult (Sort sort) {
         return this.domain.getOrDefault(sort, 0);
@@ -81,10 +85,10 @@ public final class Domain {
     
     /**
      * 
-     * @param sortname a sort's name
-     * @return the corresponding sort; <tt>null</tt> if no sort with thhat name is mapped
+     * @param sortname a getSort's name
+     * @return the corresponding getSort; <tt>null</tt> if no getSort with that name is mapped
      */
-    public Sort sort (String sortname) {
+    public Sort getSort (String sortname) {
         for ( Sort s : this.domain.keySet() ) 
             if (s.name().equals(sortname))
                 return s;
@@ -93,20 +97,24 @@ public final class Domain {
     }
       
     /**
-     * sets up a multiplicity for a specified sort in a NON destructive way
-     * if there is a sort with the same name of the passed one (possibly different)
+     * sets up a multiplicity for a specified getSort in a NON destructive way
+     * if there is a getSort with the same name of the passed one (possibly different)
      * then the existing mapping is overwritten
-     * @param s a sort
+     * @param s a getSort
      * @param mult a multiplicity value
      * @return a new domain obtained from <code>this</code> by setting up the given
-     * multiplicity for the givev sort; <code>this</code> if the sort is currently
+     * multiplicity for the givev getSort; <code>this</code> if the getSort is currently
      * assigned the specified multiplicity
+     * @throws IllegalDomain if the multiplicity is 0
      */ 
     public Domain set(Sort s, int mult) {
-         HashMap<Sort, Integer> copy = new HashMap<>(this.domain);
-         copy.put(s, mult);
-         
-         return new Domain(copy);
+         if (mult == 0) {
+             throw new IllegalDomain("zero multiplicity!");
+         } else {
+            HashMap<Sort, Integer> copy = new HashMap<>(this.domain);
+            copy.put(s, mult);
+            return new Domain(copy);
+         }
     }
        
     /**
@@ -121,27 +129,13 @@ public final class Domain {
         else {
             HashMap<Sort,Integer > copy = new HashMap<>();
             this.domain.entrySet().forEach (e -> {
-                Sort k = e.getKey(), v = sort_map.get(k); //old and new split sort
+                Sort k = e.getKey(), v = sort_map.get(k); //old and new split getSort
                 copy.put(v != null ? v : k, e.getValue());
             });
 
             return new Domain(copy);
         }
     }
-    
-    /*public Domain setSupport2 (Set<? extends Sort> newsorts) {
-        if (newsorts.isEmpty())
-            return this;
-        else {
-            HashMap<Sort,Integer > copy = new HashMap<>();
-            this.domain.entrySet().forEach (e -> {
-                Sort k = e.getKey(), v = newsorts.contains(k) ? k :  sort(); //old and new split sort
-                copy.put(v != null ? v : k, e.getValue());
-            });
-
-            return new Domain(copy);
-        }
-    }*/
     
     @Override
     public boolean equals (Object o) {

@@ -1,7 +1,6 @@
 package wncalculus.guard;
 
 import java.util.*;
-import wncalculus.logexpr.AndOp;
 import wncalculus.classfunction.Projection;
 import static wncalculus.classfunction.Projection.*;
 import wncalculus.color.ColorClass;
@@ -17,11 +16,12 @@ import wncalculus.util.Pair;
 public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard>  {
     
     private final Set<Guard> args;   // the operand's list
+    
     // caching
     private Map<ColorClass, Map<Boolean, SortedSet<Equality>> >   eq_map;
     private Map<ColorClass, Map<Boolean, Set<Membership>> >       memb_map;
-    
-    private final boolean congrsign = this instanceof AndOp ; // the "congruent sign"
+    private final boolean congrsign = this instanceof And ; // the "congruent sign"
+    private final boolean simple ;
     
     /**
     * basic constructor: builds a n-ary operator from a set of guards
@@ -32,19 +32,21 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     protected NaryGuardOperator(Set<? extends Guard> guards, boolean check) {
         if (check)
             Expressions.checkDomain(guards);
-        this.args  = Collections.unmodifiableSet(guards);
+        this.args   =  Collections.unmodifiableSet(guards);
+        this.simple =  LogicalExprs.simple(this.args);
     }
     
     /**
      * calculates the map of equalities included in <tt>this</tt> guard, grouped
      * by color and sign
      * @return the (possibly empty) map of equalities included in <tt>this</tt> guard, grouped
-     * by color (first) and sign
+     * by color (first) and sign; if the guard is not a simple form then returns an empty map 
      */
     @Override
     public final Map<ColorClass, Map <Boolean, SortedSet<Equality> > > equalityMap() {
-        if ( this.eq_map == null) 
-            this.eq_map = Collections.unmodifiableMap( setEqualityMap() );
+        if ( this.eq_map == null) { 
+            this.eq_map = simple() ?  Collections.unmodifiableMap( setEqualityMap() ) : Collections.EMPTY_MAP;
+        }
         
         return this.eq_map;
     }
@@ -53,12 +55,13 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * calculates the map of memberships included in <tt>this</tt> guard, grouped
      * by color and sign
      * @return the (possibly empty) map of memberships included in <tt>this</tt> guard, grouped
-     * by color (first) and sign
+     * by color (first) and sign; if the guard is not a simple form then returns an empty map
      */
     @Override
     public final Map<ColorClass, Map <Boolean, Set<Membership> > > membMap() {
-        if ( this.memb_map == null) 
-            this.memb_map = Collections.unmodifiableMap( setMemberMap() );
+        if ( this.memb_map == null) {
+            this.memb_map = simple() ? Collections.unmodifiableMap( setMemberMap() ) : Collections.EMPTY_MAP;
+        }
         
         return this.memb_map;
     }
@@ -316,7 +319,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
             }
         }
        //System.out.println("before: "+this+"\nafter: "+buildOp(guards)); 
-        return guards != null ? (Guard) buildOp(guards) : this;
+        return guards == null ? this : (Guard) buildOp(guards);
     }
       
    /*
@@ -400,24 +403,8 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * (@see {LogicalExprs.simple})
      */
     public final boolean simple() {
-        return LogicalExprs.simple(this.args);
-    }
-    
-    /**
-     * 
-     * @param connected a pre-calculated (maximal) set of connected inequalities
-     * @param cc a color class
-     * @return the set of (in-)equalities of <tt>this</tt> guard 
-     */
-    public final Set<Equality> componentEq ( ColorClass cc, Set<? extends Integer> connected) {
-    	LinkedHashSet<Equality> comp = new LinkedHashSet<>();
-    	for (Equality x : this.eq_map.get(cc).get(false))
-    		if (connected.contains(x.firstIndex()))
-    			comp.add(x);
-    	
-    	return comp;
-    }
-    
+        return this.simple;
+    }    
     
     /**
      * @return the guard's color-class, if the guard is single-sort, and all predicates

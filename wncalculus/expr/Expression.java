@@ -90,8 +90,8 @@ public interface Expression {
          
     
     /**
-     * @return the expression's sort, in case it is one-sorted;
-     * <code>null</code> otherwise
+     * @return the expression's getSort, in case it is one-sorted;
+ <code>null</code> otherwise
      */
     default Sort oneSorted() {
         Set<? extends Sort> cdsupp = getCodomain().support();
@@ -102,7 +102,7 @@ public interface Expression {
      
      /** 
      * @return the @code {List} of sorts appearing in the arity (i.e, domain and codomain)
-     * of <tt>this</tt> expression, ordered according to the sort natural ordering
+     * of <tt>this</tt> expression, ordered according to the getSort natural ordering
      */
      default ArrayList<Sort> getSorts() {
          Set<Sort> supp = getDomain().support();

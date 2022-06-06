@@ -67,10 +67,13 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
         //checkPar(f, m, g);
         check = true;
         HashMap<ColorClass, Integer> tcd = buildTupleCodom(m, check ? g.getDomain() : null);
-        //if (check && !tcd .equals( f.getDomain().asMap()))  // the tuple's codomain and the filter domain must coincide
-            //throw new IllegalDomain (tcd+" and "+f.getDomain()+ ": (co)domains are incompatible!");
+        if (f==null)
+            this.filter = True.getInstance(new Domain(tcd)); //messo per compatibilità con cli ...
+        else if (check && !tcd .equals( f.getDomain().asMap()))  // the tuple's codomain and the filter domain must coincide
+            throw new IllegalDomain (tcd+" and "+f.getDomain()+ ": derived and filter's domains incompatible!\nf: "+f); 
+        else
+            this.filter = f;
         
-        this.filter = f != null ? f : True.getInstance(new Domain(tcd)); //messo per compatibilità con cli ...
         this.guard  = g;
         this.hom_parts = Collections.unmodifiableSortedMap(m);
     }
@@ -173,16 +176,20 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
       */
      static <E extends ClassFunction> HashMap<ColorClass, Integer> buildTupleCodom (final SortedMap<ColorClass , List<? extends E>> map, final Domain dom) {
             /*Sorted*/HashMap<ColorClass, Integer> tcd = new /*Tree*/HashMap<>(); // the tcd's structure
-            map.entrySet().forEach((var entry) -> {
+            map.entrySet().forEach((Map.Entry<ColorClass, List<? extends E>> entry) -> {
                 var st = entry.getValue();
-                var cc = entry.getKey();
-                if (dom != null) {
-                    Set<? extends Integer> idxset = ClassFunction.indexSet(st); // the projection or_index set of st
-                    if (! idxset.isEmpty() && Collections.max(idxset)  > dom.mult(cc) )
-                        throw new IllegalDomain("failed tuple's building:\nincorrect domain specification (projection index outside the range of color "+cc+
-                                "\ntuple components: "+st+"), domain: "+dom);
+                if (st.isEmpty())
+                    throw new IllegalDomain();
+                else {
+                    var cc = entry.getKey();
+                    if (dom != null) {
+                        Set<? extends Integer> idxset = ClassFunction.indexSet(st); // the projection or_index set of st
+                        if (! idxset.isEmpty() && Collections.max(idxset)  > dom.mult(cc) )
+                            throw new IllegalDomain("failed tuple's building:\nincorrect domain specification (projection index outside the range of color "+cc+
+                                    "\ntuple components: "+st+"), domain: "+dom);
+                    }
+                    tcd.put(cc, st.size());
                 }
-                tcd.put(cc, st.size());
            });
         return tcd; 
      }

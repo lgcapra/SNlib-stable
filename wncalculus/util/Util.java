@@ -119,15 +119,10 @@ public class Util  {
      * @param feature a given feature of collection's elements
      * @return a feature-based map of collection's elements to sets sharing the feature
      */
-     /*public static <E, K> HashMap<K, Set<E>> mapFeature(Collection<? extends E> c, Function<E,K> feature) {
-        HashMap<K, Set<E>> m = new HashMap<>();
-        c.forEach( f -> { addElem(feature.apply(f), f, m); });
-        
-        return m;
-    }*/
     public static <E, K> HashMap<K, Set<E>> mapFeature(Collection<? extends E> c, Function<E,K> feature) {
         return mapFeature(c, feature, e -> e);
     }
+    
     /**
      * overloaded version of {@code mapFeature} using {@code SortedSet} for
      * the values of the map
@@ -311,12 +306,16 @@ public class Util  {
      * @param k a key
      * @param v a value
      * @return the map k to v
+     * @throws NullPointerException if the key is null
      */
     public static <K, V> HashMap<K,V> singleMap (K k, V v) {
-        HashMap<K,V> map = new HashMap<>();
-        map.put(k, v);
-        
-        return map;
+        if (k == null) {
+            throw new NullPointerException("null key!");
+        } else{
+            HashMap<K,V> map = new HashMap<>();
+            map.put(k, v);
+            return map;
+        }
     }
     
     /**
@@ -326,12 +325,16 @@ public class Util  {
      * @param k the key
      * @param e the value
      * @return a singleton sorted-map {k = e}
+     * @throws NullPointerException if the key is null
      */
     public static <E, K> SortedMap<K, E> singleSortedMap(K k, E e ) {
-        TreeMap<K,  E> m = new TreeMap<>();
-        m.put(k, e);
-        
-        return m;
+        if (k == null) {
+            throw new NullPointerException("null key!");
+        } else {
+            TreeMap<K,  E> m = new TreeMap<>();
+            m.put(k, e);
+            return m;
+        }
     }
      
     /**
@@ -614,7 +617,7 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
                 if ( ! check.apply(first, next = ite.next()) ) 
                     if (ex != null) {
                         try {
-                            System.err.println(first + " and " + next + " don't match the samee property:\n" + textprop.apply(first)+ "\nvs\n" + textprop.apply(next)); //error message
+                            System.err.println(first + " and " + next + " don't match the same property:\n" + textprop.apply(first)+ "\nvs\n" + textprop.apply(next)); //error message
                             throw ex.newInstance();
                         } 
                         catch (InstantiationException | IllegalAccessException ex1) {

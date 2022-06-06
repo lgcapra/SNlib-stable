@@ -88,92 +88,103 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
     @Override
     public FunctionTuple specSimplify( ) {
         //System.out.println("TupleProjection:\n"+this); //debug
-        if (this.ftuple.isFalse() ) 
-            return  getFalse();
         if (this.k == this.ftuple.size())  // the Projection is the identity
             return this.ftuple;
-        if (this.ftuple instanceof TupleProjection) 
-            return new TupleProjection(((TupleProjection) this.ftuple).ftuple , this.k);
         if (this.ftuple instanceof AllTuple) 
             return AllTuple.getInstance(getCodomain(), getDomain());
-        
-        if (! (this.ftuple instanceof Tuple) )
-            return this;
-        // VERY IMPORTANT: we assume that the inequation set corresponding to the filter has been shown "satisfiable"...
-        Tuple tuple = (Tuple) this.ftuple ; 
-        List<? extends SetFunction> components = tuple.getHomSubTuple(this.cc);
-        //System.out.println(this); //debug
-        if ( SetFunction.differentFromZero(components.subList(this.k, tuple.size() )) ) {
-            Guard filter = tuple.filter() , guard = tuple.guard(); 
-            Set<Integer> f_idxset = filter.indexSet() ;
-            SortedMap<ColorClass,List<? extends SetFunction>> projection = Util.singleSortedMap(this.cc, components.subList(0, this.k ));
-            Domain codom = getCodomain(); 
-            if (f_idxset.isEmpty() || Collections.max(f_idxset) <= this.k)  // rule 3 (simplest case)
-                return new Tuple (filter.clone(codom), projection, guard); 
-            //the filter contains at least a variable with index > k ...; due to preliminary filter simplifications,
-            //equalities should only refer to i) "equal" (mod-succ) components ii) of cardlb > 1, as for inequalities condition i) omay hold for single forms
-            var equalityMap = filter.equalityMap();
-            Set<Equality> equalities   = equalityMap.get(this.cc).getOrDefault(true,  Collections.emptySortedSet()), 
-                          inequalities = equalityMap.get(this.cc).getOrDefault(false, Collections.emptySortedSet());
-            if (! equalities.isEmpty() && Collections.max(Guard.indexSet(equalities) ) > this.k ) { // Lemma 11: there are any equalities that refer to the extended part...
-                Collection<Guard> restriction = Guard.restriction(equalities, this.k);
-                restriction.addAll(inequalities); // inequalities are added
+        if (this.ftuple instanceof EmptyTuple ) 
+            return getFalse();
+        if (this.ftuple instanceof TupleProjection) 
+            return new TupleProjection(((TupleProjection) this.ftuple).ftuple , this.k);
+        // main case
+        if ( this.ftuple instanceof Tuple ){
+            // VERY IMPORTANT: we assume that the inequation set corresponding to the filter has been shown "satisfiable"...
+            var tuple = (Tuple) this.ftuple ; 
+            var components = tuple.getHomSubTuple(this.cc);
+            //System.out.println(this); //debug
+            if ( SetFunction.differentFromZero(components.subList(this.k, tuple.size() )) ) {
+                Guard filter = tuple.filter() , guard = tuple.guard(); 
+                SortedMap<ColorClass,List<? extends SetFunction>> projection = Util.singleSortedMap(this.cc, components.subList(0, this.k ));
+                Domain codom = getCodomain(); 
+                if (filter.isTrivial())  // rule 3 (simplest case)
+                    return new Tuple (filter.clone(codom), projection, guard); 
                 
-                return new TupleProjection(new Tuple (filter.andFactory(restriction), tuple.getHomSubTuples(), guard), this.k);
-            }
-             // some inequality refers to the tuple's extension (otherwise we would have been fallen in one of the previous cases ..
-            Interval bounds = cardBoundsGt1(inequalities,  components, this.k) ; // the interval [minlb, maxub] of cardinality's bounds
-            if ( bounds != null) {// some inequality refers to f whose ccard cannot be computed or is  < 2  (the inequality "domains" have size > 1 ...)   
-                InequalityGraph igraph = new InequalityGraph(inequalities);
-                int minlb  = bounds.lb(), maxub = bounds.ub() ;// the Projection monotonicity-bound ..
-                if (this.monBound == null)
-                    this.monBound = monoBound(igraph);
-                //System.out.println(this +" mon_bound: "+this.monBound+ " (minlb="+minlb+ ") (maxub="+maxub+')'); //debug
-                //corollary 14 + lemma 4.10: either minlb > proj's mon_bound or g[T] is f.p and the inequalities' restriction is a clique
-                Set<? extends Guard> f_args = And.getArgs(filter);
-                if ( minlb > this.monBound  ) 
-                    return new Tuple( And.buildAndFormWithD(Guard.restriction(f_args, this.k), codom), projection, guard); // k-restriction of the whole filter
-                
-                if (igraph.isSimpleForm()) {
-                    boolean clique_k = igraph.isClique(this.k);
-                    if (clique_k && minlb >= igraph.chromaticNumber() ) 
-                        return new Tuple( And.buildAndFormWithD(Guard.restriction(f_args, this.k), codom), projection, guard); // k-restriction of the whole filter
-                    // minlb <= mon_bound and either g is not a single-form or the inequality graph's restriction is not a clique, or some extra components has cardlb minlb < X
-                    FunctionTuple ft= tuple.reduceFilterClassIneqs(inequalities, this.cc);
-                    if (ft != tuple)  // g single-form but [g]T not a fixed-point (we may drop this condition)
-                        return new TupleProjection(ft, this.k); 
-                   // ... and either g is not a single-form or [g]T is a fixed-point
-                   if (!clique_k && maxub >= 0 &&  maxub  <= this.monBound ) { // the cardinalities u.b. <= mon_bound (otherwise a split would be needed)     
-                        codom = tuple.getCodomain();
-                        // [g]T is a f.p.: there should be (assumption) a pair of independent nodes X_i, X_j, i <=k , j <= k - DOES THE CHECK MAY BE REMOVED?
-                        Projection[] i_nodes = igraph.getIndependentNodesLe(this.k); 
-                        //System.out.println(toStringDetailed()+": added constraint: "+i_nodes[0]+","+i_nodes[1]); //debug
-                        var args_1 = new HashSet<Guard>(f_args);
-                        var args_2 = new HashSet<Guard>(f_args);
-                        args_1.add(Equality.builder(i_nodes[0],i_nodes[1],true, codom ));
-                        args_2.add(Equality.builder(i_nodes[0],i_nodes[1],false,codom));
-                        TupleProjection tp_1 = new TupleProjection(new Tuple (And.factory(args_1), tuple.getHomSubTuples(), guard), this.k),
-                                        tp_2 = new TupleProjection(new Tuple (And.factory(args_2), tuple.getHomSubTuples(), guard), this.k);
-                        return TupleSum.factory(true, tp_1, tp_2);                        
-                    }
-                } else { // the filter is not a simple form
-                    final var ccard = this.cc.fixedSize();
-                    if (ccard > 0) { // fixed-size color class 
-                        Iterator<Set<Equality>> ite = Util.mapFeature(inequalities, e -> new Pair<>(e.firstIndex(), e.secondIndex())). values().iterator();
-                        Set<Equality> maxsim = ite.next(), next;
-                        while (ite.hasNext())
-                            if ( (next = ite.next() ).size() > maxsim.size() )
-                                maxsim = next;
-                        //the greatest similar sub-list of ineqs is replaced in the filter by a cooresponding sum of eqs 
-                        var args = new LinkedHashSet<>(f_args); 
-                        args.removeAll(maxsim);
-                        Or nested = (Or) Or.factory(Equality.missingOppEqs(maxsim, ccard), true);
-                        return new TupleProjection(new Tuple ( ((And)And.factory(args)).distribute(nested), tuple.getHomSubTuples(), guard), this.k);
-                    
-                    }
+                var equalityMap = filter.equalityMap();
+                if (equalityMap.isEmpty() || ! filter.membMap().isEmpty() )
+                    return this;
+                // the filter is built of (in)equalities
+                // equalities should only refer to i) "equal" (mod-succ) components ii) of cardlb > 1, as for inequalities condition i) may hold for single forms
+                Set<Equality> equalities   = equalityMap.get(this.cc).getOrDefault(true,  Collections.emptySortedSet()), 
+                              inequalities = equalityMap.get(this.cc).getOrDefault(false, Collections.emptySortedSet());
+                Set<Guard> eq_restr = Guard.restriction(equalities, this.k), ieq_restr;
+                if (eq_restr.size() != equalities.size() ) { // Lemma 11: some equalities refer to the tuple's extended part ...
+                    eq_restr.addAll(inequalities); // inequalities are added
+                    return new TupleProjection(new Tuple (filter.andFactory(eq_restr), tuple.getHomSubTuples(), guard), this.k);
                 }
-                 // new! we may direcltly set the split offset
-                 this.splitdelim = this.cc.setDelim(this.monBound - minlb + 1) ; // this quantity is >= 1
+                // equalities (if any) refer to the original part of the tuple
+                ieq_restr = Guard.restriction(inequalities, this.k);
+                if (ieq_restr.size()== inequalities.size() ) {
+                    return new Tuple (filter.clone(codom), projection, guard); // rule 3
+                }
+                // some inequality refers to the tuple's extension
+                final Interval bounds = cardBounds(inequalities,  components, this.k) ; // the interval [minlb, maxub] of cardinality's bounds
+                final int minlb  = bounds.lb();
+                if ( minlb > 1) {   
+                    final InequalityGraph igraph = new InequalityGraph(inequalities);
+                    if (this.monBound == null)
+                        this.monBound = monoBound(igraph);
+                    //System.out.println(this +" mon_bound: "+this.monBound+ " (minlb="+minlb+ ") (maxub="+maxub+')'); //debug
+                    //corollary 14 + lemma 4.10: either minlb > proj's mon_bound or g[T] is f.p and the inequalities' eq_restr is a clique
+                    if ( minlb > this.monBound  ) {
+                        eq_restr.addAll(ieq_restr); // the k-restriction of the filter
+                        return new Tuple( And.buildAndFormWithD(eq_restr, codom), projection, guard); // k-restr of the whole tuple
+                    }
+                    
+                    if (igraph.isSimpleForm()) {
+                        final boolean clique_k = igraph.isClique(this.k);
+                        if (clique_k && minlb >= igraph.chromaticNumber() ) {
+                            eq_restr.addAll(ieq_restr); 
+                            return new Tuple( And.buildAndFormWithD(eq_restr, codom), projection, guard); // k-restr of the whole tuple
+                        }                        
+                        // minlb <= mon_bound and either g is not a single-form or the inequality graph's eq_restr is not a clique, or some extra components has cardlb minlb < X
+                        FunctionTuple ft = tuple.reduceFilterClassIneqs(inequalities, this.cc);
+                        if (ft != tuple)  // g single-form but [g]T not a fixed-point (we may drop this condition)
+                            return new TupleProjection(ft, this.k); 
+                        // if the graph is not a clique, we consider the projection monotonicity-bound
+                        if (!clique_k && bounds.ub() >= 0 && bounds.ub() <= this.monBound ) { // the cardinalities u.b. <= mon_bound (otherwise a split would be needed)     
+                            codom = tuple.getCodomain();
+                            // [g]T is a f.p.: there should be (assumption) a pair of independent nodes X_i, X_j, i <=k , j <= k - DOES THE CHECK MAY BE REMOVED?
+                            final Projection[] i_nodes = igraph.getIndependentNodesLe(this.k); 
+                            //System.out.println(toStringDetailed()+": added constraint: "+i_nodes[0]+","+i_nodes[1]); //debug
+                            Set<Equality> f_args = new HashSet<>(inequalities); // a copy of the filter 
+                            f_args.addAll(equalities);
+                            final var args_1 = new HashSet<Guard>(f_args);
+                            final var args_2 = new HashSet<Guard>(f_args);
+                            args_1.add(Equality.builder(i_nodes[0],i_nodes[1],true, codom ));
+                            args_2.add(Equality.builder(i_nodes[0],i_nodes[1],false,codom));
+                            TupleProjection tp_1 = new TupleProjection(new Tuple (And.factory(args_1), tuple.getHomSubTuples(), guard), this.k),
+                                            tp_2 = new TupleProjection(new Tuple (And.factory(args_2), tuple.getHomSubTuples(), guard), this.k);
+                            return TupleSum.factory(true, tp_1, tp_2);                        
+                        }
+                    } else { // the filter is not a simple form
+                        final var ccard = this.cc.fixedSize();
+                        if (ccard > 0) { // fixed-size color class 
+                            Iterator<Set<Equality>> ite = Util.mapFeature(inequalities, e -> new Pair<>(e.firstIndex(), e.secondIndex())). values().iterator();
+                            Set<Equality> maxsim = ite.next(), next;
+                            while (ite.hasNext())
+                                if ( (next = ite.next() ).size() > maxsim.size() )
+                                    maxsim = next;
+                            //the greatest sub-list of similar ineqs is replaced by a cooresponding sum of equalities 
+                            var args = new HashSet<>(inequalities); 
+                            args.removeAll(maxsim);
+                            args.addAll(equalities);
+                            Or nested = (Or) Or.factory(Equality.missingOppEqs(maxsim, ccard), true);
+                            return new TupleProjection(new Tuple ( ((And)And.factory(args)).distribute(nested), tuple.getHomSubTuples(), guard), this.k);
+                        }
+                    }
+                     // new! we may direcltly set the split offset
+                     this.splitdelim = this.cc.setDelim(this.monBound - minlb + 1) ; // this quantity is >= 1
+                }
             }
         }
         return this; 
@@ -185,7 +196,7 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
      * equivalent to the syntactical restriction of the [g']T.
      * tuple's components cardinalities are taken into account
      * @param g the inequation graph associated with the filter
-     * @return a minimal upper bound for the k-projection to be equivalent to the k-(syntactical) restriction
+     * @return a minimal upper bound for the k-projection to be equivalent to the k-(syntactical) eq_restr
      */
     private int monoBound (InequalityGraph g) {   
         if (g.isEmpty() || g.indexSetGt(this.k).isEmpty()) 
@@ -226,26 +237,23 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
     
         
     /**
-     @return the interval [minlb, maxub] of built of cardinality's bounds of tuple functions (meant as domains) referred to by a list of in(equalities;
-     indices greater than a given value are considered; <code>null</code>, if the cardinality of some functions is undefined or < 2
+     * @return the interval [minlb, maxub] of cardinality's bounds of tuple functions (meant as domains)
+     * referred to by a inequalities with indices greater than a given value;
+     * <code>[0,0]</code>, if the cardinality of some functions is undefined
      */
-    private static Interval cardBoundsGt1(Collection<? extends Equality> eqs, List<? extends SetFunction> components, int k) {
+    private static Interval cardBounds(Collection<? extends Equality> eqs, List<? extends SetFunction> components, int k) {
         int minlb = Integer.MAX_VALUE, maxub = 0;
         for (int x : Guard.indexSet(eqs)) {
             if (x > k) {
                 Interval card = components.get(x -1).card();
-                if ( card == null || card.lb() < 2 )
-                    return null;
+                if ( card == null )
+                    return new Interval(0,0);
                 
                 if (minlb > card.lb())
                     minlb = card.lb();
-               
                 if (maxub >= 0 && ( card.ub() < 0 || maxub < card.ub() ))
                     maxub = card.ub(); 
             }
-        }
-        if (minlb == Integer.MAX_VALUE) {
-            throw new Error("suspicious situation!");
         }
         return maxub < 0 ? new Interval(minlb) : new Interval(minlb, maxub);
     }
@@ -265,7 +273,6 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
         return hash;
     }
 
-  
     /**
      * overrides the super-type method because the operand's codomain is an extension
      * of <tt>this</tt> term's codomain

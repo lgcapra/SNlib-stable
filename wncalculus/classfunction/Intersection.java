@@ -93,7 +93,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
     @Override
     public Interval card() {
         Integer k;
-        if ( this.card == null && ( k = isExtendedCompl() ) != 0 ) { // k: number of proj.-compl
+        if ( this.card == null && ( k = extendedCompl() ) != 0 ) { // k: number of proj.-compl
             //System.out.println(k);//debug
             ColorClass cc = getSort();
             Interval in = subclSize() == 0 ? cc.card() : subclasses().iterator().next().card();
@@ -115,7 +115,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
      * assumes that different projections map to different colours and no duplicates are present
      * @return the number of proj. complements if and only if the check succeeds; @code {0} otherwise 
      */
-    public Integer isExtendedCompl () {
+    public Integer extendedCompl () {
         if (this.extended_compl == null) { // never computed before ...
             this.extended_compl = 0; //we assume it is not
             ColorClass cc = getSort();
@@ -146,19 +146,27 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
         return this.extended_compl;
     }
     
+    /**
+     * 
+     * @return <code>true</code> if and only if <code>this</code> is an extended projection compl.  
+     */
+    public boolean isExtendedCompl() {
+        return !extendedCompl ().equals(0) ;
+    }
+    
      /** 
      * @return a set with the the successor-arguments appearing on @code {this}, which is
      * assumed to be an extended complement;
      * an empty set if (for any reasons)  @code {this} is not an extended complement
      */
       public Set<Integer> extendedComplSucc () {
-        if ( isExtendedCompl() == 0)
-           return Collections.EMPTY_SET;
-           
-        Set<Integer> succset = new HashSet<>();
-        congruent(false).forEach( x -> { succset.add(x.getSucc()); });
+        if ( isExtendedCompl() ) {
+            Set<Integer> succset = new HashSet<>();
+            congruent(false).forEach( x -> { succset.add(x.getSucc()); });
+            return succset;
+        }
         
-        return succset;
+        return Collections.EMPTY_SET;
        }
         
     /** gets the index-separated operands of <code>this</code> intersection,
@@ -251,7 +259,6 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
     public Set<? extends Pair<? extends SetFunction, ? extends Guard> > toSimpleFunctions (final Set<? extends Equality> ineqlist, final Map<Projection, Subcl> inmap, final Map<Projection, Set<Subcl>> notinmap, Domain domain) {
         //System.out.println("Intersection.toSimpleFunctions (1)\n"+this);
         Set< Pair <SetFunction , Guard> > res = new HashSet<>();
-        //if (  hasSimplifiedForm() ) { // is an intersection in simplified form
         Projection pr;
         Set<? extends SetFunction> operands = getArgs();
         if ( congruent(true).isEmpty() ) {  // no Projection in the operands' list - only ProjectionComp(s) and (at most) one Subcl
@@ -317,10 +324,10 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
                 new_guards.add(Equality.builder(pr, (Projection) pc.opposite(), false, domain));
             for (Subcl s : subclasses()) // new memberships
                 new_guards.add (Membership.build(pr, s, domain)); 
-
-            res.add(new Pair<>(pr, And.factory(new_guards)));
+            
+            if (!new_guards.isEmpty()) // means that further rewriting needed
+                res.add(new Pair<>(pr, And.factory(new_guards)));
         } 
-        //}
         //System.out.println("ecco torightcompset: "+res);
         return res; 
     }

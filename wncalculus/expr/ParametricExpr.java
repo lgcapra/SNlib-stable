@@ -81,7 +81,7 @@ public interface ParametricExpr extends Expression {
      
      /**
       * 
-      * @return <code>true</code> if and only if any sort of expression's arity is parametric 
+      * @return <code>true</code> if and only if any getSort of expression's arity is parametric 
       */
      default boolean isParametric() {
          Set<Sort> supp = getDomain().support();

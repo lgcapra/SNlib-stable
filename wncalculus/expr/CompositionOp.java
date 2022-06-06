@@ -87,8 +87,8 @@ public interface CompositionOp<E extends ParametricExpr, F extends ParametricExp
             HashMap<Sort,Integer > copy = new HashMap<>();
             left_dom.asMap().entrySet().forEach (e -> {
                 Sort s = e.getKey(), ns;
-                boolean not_found = newdom.mult(s) == 0 && newcd.mult(s) == 0; // the old sort of the left's domain is not present in the new (co-)domain
-                if (not_found && ( (ns = newdom.sort(s.name() )) != null || (ns = newcd.sort(s.name() )) != null) ) // in the new (co-)domain there is a sort with that name
+                boolean not_found = newdom.mult(s) == 0 && newcd.mult(s) == 0; // the old getSort of the left's domain is not present in the new (co-)domain
+                if (not_found && ( (ns = newdom.getSort(s.name() )) != null || (ns = newcd.getSort(s.name() )) != null) ) // in the new (co-)domain there is a getSort with that name
                     s = ns;
                 copy.put(s, e.getValue());
             });

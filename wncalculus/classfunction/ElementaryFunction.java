@@ -36,8 +36,8 @@ public abstract class ElementaryFunction extends SetFunction  {
     @Override
     public final ElementaryFunction clone(Domain newdom, Domain newcd) {
         if (newdom.mult(cc) == 0 && newcd.mult(cc) == 0) { // the color-class is not present in the new (co-)domain             
-            Sort ncc = newdom.sort(cc.name());
-            if (ncc != null || (ncc = newcd.sort(cc.name())) != null)
+            Sort ncc = newdom.getSort(cc.name());
+            if (ncc != null || (ncc = newcd.getSort(cc.name())) != null)
                 return copy((ColorClass) ncc);
             }
         

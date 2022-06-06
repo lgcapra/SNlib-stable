@@ -125,8 +125,8 @@ public class Expressions {
     
     /** try to "merge" two constraints (i.e., two ordered lists of corresponding sorts)
      *  of two terms of the same arity 
-     *  @return a map between the old sort of the first list and the sort resulting from merge, if any;
-     *  <tt>null</tt> if no merge is done
+     *  @return a map between the old getSort of the first list and the getSort resulting from merge, if any;
+  <tt>null</tt> if no merge is done
     */
     private static  Map<Sort,Sort>  mergeConstraint(List<? extends Sort> c1, List<? extends Sort> c2) {
         Map<Sort,Sort> old_to_merge = null;

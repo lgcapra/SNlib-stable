@@ -128,7 +128,7 @@ public abstract class ElementaryGuard extends Guard implements SingleSortExpr  {
     public final Guard clone(Domain newdom, Domain newcd) {
        Sort cc = getSort();
        
-       return newdom.mult(cc) != 0 ? clone(newdom) : copy( (ColorClass) newdom.sort(cc.name()), newdom); //we first check if color cc is present in newdom
+       return newdom.mult(cc) != 0 ? clone(newdom) : copy( (ColorClass) newdom.getSort(cc.name()), newdom); //we first check if color cc is present in newdom
     }
     
     /** 

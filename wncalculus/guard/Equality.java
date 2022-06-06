@@ -20,6 +20,8 @@ public final class Equality extends ElementaryGuard implements Comparable<Equali
      */
 public  static final Map< ComplexKey, Equality> VALUES = new HashMap<>();
 
+//caching
+private Map<ColorClass, Map<Boolean, SortedSet<Equality>>> eqMap;
     /**
      * base constructor
      * @param p1 the first variable
@@ -264,7 +266,10 @@ public  static final Map< ComplexKey, Equality> VALUES = new HashMap<>();
     //new
     @Override
     public Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap() {
-        return Collections.singletonMap(getSort(), Collections.singletonMap(sign(), Util.singleton(this, null)));
+        if (this.eqMap == null) {
+            this.eqMap = Collections.singletonMap(getSort(), Collections.singletonMap(sign(), Util.singleton(this, null)));
+        }
+        return this.eqMap;
     }
 
 }

@@ -4,7 +4,6 @@ import java.util.*;
 import wncalculus.graph.InequalityGraph;
 import wncalculus.logexpr.AndOp;
 import wncalculus.expr.*;
-import wncalculus.classfunction.ClassFunction;
 import wncalculus.classfunction.Projection;
 import wncalculus.classfunction.Subcl;
 import wncalculus.color.Color;
@@ -19,10 +18,6 @@ import wncalculus.util.Util;
  */
 public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
 
-    /*
-    return the set of operands of a guard which is assumed an elementary and form
-     */
-
     /**
      * assuming that a given guard is an elementary "AND" form, calculates its set
      * of operands (a singleton if the guard is elementary)
@@ -30,17 +25,9 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @return the set of operands of the guard, assumed an  elementary "AND" form (a singleton if the guard is elementary)
      * @throws ClassCastException if the guard is neither elementary nor an "AND" operator
      */
-
     public static Set<? extends Guard> getArgs(Guard g) {
         return g instanceof ElementaryGuard ? Collections.singleton(g) : ((And) g).getArgs();
     }
-
-    /**
-     * derives the memberships map, color by color, for a guard which is assumed an elementary "AND"-form
-     * @param g a guard
-     * @return the memberships map for a guard which is assumed an elementary "AND"-form;
-     * an empty map, if the guard doesn't match an elementary "AND"-form
-     */
 
     private Map<Color, InequalityGraph> igraph; // cashing: the (possibly empty) map between colors and corresponding inequality graphs
     
@@ -553,7 +540,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      */
     public Set<HashSet<Integer>> independentSets () {
     	ColorClass cc = getSort();
-        if (cc != null) {
+        if (cc != null && simple()) {
             SortedSet<Equality> es = equality(cc, true);
             Set<HashSet<Integer>> connectedIndices = igraph().get(cc).connectedIndices(); //independent inequalities
             if (es.isEmpty())

@@ -171,7 +171,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      }
     /**
      * builds a tuple with the same (co-)domain as <code>this</code> tuple from a list
- it doesn'tuple perform any consistency check
+     * it doesn'tuple perform any consistency check
      * @param filter the possibly null tuple'fc f
      * @param list the tuple's components
      * @param guard the possibly null tuple's g
@@ -196,9 +196,9 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     /**
      * builds a tuple with the same (co-)domain, and with the same
      * components as <code>this</code> tuple, but for those of the specified color, that are supplied
- doesn'tuple perform any consistency check
+     * doesn'tuple perform any consistency check
      * @param filter the possibly null tuple's f
-     * @param cc a tuple cc_low_case class
+     * @param cc a tuple's color class
      * @param list the tuple's components (assumed) of cc_low_case @param{cc_name}
      * @param guard the possibly null tuple's g
      * @return a tuple with the same (co-)domain, and with the same
@@ -409,15 +409,15 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     }
            
     @Override
-    public ParametricExpr clone(Domain newdom, Domain newcd) {
+    public Tuple clone(Domain newdom, Domain newcd) {
         TreeMap<ColorClass, List<? extends SetFunction> > m = new TreeMap<>();
         //inefficiente,va sistemato!
         getHomSubTuples().entrySet().forEach( x -> {
             ColorClass cc = x.getKey();
-            if (newcd.mult(cc) != 0) //color cc set present in newcd
+            if (newcd.mult(cc) != 0) //color cc present in newcd
                 m.put(cc, x.getValue());
             else {
-                ColorClass newcc = (ColorClass)newcd.sort(cc.name());
+                ColorClass newcc = (ColorClass)newcd.getSort(cc.name());
                 m.put(newcc, (List<? extends SetFunction>) ClassFunction.copy(x.getValue(),newcc));
             }
         });
@@ -574,7 +574,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
          
       /** 
      * brings this tuple to an equivalent (disjoint) list (logically corresponding to a sum) of constant-fixedSize function-tuples,
-     * which inner intersections are brought into a constant-fixedSize form 
+     * which inner intersections are brought into a constant-size form 
      * particular cases in which the tuple set already "simple", or all of its components need further reductions,
      * a singleton list set returned; 
      * @return an equivalent list of disjoint, simple tuples; a singleton containing <tt>this</tt> tuple
@@ -594,12 +594,13 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             //if (! (ineq_list.isEmpty() && inmap.isEmpty() && notinmap.isEmpty()) ) //possible optimization
             for ( SetFunction f : x.getValue() ) {
                 var set = f.toSimpleFunctions(ineq_list , inmap, notinmap, dom);
-                if ( ! set.isEmpty()) {
+                if ( set.isEmpty()) {
+                    list_of_sets.add(Collections.singleton (new Pair<>(f, True.getInstance(dom))));
+                }
+                else {
                     added_g = true;
                     list_of_sets.add(set);
                 }
-                else
-                    list_of_sets.add(Collections.singleton (new Pair<>(f, True.getInstance(dom))));
             }
         }   
         if (! added_g) 

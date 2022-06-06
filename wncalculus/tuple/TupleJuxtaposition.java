@@ -116,17 +116,16 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
      * of <tt>this</tt> term's codomain
      * @param newdom the new domain
      * @param newcd  the new codomain
-     * @param smap the color split-map
      * @return a clone of <tt>this</tt> with the specified co-domains
      */
     @Override
     public TupleJuxtaposition clone (final Domain newdom, final Domain newcd) {
         List<FunctionTuple> cloned_tuples = new ArrayList<>();
-        this.tuples.forEach(tuple -> {
+        this.tuples.forEach((var tuple) -> {
             Domain old_cd = tuple.getCodomain();
-            Sort cc = old_cd.support().iterator().next(); //the sub-tuple is mono-coloured
-            int m = newcd.mult(cc); // m is 0 if cc is not present in newcd
-            cloned_tuples.add((FunctionTuple)tuple.clone(newdom,  m != 0 ? old_cd : new Domain(newcd.sort(cc.name()), m) ));
+            Map.Entry<? extends Sort, Integer> e = old_cd.asMap().entrySet().iterator().next();
+            var cc = e.getKey(); //the sub-tuple is mono-coloured
+            cloned_tuples.add((FunctionTuple)tuple.clone(newdom, newcd.mult(cc) != 0 ? old_cd : new Domain(newcd.getSort(cc.name()), e.getValue()) ));
         });
         
         return new TupleJuxtaposition(cloned_tuples, true);

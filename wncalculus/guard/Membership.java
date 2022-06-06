@@ -15,6 +15,8 @@ import wncalculus.util.Util;
 public final class Membership extends ElementaryGuard  {
     
     private static final Map< ComplexKey, Membership> VALUES = new HashMap<>();
+    //caching
+    public Map<ColorClass, Map<Boolean, Set<Membership>>> membMap;
 
     /**
      * given a list of membership clauses, extracts a map from symbols to the subclasses
@@ -215,7 +217,10 @@ public final class Membership extends ElementaryGuard  {
     //new
     @Override
     public Map<ColorClass, Map<Boolean, Set<Membership>>> membMap() {
-        return Collections.singletonMap(getSort(), Collections.singletonMap(sign(), Collections.singleton(this)));
+        if (this.membMap == null){
+            this.membMap = Collections.singletonMap(getSort(), Collections.singletonMap(sign(), Collections.singleton(this)));
+        }
+        return this.membMap; 
     }
 
     
