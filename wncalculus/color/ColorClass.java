@@ -325,8 +325,8 @@ public final class ColorClass extends Sort implements Color {
     public int setDelim(int d) {
         //if (! unbounded() ) //more general
              //d = Math.min(d, ub() - lb() );
-        if (!unbounded() && d == ub() - lb() + 1)
-             d-- ;
+        if (!unbounded() )
+             d = Math.min(d, ub() - lb());
         
         return d;
     }

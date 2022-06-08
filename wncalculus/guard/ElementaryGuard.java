@@ -1,6 +1,7 @@
 package wncalculus.guard;
 
 import java.util.HashSet;
+import java.util.Map;
 import wncalculus.color.ColorClass;
 import wncalculus.classfunction.*;
 import wncalculus.expr.*;
@@ -48,7 +49,7 @@ public abstract class ElementaryGuard extends Guard implements SingleSortExpr  {
           if (! cc.equals(op2.getSort()) ) //
             throw new IllegalDomain("elementary guard's members must have the same color!");
         
-        if (! dom.support().contains(cc) ) //if dom is an HashSet remove the constructor
+        if ( dom.mult(cc) == 0) //if dom is an HashSet remove the constructor
             throw new IllegalDomain("the guard's color-class must belong to the domain:\ncc: "+cc+", dom: "+dom);
         
         return cc;
@@ -122,14 +123,13 @@ public abstract class ElementaryGuard extends Guard implements SingleSortExpr  {
     public abstract Guard replace(Equality eq) ;
     
     
-    abstract Guard copy(ColorClass cc, Domain newdom) ;    
     
-     @Override
+    /*@Override
     public final Guard clone(Domain newdom, Domain newcd) {
        Sort cc = getSort();
        
        return newdom.mult(cc) != 0 ? clone(newdom) : copy( (ColorClass) newdom.getSort(cc.name()), newdom); //we first check if color cc is present in newdom
-    }
+    }*/
     
     /** 
      * "translates" this elementary guard to a corresponding intersection form

@@ -1,5 +1,7 @@
 package wncalculus.expr;
 
+import java.util.Map;
+
 /**
  * this interface is the super-type for unary (sorted) operators,
  * in which the operand and operator's types may be different
@@ -46,19 +48,16 @@ public interface SingleArg<E extends ParametricExpr, F extends ParametricExpr> e
         return "(" + getArg() + ')' + symb();
     }
     
-    /**
-     * clone <tt>this</tt> unary op assuming that the co-domains of the operand and
-     * of the operator are the same (to be overridden otherwise)
-     * @param newdom the new domain
-     * @param newcd the new codomain
-     * @param smap the map between old and new split sorts
-     * @return a clone of <tt>this</tt> with the specified co-domain
-     */
+    
     @Override
-    default F clone (final Domain newdom, final Domain newcd) {
-        return buildOp(getArg().clone(newdom, newcd). cast());
+    default F clone (final Domain newdom) {
+        return buildOp(getArg().clone(newdom). cast());
     }
     
+    @Override
+    default F clone (final Map<Sort, Sort> split_map) {
+        return buildOp(getArg().clone(split_map). cast());
+    }
     
     /**
      * builds an operator like <code>this</code> 

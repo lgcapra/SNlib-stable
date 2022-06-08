@@ -129,7 +129,7 @@ public final class Domain {
         else {
             HashMap<Sort,Integer > copy = new HashMap<>();
             this.domain.entrySet().forEach (e -> {
-                Sort k = e.getKey(), v = sort_map.get(k); //old and new split getSort
+                Sort k = e.getKey(), v = sort_map.get(k); //old and new sort
                 copy.put(v != null ? v : k, e.getValue());
             });
 

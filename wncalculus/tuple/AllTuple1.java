@@ -64,10 +64,14 @@ public final class AllTuple1  implements FunctionTuple {
 
   
     @Override
-    public AllTuple1 clone(Domain newdom, Domain newcd) {
-        return getInstance(newcd, newdom);
+    public AllTuple1 clone(final Domain newdom) {
+        return getInstance(getCodomain(), newdom);
     }
     
+     @Override
+     public AllTuple1 clone (final  Map<Sort, Sort> split_map) {
+         return getInstance(getCodomain().setSupport(split_map), getDomain().setSupport(split_map));
+     }
 
 
     @Override

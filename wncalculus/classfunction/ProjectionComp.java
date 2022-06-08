@@ -4,6 +4,7 @@ import java.util.*;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.Domain;
 import wncalculus.expr.Interval;
+import wncalculus.expr.Sort;
 import wncalculus.guard.Equality;
 import wncalculus.util.ComplexKey;
 import wncalculus.util.Pair;
@@ -139,12 +140,17 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
         return factory(this.pr.copy(newcc)).cast();
     }
 
-    @Override
+    /*@Override
     public SetFunction clone(Domain newdom, Domain newcd) {
         Projection p = (Projection) this.pr.clone(newdom, newcd);
         return p == this.pr ? this : factory(p).cast();
-    }
+    }*/
 
+    @Override
+     public final SetFunction clone (final Map<Sort, Sort> split_map) {
+         ElementaryFunction p = this.pr.clone(split_map);
+         return p == this.pr ? this : factory((Projection) p).cast();
+     }
 
     @Override
     public ColorClass getSort() {

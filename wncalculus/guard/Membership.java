@@ -26,7 +26,7 @@ public final class Membership extends ElementaryGuard  {
      */
     public static Map<Projection, Set<Subcl>> mapSymbols(Collection<? extends Membership> mlist) {
         Map<Projection, Set<Subcl>> map = new HashMap<>();
-        mlist.forEach( m -> { Util.addElem(m.getArg1(), m.subcl(), map); });
+        mlist.forEach( m -> { Util.addElem(m.getArg1(), m.getArg2(), map); });
         
         return map;
     }
@@ -40,7 +40,7 @@ public final class Membership extends ElementaryGuard  {
      */
     public static Map<Projection, Subcl> mapSymbolsNoRep(Set<? extends Membership> mset) {
         Map<Projection, Subcl> map = new HashMap<>();
-        mset.stream().filter(m -> (map.putIfAbsent(m.getArg1(), m.subcl()) != null)).forEachOrdered(_item -> {
+        mset.stream().filter(m -> (map.putIfAbsent(m.getArg1(), m.getArg2()) != null)).forEachOrdered(_item -> {
             throw new IllegalArgumentException("many symbols refer to the same subclass: "+mset);
         });
         
@@ -119,12 +119,9 @@ public final class Membership extends ElementaryGuard  {
         return build (p1, idxset.iterator().next(), sign, dom);
     }
             
-    /**
-     *
-     * @return the subclass corresponding to the membership
-     */
-    public Subcl subcl() {
-        return (Subcl) getArg2();
+    @Override
+    public Subcl getArg2() {
+        return (Subcl) super.getArg2();
     }
     
     /**
@@ -132,7 +129,7 @@ public final class Membership extends ElementaryGuard  {
      * @return the index of the associated subclass 
      */
     public int index () {
-        return subcl().index();
+        return getArg2().index();
     }
     /**
      * the method is overridden in an optimized way, so that
@@ -157,15 +154,9 @@ public final class Membership extends ElementaryGuard  {
 
     @Override
     public Membership opposite() {
-       return build (getArg1(), subcl(), !sign(), getDomain()); 
+       return build (getArg1(), getArg2(), !sign(), getDomain()); 
     }
     
-
-    @Override
-    public Membership clone(Domain new_dom)  {
-        return build(getArg1(), subcl(), sign(), new_dom);
-    }
-
     @Override
     public Set<Integer> indexSet() {
         return getArg1().indexSet();
@@ -173,12 +164,12 @@ public final class Membership extends ElementaryGuard  {
     
     @Override
     public String toString() {
-        return getArg1()+ opSymb()+ getSort().name()+ "{"+ subcl().index() + "}" /*+ hashCode()*/;
+        return getArg1()+ opSymb()+ getSort().name()+ "{"+ getArg2().index() + "}" /*+ hashCode()*/;
     }
 
     @Override
     public Intersection toSetfunction(Projection f) {
-       return Objects.equals(f.getIndex(), firstIndex()) ? (Intersection)Intersection.factory(f, sign() ? subcl() : subcl().opposite()) : null; 
+       return Objects.equals(f.getIndex(), firstIndex()) ? (Intersection)Intersection.factory(f, sign() ? getArg2() : getArg2().opposite()) : null; 
     }
     
    
@@ -198,20 +189,24 @@ public final class Membership extends ElementaryGuard  {
     public Membership replace(Equality eq) {
         Projection p = getArg1().replace(eq);
         
-        return p == getArg1() ? this : Membership.build( p, subcl(), sign(), getDomain() ) ;
+        return p == getArg1() ? this : Membership.build( p, getArg2(), sign(), getDomain() ) ;
     }
 
-    /**
-     *
-     * @param cc
-     * @param newdom
-     * @return
-     */
+    
     @Override
-    public Membership copy(ColorClass cc, Domain newdom) {
-        Subcl sc = subcl().clone(cc);
-        
-        return Membership.build(getArg1().clone(cc), sc, sign(), newdom);
+    public Guard clone(Map<Sort, Sort> split_map) {
+        Domain nd = getDomain().setSupport(split_map);
+        ColorClass cc = getSort(), n_cc = (ColorClass)split_map.get(cc);
+        if (n_cc == null) {
+            return clone(nd);
+        } else {
+            return Membership.build(getArg1().copy(n_cc), getArg2().copy(n_cc), sign(), nd);
+        }
+    }
+    
+    @Override
+    public Membership clone(Domain new_dom)  {
+        return build(getArg1(), getArg2(), sign(), new_dom);
     }
     
     //new

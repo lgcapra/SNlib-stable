@@ -169,5 +169,10 @@ public final class LinearComb extends LogicalBag<ElementaryFunction> implements 
     public LogicalBag<ElementaryFunction> build(Map<ElementaryFunction, Integer> smap, boolean disj) {
         return new LinearComb(smap, disj);
     }
+    
+    @Override
+    public LinearComb clone (final Domain newdom) {
+        return (LinearComb) ClassFunction.super.clone(newdom);
+    }
    
 }

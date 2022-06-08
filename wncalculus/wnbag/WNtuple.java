@@ -81,10 +81,16 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
         return WNtuple.class;
    }
 
-    @Override
+    /*@Override
     public ParametricExpr clone(Domain newdom, Domain newcd) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }*/
+    
+    @Override
+    public final WNtuple clone (final  Map<Sort, Sort> split_map) {
+        return new WNtuple ((Guard)filter().clone(split_map), super.cloneComps(split_map), (Guard)guard().clone(split_map));
     }
+    
 
     @Override
     public Map<Sort, Integer> splitDelimiters() {

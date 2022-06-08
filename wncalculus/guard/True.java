@@ -3,6 +3,8 @@ package wncalculus.guard;
 import java.util.HashMap;
 import java.util.Map;
 import wncalculus.expr.Domain;
+import wncalculus.expr.ParametricExpr;
+import wncalculus.expr.Sort;
 
 /**
  * This class implements the "true" constant guard.
@@ -46,7 +48,7 @@ public final class True extends ConstantGuard  {
     }
 
     @Override
-    public Guard clone(Domain new_dom)  {
+    public True clone(Domain new_dom)  {
         return getInstance(new_dom);
     }
 
@@ -54,5 +56,5 @@ public final class True extends ConstantGuard  {
     public boolean isTrue() {         
         return true;
     }
-
+    
 }

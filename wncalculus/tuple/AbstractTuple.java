@@ -24,20 +24,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     private List</*? extends*/ E>  components; //caching
     private boolean  simplified;
     
-    
-    /* checks for the tuple's parameters*/
-    private void checkPar(final Guard f, final SortedMap<ColorClass, List<? extends E>> m, final Guard g) {
-        String msg = "";
-        if (f == null)
-            msg += "the tuple's filter is null! cannot create it; ";   
-        if (g == null)
-            msg += "the tuple's guard is null! cannot create it; ";
-        if (m == null)
-            msg +=  "the tuple's component map is null! cannot create it!";
-        if (!msg.isEmpty())
-            throw new IllegalArgumentException(msg);
-    }
-    
+        
     /* checks for the tuple's parameters (the filter is trivial) */
     private void checkPar(final SortedMap<ColorClass, List<? extends E>> m, final Guard g) {
         String msg = "";
@@ -346,10 +333,32 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      * @return a copy of <tt>this</tt> tuple with new domain, assumed compliant with ("including")
      * the current domain
      */
-    @Override
+    /*@Override
     public final AbstractTuple clone(Domain nd) {
         return nd.equals(getDomain()) ? this : build(filter(), guard().clone(nd) );
+    }*/
+    
+    
+    /**
+     * eficiently clones the tuple's components
+     * @param split_map a map from old and new sorts
+     * @return a (sorted) map containing the cloned sub-tupls
+     */
+    protected final SortedMap<ColorClass, List<? extends E> > cloneComps (final  Map<Sort, Sort> split_map) {
+        SortedMap<ColorClass, List<? extends E> > m = new TreeMap<>();
+        this.hom_parts.entrySet().forEach( (var x) -> {
+            ColorClass cc = x.getKey(),
+                       n_cc = (ColorClass) split_map.get(cc);
+            if (n_cc == null) // color cc not mapped 
+                m.put(cc, x.getValue());
+            else {
+                m.put(n_cc, (List<? extends E>) ClassFunction.copy(x.getValue(),n_cc));
+            }
+        });
+        
+        return m;
     }
+    
     
     @Override
     public final String toString () {
@@ -392,6 +401,11 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     @Override
     public final void setSimplified(boolean simplified) {
         this.simplified = simplified;
+    }
+    
+    @Override
+    public final AbstractTuple<E> clone(Domain newdom) {
+        return build(filter.clone(newdom), guard.clone(newdom)) ; 
     }
         
 }

@@ -45,7 +45,7 @@ public final class False extends ConstantGuard  {
     }
 
     @Override
-    public Guard clone(Domain  new_dom)  {
+    public False clone(Domain  new_dom)  {
         return getInstance(new_dom);
     }
    

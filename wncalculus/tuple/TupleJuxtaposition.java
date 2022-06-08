@@ -118,7 +118,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
      * @param newcd  the new codomain
      * @return a clone of <tt>this</tt> with the specified co-domains
      */
-    @Override
+    /*@Override
     public TupleJuxtaposition clone (final Domain newdom, final Domain newcd) {
         List<FunctionTuple> cloned_tuples = new ArrayList<>();
         this.tuples.forEach((var tuple) -> {
@@ -129,6 +129,15 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
         });
         
         return new TupleJuxtaposition(cloned_tuples, true);
+    }*/
+    
+    @Override
+    public TupleJuxtaposition clone (final  Map<Sort, Sort> split_map) {
+        List<FunctionTuple> cloned_tuples = new ArrayList<>();
+        this.tuples.forEach((var tuple) -> { cloned_tuples.add(tuple.clone(split_map ). cast() ); });
+        
+        return new TupleJuxtaposition(cloned_tuples, true);
+        
     }
 
     @Override

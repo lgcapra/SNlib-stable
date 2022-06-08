@@ -3,6 +3,7 @@ package wncalculus.bagexpr;
 import java.util.*;
 import wncalculus.expr.Domain;
 import wncalculus.expr.ParametricExpr;
+import wncalculus.expr.Sort;
 
 //Si potrebbe definire una super-interfaccia che rappresenta bag di qualsiasi tipo
 
@@ -112,14 +113,24 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>   {
    
     
     @Override
-    default Bag<E> clone(Domain newdom, Domain newcd) {
+    default Bag<E> clone(Domain newdom) {
          if (isEmpty())
-            return build(newdom, newcd) ;
+            return build(newdom, getCodomain()) ;
          
          HashMap<E,Integer> mapcopy = new HashMap<>();
-         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(newdom, newcd)), e.getValue()); });
+         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(newdom)), e.getValue()); });
          
          return build(mapcopy);
     }
+    
+    @Override
+     default Bag<E> clone (final Map<Sort, Sort> split_map) {
+        if (isEmpty())
+            return build(getDomain().setSupport(split_map), getCodomain().setSupport(split_map)) ;
+         
+         HashMap<E,Integer> mapcopy = new HashMap<>();
+         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(split_map)), e.getValue()); });   
+         return build(mapcopy);
+     }
     
 }

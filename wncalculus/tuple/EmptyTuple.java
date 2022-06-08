@@ -3,6 +3,7 @@ package wncalculus.tuple;
 import java.util.*;
 import wncalculus.expr.Domain;
 import wncalculus.expr.ParametricExpr;
+import wncalculus.expr.Sort;
 import wncalculus.util.ComplexKey;
 
 /**
@@ -47,15 +48,15 @@ public final class EmptyTuple extends ConstantTuple {
   
     
     @Override
-    public ParametricExpr clone(Domain newdom, Domain newcd) {
-        return getInstance(newcd, newdom);
+    public EmptyTuple clone(Domain newdom) {
+         return getInstance(getCodomain(), newdom);
     }
-
     
-    public EmptyTuple setDomain(Domain nd) {
-        return nd.equals(getDomain()) ? this : getInstance(getCodomain(), nd);
-    }
-
+    @Override
+     public EmptyTuple clone (final  Map<Sort, Sort> split_map) {
+         return getInstance(getCodomain().setSupport(split_map), getDomain().setSupport(split_map));
+     }
+    
 
     @Override
     public boolean differentFromZero() {

@@ -79,10 +79,14 @@ public final class FilteredTuple implements FunctionTuple, GuardedExpr<FunctionT
     }
     
     @Override
-    public FilteredTuple clone(Domain newdom, Domain newcd) {
-        return new FilteredTuple ((Guard)this.filter.clone(newcd,null), (FunctionTuple) this.expr.clone(newdom,newcd));
+    public FilteredTuple clone(Domain newdom) {
+        return new FilteredTuple (this.filter, (FunctionTuple) this.expr.clone(newdom));
     }
-
+    
+    @Override
+     public FilteredTuple clone (final  Map<Sort, Sort> split_map) {
+         return new FilteredTuple ((Guard)this.filter.clone(split_map), (FunctionTuple) this.expr.clone(split_map));
+     }
     
     @Override
     public  boolean isFalse() {

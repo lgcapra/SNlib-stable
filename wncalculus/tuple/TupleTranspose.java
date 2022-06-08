@@ -61,10 +61,11 @@ public final class TupleTranspose implements FunctionTuple, UnaryOp<FunctionTupl
      * @param smap the map between old and new split sorts
      * @return a clone of <tt>this</tt> with the specified co-domain
      */
+    /*
     @Override
     public TupleTranspose clone (final Domain newdom, final Domain newcd) {
         return new TupleTranspose(getArg().clone(newcd, newdom).cast());
-    }
+    }*/
 
     @Override
     public FunctionTuple specSimplify() {

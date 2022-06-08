@@ -1,6 +1,7 @@
 package wncalculus.classfunction;
 
 
+import java.util.Map;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.Domain;
 import wncalculus.expr.Sort;
@@ -33,6 +34,7 @@ public abstract class ElementaryFunction extends SetFunction  {
     }
     
     
+    /*
     @Override
     public final ElementaryFunction clone(Domain newdom, Domain newcd) {
         if (newdom.mult(cc) == 0 && newcd.mult(cc) == 0) { // the color-class is not present in the new (co-)domain             
@@ -43,6 +45,16 @@ public abstract class ElementaryFunction extends SetFunction  {
         
         return this;
     }
+   */
+    
+    @Override
+    public final ElementaryFunction clone (final Map<Sort, Sort> split_map) {
+        Sort n_cc = split_map.get(cc);
+        if (n_cc == null) {
+            return this;
+        }
+        return copy((ColorClass)n_cc);
+    } 
     
     @Override
     public void setSimplified(boolean simp) { }

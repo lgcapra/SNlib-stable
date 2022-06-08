@@ -48,7 +48,7 @@ public interface ParametricExpr extends Expression {
                         split_map.put(p.getKey(), p.getValue().get(Util.checkBit(i, x.getKey())));
                     }
                     //System.out.println("split_map ->\n"+split_map);
-                    res.add( clone(getDomain().setSupport(split_map), getCodomain().setSupport(split_map))); //nuovo clone
+                    res.add( clone(split_map));
                 }
                 return res;
             }
@@ -57,22 +57,29 @@ public interface ParametricExpr extends Expression {
     }
     
       /**
-     * builds a copy of <tt>this</tt> expression with given new co-domains, which are assumede compliant
-     * with the term's co-domains; the terms composing the expression are cloned too
-     * optionally performs domain consistency checks
-     * @param newdom the new domain
-     * @param newcd the new codomain
-     * @return  a copy of this term with the new co-domains
+     * builds a copy of <tt>this</tt> expression with a new arity matching the given map from old sorts to new sorts 
+     * if a sort is not mapped then it is retained
+     * the terms composing the expression are recursively cloned
+     * the constraint of the new sort should be tighter than the original one when used to split a term
+     * may performs sort-consistency checks
+     * @param split_map the map from old and new sorts (assumed coherent)
+     * @return  a copy of this term with the new arity
      * @throws IllegalDomain if the specified co-domains are not compliant with the current one
      */
-      ParametricExpr clone (final Domain newdom, final Domain newcd);
+      ParametricExpr clone (final  Map<Sort, Sort> split_map);
       
       
-      default ParametricExpr clone (final Domain newdom) {
-          return clone(newdom, getCodomain());
-      }
-    
+     /**
+     * builds a copy of <tt>this</tt> expression with the given new domain, which is assumede compliant
+     * with the current domain (the method's behaviour is undefined otherwise)
+     * the terms composing the expression are recursively cloned
+     * doesn't perform any consistency checks 
+     * @param newdom the new domain
+     * @return  a copy of this term with the new co-domains
+     */
+      ParametricExpr clone (final Domain newdom) ;
       
+     
      /**
       * @return a map of sorts to split-delimiters for <code>this</code> term;
       * sorts not appearing in the map shouldn't be split

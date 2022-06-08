@@ -79,6 +79,14 @@ public interface ClassFunction extends SingleSortExpr {
         return getSort().equals(newcc) ? cast() : copy(newcc);
     }
     
+    @Override
+    default ClassFunction clone (final Domain newdom) {
+         if (newdom.mult(getSort()) != 0)
+             return this;
+         else
+             throw new IllegalDomain();
+    }
+    
     /**    
      * creates a copy of <tt>this</tt> class-function with another colour
      * @param <E> the type to which the term is "casted"

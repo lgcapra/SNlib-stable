@@ -182,8 +182,9 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
                             return new TupleProjection(new Tuple ( ((And)And.factory(args)).distribute(nested), tuple.getHomSubTuples(), guard), this.k);
                         }
                     }
-                     // new! we may direcltly set the split offset
-                     this.splitdelim = this.cc.setDelim(this.monBound - minlb + 1) ; // this quantity is >= 1
+                    // new! we may direcltly set the split offset
+                    this.splitdelim = this.cc.setDelim(this.monBound - minlb + 1) ; // this quantity is >= 1
+                    //System.out.println("delim: "+splitdelim+", minlb"+minlb);
                 }
             }
         }
@@ -273,19 +274,7 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
         return hash;
     }
 
-    /**
-     * overrides the super-type method because the operand's codomain is an extension
-     * of <tt>this</tt> term's codomain
-     * @param newdom the new domain
-     * @param newcd  the new codomain
-     * @param smap the color split-map
-     * @return a clone of <tt>this</tt> with the specified co-domains
-     */
-    @Override
-    public TupleProjection  clone (final Domain newdom, final Domain newcd) {
-        return buildOp( getArg().clone(newdom, new Domain(newcd.support().iterator().next(), this.ftuple.size())). cast());
-    }
-
+    
     @Override
     public boolean differentFromZero() {
         return this.ftuple.differentFromZero();

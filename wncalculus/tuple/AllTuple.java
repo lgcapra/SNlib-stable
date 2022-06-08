@@ -63,9 +63,14 @@ public final class AllTuple extends ConstantTuple {
     }
     
     @Override
-    public AllTuple clone(Domain newdom, Domain newcd) {
-        return getInstance(newcd, newdom);
+    public AllTuple clone(Domain newdom) {
+        return getInstance(getCodomain(), newdom);
     }
+    
+     @Override
+     public AllTuple clone (final  Map<Sort, Sort> split_map) {
+         return getInstance(getCodomain().setSupport(split_map), getDomain().setSupport(split_map));
+     }
     
 
     @Override

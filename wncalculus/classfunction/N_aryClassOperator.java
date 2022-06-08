@@ -224,4 +224,9 @@ public abstract class N_aryClassOperator  extends SetFunction implements N_aryOp
         return buildOp((ClassFunction.copy(this.args, newcc)));
      }
      
+     @Override
+     public SetFunction clone (final Domain newdom) {
+         return (SetFunction) super.clone(newdom);
+     }
+     
 }

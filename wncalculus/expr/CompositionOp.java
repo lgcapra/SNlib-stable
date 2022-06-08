@@ -75,7 +75,7 @@ public interface CompositionOp<E extends ParametricExpr, F extends ParametricExp
      * @param smap the map between orginal and split sorts
      * @return a clone of <tt>this</tt> composition with the new co-domains
      */
-    @Override
+    /*@Override
     default F clone (final Domain newdom, final Domain newcd) {
         E left = left(), right = right();
         Domain left_dom = left.getDomain(); // the left operands' domain = right operand's codom
@@ -97,7 +97,8 @@ public interface CompositionOp<E extends ParametricExpr, F extends ParametricExp
         }
         
         return buildOp(left().clone(left_dom, newcd). cast(), right().clone(newdom, left_dom). cast());
-    }
+    }*/
+    
     
     @Override
     default String symb() {

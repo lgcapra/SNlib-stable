@@ -5,6 +5,8 @@ import wncalculus.classfunction.*;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.Domain;
 import wncalculus.expr.IllegalDomain;
+import wncalculus.expr.ParametricExpr;
+import wncalculus.expr.Sort;
 import wncalculus.util.ComplexKey;
 import wncalculus.util.Util;
 
@@ -248,20 +250,21 @@ private Map<ColorClass, Map<Boolean, SortedSet<Equality>>> eqMap;
     }
     
     @Override
+    public Guard clone(Map<Sort, Sort> split_map) {
+        Domain nd = getDomain().setSupport(split_map);
+        ColorClass cc = getSort(), n_cc = (ColorClass)split_map.get(cc);
+        if (n_cc == null) {
+            return clone(nd);
+        } else {
+            return Equality.builder(getArg1().copy(n_cc), getArg2().copy(n_cc), sign(), nd);
+        }
+    }
+    
+    @Override
     public Guard clone (Domain newdom)  {
         return Equality.builder(getArg1(), getArg2(), sign(), newdom);
     }
     
-    /**
-     *
-     * @param cc
-     * @param newdom
-     * @return
-     */
-    @Override
-    public Guard copy(ColorClass cc, Domain newdom) {
-        return Equality.builder(getArg1().copy(cc), getArg2().copy(cc), sign(), newdom);
-    }
     
     //new
     @Override
@@ -271,5 +274,6 @@ private Map<ColorClass, Map<Boolean, SortedSet<Equality>>> eqMap;
         }
         return this.eqMap;
     }
+
 
 }

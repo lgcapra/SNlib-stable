@@ -143,7 +143,13 @@ public final class ClassComposition extends SetFunction implements LogCompositio
         return new ClassComposition(this.left.copy(newcc), this.right.copy(newcc));
     }
     
-    //needed because it inherits two default methods
+   
+    @Override
+    public SetFunction clone (final Domain newdom) {
+       return (SetFunction) super.clone(newdom);
+    }
+    
+     //needed because it inherits two default methods
     @Override
     public Map<Sort, Integer> splitDelimiters() {
         return super.splitDelimiters();

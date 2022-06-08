@@ -83,10 +83,11 @@ public final class BagTranspose<E extends Transposable> extends UnaryBagOp<E> {
      * @param smap the map between old and new split sorts
      * @return a clone of <tt>this</tt> with the specified co-domain
      */
+    /*
     @Override
     public BagTranspose<E> clone (final Domain newdom, final Domain newcd) {
         return new BagTranspose<> (getArg().clone(newcd, newdom). cast());
-    }
+    }*/
 
     @Override
     public Map<Sort, Integer> splitDelimiters() {

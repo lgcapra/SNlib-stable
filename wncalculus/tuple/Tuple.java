@@ -97,7 +97,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
    
     /**
      * efficiently builds a tuple from a map between colors and corresponding class-function lists;
- it doesn'tuple perform any check and true copy, it builds an unmodifiable view of the passed map
+     * it doesn'tuple perform any check and true copy, it builds an unmodifiable view of the passed map
      * @param filter the tuple's f (<code>null</code> means TRUE)
      * @param codomain the tuple's codomain (necessary only if f set <code>null</code>)
      * @param m the specified map
@@ -408,7 +408,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         return delims;
     }
            
-    @Override
+    /*@Override
     public Tuple clone(Domain newdom, Domain newcd) {
         TreeMap<ColorClass, List<? extends SetFunction> > m = new TreeMap<>();
         //inefficiente,va sistemato!
@@ -423,8 +423,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         });
         
         return new Tuple ((Guard)filter().clone(newcd, null), m, (Guard)guard().clone(newdom, null));
-    }
-     
+    }*/ 
 
     @Override
     public boolean isTrue() {
@@ -693,7 +692,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             h_tuple = new ArrayList<>( getHomSubTuple( cc= mx.getKey() )); // the sub-tuple of cc_low_case cc_name
             for (Map.Entry<Boolean, Set<Membership>> my : mx.getValue().entrySet())
                 for (Membership m : my.getValue()) {
-                    h_tuple.set( (i = m.firstIndex()) -1 , Intersection.factory(my.getKey() ? m.subcl() : m.subcl().opposite(), h_tuple.get( i -1 )));
+                    h_tuple.set( (i = m.firstIndex()) -1 , Intersection.factory(my.getKey() ? m.getArg2() : m.getArg2().opposite(), h_tuple.get( i -1 )));
                     to_remove.add(m); // m removed from the f
                     reduced = true;
                 }
@@ -1364,5 +1363,11 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     public boolean isTuple() {
         return true;
     }
+    
+    @Override
+    public final Tuple clone (final  Map<Sort, Sort> split_map) {
+        return new Tuple ((Guard)filter().clone(split_map), super.cloneComps(split_map), (Guard)guard().clone(split_map));
+    }
+
        
 }

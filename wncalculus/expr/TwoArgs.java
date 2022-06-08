@@ -93,18 +93,18 @@ public interface TwoArgs<E extends ParametricExpr, F extends ParametricExpr> ext
         return buildOp(x.next(),x.next());
     }
     
-     /**
-     * clone <tt>this</tt> operator assuming that the co-domains of the operands and
-     * of the operator are the same (to be overridden otherwise)
-     * @param newdom the new domain
-     * @param newcd the new codomain
-     * @param smap the map between old and new split sorts
-     * @return a clone of <tt>this</tt> with the specified co-domain
-     */
+     
     @Override
-    default F clone (final Domain newdom, final Domain newcd) {
-        return buildOp(left().clone(newdom, newcd).cast(), right().clone(newdom, newcd). cast());
+    default F clone (final Domain newdom) {
+        return buildOp(left().clone(newdom).cast(), right().clone(newdom). cast());
     }
+    
+    
+    @Override
+    default F clone (final Map<Sort, Sort> split_map) {
+        return buildOp(left().clone(split_map). cast(), right().clone(split_map). cast());
+    }
+    
     
     @Override
     default Map<Sort, Integer> splitDelimiters() {

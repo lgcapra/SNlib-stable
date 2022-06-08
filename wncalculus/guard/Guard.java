@@ -5,6 +5,7 @@ import java.util.*;
 import wncalculus.classfunction.SetFunction;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.Domain;
+import wncalculus.expr.Sort;
 import wncalculus.util.Util;
 
 /**
@@ -233,8 +234,6 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
      
     @Override
     public abstract Guard clone(Domain nd);
-    
-    //news
     
     /**
      * 

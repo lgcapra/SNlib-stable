@@ -2,7 +2,6 @@ package wncalculus.guard;
 
 import java.util.*;
 import wncalculus.expr.Domain;
-import wncalculus.expr.ParametricExpr;
 import wncalculus.expr.Sort;
 
 /**
@@ -57,13 +56,19 @@ public abstract class ConstantGuard extends Guard  {
      * @param newdom
      * @return
      */
-    public abstract Guard clone(Domain newdom);
+    @Override
+    public abstract ConstantGuard clone(Domain newdom);
     
-     @Override
+    /*@Override
     public ParametricExpr clone(Domain newdom, Domain newcd) {
        return clone(newdom);    
-    }
+    }*/
     
+    @Override
+    public final ConstantGuard clone(Map<Sort, Sort> split_map) {
+        return clone(getDomain().setSupport(split_map));
+    }
+
     @Override
     public final boolean elementary() {
         return false;

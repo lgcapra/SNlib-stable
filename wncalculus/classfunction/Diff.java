@@ -1,5 +1,6 @@
 package wncalculus.classfunction;
 
+import java.util.Map;
 import java.util.Set;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.*;
@@ -77,7 +78,7 @@ public final class Diff extends SetFunction  {
     }
 
     @Override
-    public ParametricExpr clone(Domain newdom, Domain newcd) {
+    public ParametricExpr clone(final  Map<Sort, Sort> split_map) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

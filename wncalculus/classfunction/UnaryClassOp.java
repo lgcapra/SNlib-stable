@@ -3,6 +3,7 @@ package wncalculus.classfunction;
 import java.util.Set;
 import wncalculus.expr.UnaryOp;
 import wncalculus.color.ColorClass;
+import wncalculus.expr.Domain;
 
 /**
  *
@@ -49,7 +50,12 @@ public abstract class UnaryClassOp extends SetFunction implements UnaryOp<SetFun
         return UnaryOp.super.toStringOp();
     }
     
-     @Override
+    @Override
+    public final SetFunction clone (final Domain newdom) {
+       return (SetFunction) super.clone(newdom);
+    }
+    
+    @Override
     public final SetFunction copy(ColorClass newcc) {
         return buildOp(this.arg.copy(newcc));
     }

@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import wncalculus.bagexpr.LogicalBag;
 import wncalculus.expr.Domain;
+import wncalculus.expr.ParametricExpr;
 import wncalculus.guard.Guard;
 import wncalculus.tuple.FilteredTuple;
 import wncalculus.tuple.FunctionTuple;
