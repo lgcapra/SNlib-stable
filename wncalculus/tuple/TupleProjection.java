@@ -3,13 +3,10 @@ package wncalculus.tuple;
 import java.util.*;
 import wncalculus.expr.*;
 import wncalculus.graph.InequalityGraph;
-import wncalculus.classfunction.ClassFunction;
-import wncalculus.classfunction.Projection;
-import wncalculus.classfunction.SetFunction;
+import wncalculus.classfunction.*;
 import wncalculus.color.ColorClass;
 import wncalculus.guard.*;
-import wncalculus.util.Util;
-import wncalculus.util.Pair;
+import wncalculus.util.*;
 
 /**
  * this class defines the Projection on the first k components of a one-sorted WN function-tuple F 
@@ -83,8 +80,7 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
         //System.out.println("ecco delim di "+this+": "+delimiters); //debug
         return delimiters;   
     }
-        
-    
+            
     @Override
     public FunctionTuple specSimplify( ) {
         //System.out.println("TupleProjection:\n"+this); //debug
@@ -99,8 +95,8 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
         // main case
         if ( this.ftuple instanceof Tuple ){
             // VERY IMPORTANT: we assume that the inequation set corresponding to the filter has been shown "satisfiable"...
-            var tuple = (Tuple) this.ftuple ; 
-            var components = tuple.getHomSubTuple(this.cc);
+            final var tuple = (Tuple) this.ftuple ; 
+            final var components = tuple.getHomSubTuple(this.cc);
             //System.out.println(this); //debug
             if ( SetFunction.differentFromZero(components.subList(this.k, tuple.size() )) ) {
                 Guard filter = tuple.filter() , guard = tuple.guard(); 
@@ -132,7 +128,7 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
                 if ( minlb > 1) {   
                     final InequalityGraph igraph = new InequalityGraph(inequalities);
                     if (this.monBound == null)
-                        this.monBound = monoBound(igraph);
+                        this.monBound = igraph.prMonoBound(this.k, tuple.getHomSubTuple(this.cc));
                     //System.out.println(this +" mon_bound: "+this.monBound+ " (minlb="+minlb+ ") (maxub="+maxub+')'); //debug
                     //corollary 14 + lemma 4.10: either minlb > proj's mon_bound or g[T] is f.p and the inequalities' eq_restr is a clique
                     if ( minlb > this.monBound  ) {
@@ -189,53 +185,7 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
             }
         }
         return this; 
-    }
-    
-            
-    /**
-     * find a minimal upper bound (monotonicity bound) for the the (k-)projection of [g']T to be
-     * equivalent to the syntactical restriction of the [g']T.
-     * tuple's components cardinalities are taken into account
-     * @param g the inequation graph associated with the filter
-     * @return a minimal upper bound for the k-projection to be equivalent to the k-(syntactical) eq_restr
-     */
-    private int monoBound (InequalityGraph g) {   
-        if (g.isEmpty() || g.indexSetGt(this.k).isEmpty()) 
-            return 0;
-        
-        Set<Projection> to_be_removed   = new HashSet<>();
-        Set<Integer>    min_degree_set  = new HashSet<>();
-        int min_d = min_degree_vset (g, min_degree_set);
-        min_degree_set.forEach( i -> { to_be_removed.addAll(g.vertexSet(i)); });
-        //System.out.println(g); debug
-        return Math.max(min_d , monoBound( g.clone().removeAll(to_be_removed)));
-    }
-    
-    /**
-     * brings in the specified set (which is cleared at each call) the set of indices
-     * {i}, i > k and degree(v_i)+gap_i == minlb({degree(v_i)+gap(i)} );
-     * gap(i) is the constant "gap" associated to the domain represented by the application of the i-th component
-     * of the specified (extended) tuple; k is the tuple's Projection bound;
-     * @return minlb({degree(i)+gap(i)}, i > k)
-     * @throws NoSuchElementException if the set of vertices with index > k is empty
-     */
-    private int min_degree_vset(InequalityGraph g, Set<Integer> sd) {
-        List<? extends ClassFunction> t = ((Tuple) this.ftuple).getHomSubTuple(this.cc);
-        Iterator<Integer> it = g.indexSetGt(this.k).iterator();
-        int i   = it.next(), min = g.degree(i) + ((SetFunction)t.get(i-1)).gap(), d_i;
-        sd.add(i);
-        while ( it.hasNext() ) 
-            if ( ( d_i = g.degree(i = it.next()) + ((SetFunction)t.get(i-1)).gap() ) <= min) {
-                if (d_i < min) {
-                    min = d_i;
-                    sd.clear();
-                }
-                sd.add(i);
-            }
-        
-        return min;
-    }
-    
+    }    
         
     /**
      * @return the interval [minlb, maxub] of cardinality's bounds of tuple functions (meant as domains)

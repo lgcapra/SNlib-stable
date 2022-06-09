@@ -4,11 +4,11 @@ import java.util.*;
 import java.util.function.Function;
 import wncalculus.classfunction.*;
 import wncalculus.color.ColorClass;
-import wncalculus.expr.Interval;
-import wncalculus.expr.NonTerminal;
+import wncalculus.expr.*;
 import wncalculus.guard.Equality;
 import wncalculus.util.Util;
 import static wncalculus.classfunction.Projection.*;
+import wncalculus.util.Pair;
 
 /**
  *
@@ -16,7 +16,7 @@ import static wncalculus.classfunction.Projection.*;
  this class provides a simple-graph representation for a color-homogenous set of inequalities
  the corresponding graphs are connected
  */
-public final class InequalityGraph extends  Graph<Projection> {
+public final class InequalityGraph extends Graph<Projection> {
 
     private ColorClass cc; //the inequations' color class    
     private HashMap<Integer, HashSet<Projection>> imap; // the "index" map of this graph ("hashing")
@@ -52,12 +52,9 @@ public final class InequalityGraph extends  Graph<Projection> {
         this.cc = c.iterator().next().getSort();
         this.imap = new HashMap<>();
         Function<Equality,Boolean> addEdge = this.cc.isOrdered() ?  e -> addOrdIneq(e) : e -> addIneq(e);
-        for (Equality eq : c) 
-            if (! addEdge.apply(eq) ) {
-                System.out.println("failed adding: "+eq.toStringDetailed()+ " "+eq.hashCode());
-                System.out.println("from set: "+c);
-                throw new Error("inequality graph building failed\n:"+c);
-            }
+        c.stream().filter(eq -> (! addEdge.apply(eq) )).forEachOrdered(_item -> {
+            throw new Error("inequality graph building failed\n:"+c);
+        });
     }
     
     
@@ -243,15 +240,15 @@ public final class InequalityGraph extends  Graph<Projection> {
         
     
     /**
-     * computes the cardinality of the sum of tuple'X components (representing variable domains)
- that are referred to by inequalities
+     * computes the cardinality of the sum of tuple'X components (representing variable domains
+     * referred to by inequalities
      * @param t the right-tuple, in the form of a list
      * @return the cardinality of the sum of components; <code>null</code> if it cannot be computed.
      * @throws ClassCastException if any term in t is not a SetFunction
      */
-    public Interval ineqDomainCard (List<? extends ClassFunction> t)  {
+    public Interval ineqDomainCard (List<? extends SetFunction> t)  {
        Set<SetFunction> comps = new HashSet<>(); //tuple components corresponding to inequalities
-       vertexSet().forEach((var p) -> { comps.add (Successor.factory(p.getSucc() , (SetFunction) t.get( p.getIndex() - 1 ))); });
+       vertexSet().forEach((var p) -> { comps.add (Successor.factory( p.getSucc() , t.get( p.getIndex() - 1 )) ); });
        SetFunction u = Union.factory(comps,false);
        if (u instanceof NonTerminal) //optimization
            u =  (SetFunction) u.normalize( );
@@ -260,9 +257,8 @@ public final class InequalityGraph extends  Graph<Projection> {
     }
    
     /**
-     * return the "cumulative" degree of this graph'X vertexes
- with the specified index (disregarding by the way implicit
- relations between similar vertices)
+     * return the "cumulative" degree of this graph'X vertexes with the specified
+     * index (disregarding by the way implicit relations between similar vertices)
      * @param i the vertices' index
      * @return the cumulative degree of vertexes with index <code>i</code>
      * @throws NullPointerException if there are no such vertices
@@ -295,21 +291,6 @@ public final class InequalityGraph extends  Graph<Projection> {
     public boolean isClique (int k) {
         return subGraph(vertexSetLe(k)).isClique();
     }
-    /*
-    public boolean isClique (int k) {
-        Collection<? extends Projection> restriction = vertexSetLe(k);
-        if (restriction.fixedSize() > 1) { // the singleton/empty graphs are cliques
-            Set<Projection> copy = new HashSet<>(restriction);
-            restriction.remove(copy.iterator().next()); //optimization: it is sufficient to consider all nodes but one ...
-            for (Projection p : restriction) {
-                copy.remove(p);
-                if (! g.adjiacent(p).containsAll(copy) ) // efficient if hashset is used ..
-                    return false;
-                copy.add(p);
-            }
-        }
-        return true;                
-    }*/
     
     /**
      * computes two  non-adjacent vertices v_i, v_j, i != j, i, j with indexes &le; k
@@ -343,7 +324,6 @@ public final class InequalityGraph extends  Graph<Projection> {
      */
     @Override
     public InequalityGraph clone () {
-
         InequalityGraph copy = (InequalityGraph) super.clone(); // deep copy of the graph structure
         copy.cc = this.cc;
         copy.imap = new HashMap<>(); // deep copy
@@ -363,7 +343,7 @@ public final class InequalityGraph extends  Graph<Projection> {
      * @return the split-delimiter of the corresponding inequality-set, that is,
      * the maximal offset between successors (with the same index ?)
      */
-    public int splitDelimiter(List<? extends ClassFunction> l) {
+    public int splitDelimiter(List<? extends SetFunction> l) {
         int delim = isSimpleForm() ? 0 : succDelim(maxSuccOffset(vertexSet(), this.cc), this.cc);
         if (delim == 0 && l != null) { //may we restrict to ordered classes?
            Interval ineqCard = ineqDomainCard(l);
@@ -384,13 +364,77 @@ public final class InequalityGraph extends  Graph<Projection> {
      */
     public Set<HashSet<Integer>> connectedIndices () {
     	Set<HashSet<Integer>> i_set = new HashSet<>();
-    	for (Set<Projection> x : connectedComponents() ) {
+        connectedComponents().stream().map((var x) -> {
             HashSet<Integer> i_x = new HashSet<>();
             x.forEach(p -> { i_x.add(p.getIndex()); });
+            return i_x;
+        }).forEachOrdered(i_x -> {
             i_set.add(i_x);
-    	}
+        });
    
     	return i_set;
     }
     
+    /**
+     * find a minimal upper bound (monotonicity bound) for the the (k-)projection of [g']T to be
+     * equivalent to the syntactical restriction of the [g']T.
+     * tuple's components cardinalities are taken into account
+     * @param g the inequation graph associated with the filter
+     * @return a minimal upper bound for the k-projection to be equivalent to the (syntactical) k-restriction
+     */
+    public int prMonoBound (final int k, final List<? extends SetFunction> t) {
+        return clone().prMonoBoundDestr(t, k);
+    }
+    
+    /**
+     * auxiliary method operating in a destructivr way (for efficiency)
+     * @param t the tuple to project
+     * @param k the projection's size
+     * @return the projection's monotonicity bound (@see prMonoBound)
+     */
+    private int prMonoBoundDestr (final List<? extends SetFunction> t, final int k) {   
+        Set<Integer> iset ;
+        if (isEmpty() || (iset = indexSetGt(k)). isEmpty()) 
+            return 0;
+        else{
+            var p = min_degree_vset(t, iset);
+            var to_remove   = new HashSet<Projection>();
+            p.getKey().forEach(i -> { to_remove.addAll(vertexSet(i)); });
+            return Math.max(p.getValue(), removeAll(to_remove). prMonoBoundDestr(t, k) );
+        }
+    }
+    
+    
+    /**
+     * calculates the set of indices {i}, s.t., i > k and degree(v_i)+gap_i == minlb({degree(v_i)+gap(i)} );
+     * gap(i) is the constant "gap" associated to the domain represented by the application of the i-th component
+     * of the specified (extended) tuple; k is the tuple's Projection bound;
+     * @param sd the (initially empty) set to fill with those vertices i such that i > k and degree(i)+gap(i) is min
+     * @param isetgt_k the pre-calculated set of vertices with index > k
+     * @return a pair containing the set minlb({degree(i)+gap(i)}, i > k) and (for convenience) 
+     * @throws NoSuchElementException if <code>isetgt_k</code> is empty
+     */
+    public Pair<Set<Integer>,Integer> min_degree_vset(final List<? extends SetFunction> t, final Set<? extends Integer> isetgt_k) {
+        var sd = new HashSet<Integer>();
+        var it = isetgt_k.iterator();
+        int i = it.next(), min = degreePlusGap(i,t);
+        for (sd.add(i); it.hasNext(); i = it.next()) { 
+            var d_i = degreePlusGap(i,t);
+            if ( d_i <= min) {
+                if (d_i < min) {
+                    min = d_i;
+                    sd.clear();
+                }
+                sd.add(i);
+            }
+        }
+        return new Pair<>(sd, min);
+    }
+    
+    /*
+    calculates the sum of i-th vertex's degree and the gap of the corresponding tuple's component
+    */
+    private int degreePlusGap(final int i,  final List<? extends SetFunction> t) {
+        return degree(i) + t.get(i-1).gap();
+    }
 }
