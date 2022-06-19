@@ -199,21 +199,18 @@ public final class InequalityGraph extends Graph<Projection> {
             
         return vset;
     }
-    
-    /**     
-     * destructively removes a set of nodes from this inequation graph
-     * builds on <code>Graph.removeVertices</code>
-     * @param vlist a set of nodes to be removed
-     * @return <code>this</code>
+        
+    /**
+     * safely removes the node(s) with given index from <code>this</code> graph
+     * @param i an index
+     * @return <code>this</code> graph
      */
-    public InequalityGraph removeAll (Collection<? extends Projection> vlist) {
-        removeVertices(vlist);
-        vlist.forEach( v -> {
-            int k = v.getIndex();
-            Set<Projection> x = this.imap.get(k);
-            if (x != null && x.remove(v) && x.isEmpty()) 
-                this.imap.remove(k);
-        });
+    public InequalityGraph remove(int i) {
+        var x = this.imap.get(i);
+        if (x != null) {
+            removeVertices(x);
+            this.imap.remove(i);
+        }
         
         return this;
     }
@@ -380,10 +377,15 @@ public final class InequalityGraph extends Graph<Projection> {
      * equivalent to the syntactical restriction of the [g']T.
      * tuple's components cardinalities are taken into account
      * @param g the inequation graph associated with the filter
-     * @return a minimal upper bound for the k-projection to be equivalent to the (syntactical) k-restriction
+     * @return a minimal upper bound for the k-projection to be equivalent to the (syntactical) k-restriction;
+     * -1 if this value cannot be calculated
      */
     public int prMonoBound (final int k, final List<? extends SetFunction> t) {
-        return clone().prMonoBoundDestr(t, k);
+        try {
+            return clone().prMonoBoundDestr(t, k);
+        } catch (NullPointerException e) {
+            return -1;
+        }
     }
     
     /**
@@ -391,6 +393,7 @@ public final class InequalityGraph extends Graph<Projection> {
      * @param t the tuple to project
      * @param k the projection's size
      * @return the projection's monotonicity bound (@see prMonoBound)
+     * @throws NullPointerException
      */
     private int prMonoBoundDestr (final List<? extends SetFunction> t, final int k) {   
         Set<Integer> iset ;
@@ -398,9 +401,8 @@ public final class InequalityGraph extends Graph<Projection> {
             return 0;
         else{
             var p = min_degree_vset(t, iset);
-            var to_remove   = new HashSet<Projection>();
-            p.getKey().forEach(i -> { to_remove.addAll(vertexSet(i)); });
-            return Math.max(p.getValue(), removeAll(to_remove). prMonoBoundDestr(t, k) );
+            p.getKey().forEach(this::remove);
+            return Math.max(p.getValue(), prMonoBoundDestr(t, k) );
         }
     }
     
@@ -413,6 +415,7 @@ public final class InequalityGraph extends Graph<Projection> {
      * @param isetgt_k the pre-calculated set of vertices with index > k
      * @return a pair containing the set minlb({degree(i)+gap(i)}, i > k) and (for convenience) 
      * @throws NoSuchElementException if <code>isetgt_k</code> is empty
+     * @throws NullPointerException
      */
     public Pair<Set<Integer>,Integer> min_degree_vset(final List<? extends SetFunction> t, final Set<? extends Integer> isetgt_k) {
         var sd = new HashSet<Integer>();
@@ -431,8 +434,69 @@ public final class InequalityGraph extends Graph<Projection> {
         return new Pair<>(sd, min);
     }
     
-    /*
+    //alternative
+    
+    /**
+     * founds a projection monotonicit bound
+     * @param k the projection's size
+     * @param t the tuple
+     * @return 0 if the projection can be immediately solved; a projection monotonicity bound otherwise
+     * NOTE if the returned non-zero value exceeds the current constraint's size, it means that the
+     * projection cannot be solved
+     */
+    public int monoBound (final int k, final List<? extends SetFunction> t) {
+        try {
+            return clone().monoBoundDestr(t, k, 0);
+        } catch (NullPointerException e) {
+            return -1;
+        }
+    }
+    
+    private InequalityGraph remAbundant (final List<? extends SetFunction> t, final int k) {
+        for (int i : this.imap.keySet()) { 
+            if (i > k  && degree(i) - t.get(i-1).card().lb() < 0) {
+                remove(i).remAbundant(t, k);
+                break;
+            }
+        }
+        return this;
+    }
+    
+    /**
+     * recursively computes the projection monotonicit bound by firt removing
+     * all nodes (greater than k) with a degree less than than the lower bound
+     * of the corresponding tuple-component (operates destructively)
+     * @param t the tuple
+     * @param k the projection bound
+     * @return <code>this</code>
+     */
+    private int monoBoundDestr (final List<? extends SetFunction> t, final int k, final int min) {
+        Integer p = null;
+        var next_min = Integer.MAX_VALUE;
+        for (int i : remAbundant(t, k). imap.keySet()) {  
+            if (i > k ) { 
+                var d_i = degree(i) - t.get(i-1).card().lb() + 1;
+                if (d_i < next_min) {
+                    next_min = d_i;
+                    p = i;
+                }
+            }
+        }
+        
+        if (p == null) { // no vertex with index > k left (the projection can be solved immediately)
+            return min;
+        }
+        if (this.cc.fit(next_min) ) { // we can find a projection bound by splitting the constraint
+            return remove(p).monoBoundDestr(t, k, Math.max( next_min, min) );
+        }
+        
+        return next_min; // no projection bound can be found 
+    }
+    
+    
+    /**
     calculates the sum of i-th vertex's degree and the gap of the corresponding tuple's component
+    @throws NullPointerException if the component's cardinality is undefined
     */
     private int degreePlusGap(final int i,  final List<? extends SetFunction> t) {
         return degree(i) + t.get(i-1).gap();

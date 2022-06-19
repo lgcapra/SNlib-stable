@@ -83,7 +83,7 @@ package wncalculus.expr;
         
         /**
          * 
-         * @return <code>true</code> if and only if is not single-valueS
+         * @return <code>true</code> if and only if is single-valueS
          */
         public boolean singleton() {
             return this.lb == this.ub;
@@ -209,6 +209,10 @@ package wncalculus.expr;
             return 1;
         
         return o.unbounded() ? -1 : this.ub < o.ub ? -1 : 1;
+    }
+    
+    public boolean fit(final int offset) {
+        return unbounded() || offset + this.lb  <= this.ub;
     }
   
   }

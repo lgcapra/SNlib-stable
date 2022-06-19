@@ -343,6 +343,7 @@ public final class ColorClass extends Sort implements Color {
         return nd >= lb && (d < lb || nd < d) ; 
     }
     
+    
     /**
      * 
      * @param nd a split delimiter
@@ -426,6 +427,15 @@ public final class ColorClass extends Sort implements Color {
     @Override
     public ColorClass getSort() {
         return this;
+    }
+    
+    /**
+     * 
+     * @param offset an integral value
+     * @return <code>true</code> if and only if this constraint fits the specified offset
+     */
+    public boolean fit(final int offset) {
+        return card().fit(offset);
     }
     
 }

@@ -145,17 +145,22 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     
     /**
      *
-     * @return the difference between the lower bounds of <tt>this</tt> function's color-dom cardinality
-     * and the function's size (cardinality), if the respective bounds are "congruent";
-     * 0 if, for any reasons, it cannot be computed
+     * @return the difference between the lower bounds of <tt>this</tt> function's color-class cardinality
+     * and the function's cardinality, if the respective constraints are "congruent";
+     * 0, if they are not; <code>null</code> if function's cardinality cannot be computed 
      */
-    public final int gap () {
-        int gap = 0; // before -1
-        Interval mycard = card() , constr;
-        if (mycard != null && mycard.size() == ( constr = getConstraint() ).size()) //  card and constr either unbounded or "congruent" 
-              gap = constr.lb() - mycard.lb();
-        
-        return gap;
+    public final Integer gap () {
+        Interval mycard = card();
+        if (mycard == null) {
+            return null;
+        } else {
+            int gap = 0; // before -1
+            var constr = getConstraint();
+            if ( mycard.size() == constr .size() ) //  card and constr are either unbounded or "congruent" 
+                  gap = constr.lb() - mycard.lb();
+            
+            return gap;
+        }
     }
     
     /**
