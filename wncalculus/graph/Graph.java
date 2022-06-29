@@ -50,9 +50,21 @@ public class Graph<E> {
     
     /** overloaded version of contains
      * @param v a vertex
-     * @return <code>true</code> if and only if the graph contains the specified vertex*/
+     * @return <code>true</code> if and only if the graph contains the specified element
+     */
     public final boolean contains (E v) {
         return this.adjlist.containsKey(v);
+    }
+    
+    /**
+     * 
+     * @param v a vertex
+     * @return <code>true</code> if and only if the specified eleemnt is an
+     * isolated vertex of the graph
+     */
+    public boolean isolated(E v) {
+        Set<E> s = this.adjlist.get(v);
+        return s != null && s.isEmpty();
     }
     
     /** 
@@ -406,23 +418,6 @@ public class Graph<E> {
         
         return ag;
     }
-    
-    /**
-     * removes a specified set of vertexes from the graph in a non-destructive way
-     * @param cv the vertex-set to be removed
-     * @return a copy of the graph without the specified vertex - <code>this</code> if
-     * no vertices are removed
-     */
-    /*public final Graph<E> remove (Collection<? extends E> cv) {
-        Graph<E> res = this;
-        if (! cv.isEmpty()) {
-            Set<E> vset = new HashSet<>( vertexSet() ); // the residual nodes of the graph
-            if ( vset.removeAll( cv ) )
-                 res = subGraph(vset);
-        }
-        //System.out.println("remove "+cv+'\n'+res); //debug
-        return res;
-    } */
     
     /**
      * computes the value of chromatic polynomial of <code>this</code> graph, i.e., the number of

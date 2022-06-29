@@ -237,7 +237,7 @@ public final class InequalityGraph extends Graph<Projection> {
         
     
     /**
-     * computes the cardinality of the sum of tuple'X components (representing variable domains
+     * computes the cardinality of the sum of tuple's components (representing variable domains
      * referred to by inequalities
      * @param t the right-tuple, in the form of a list
      * @return the cardinality of the sum of components; <code>null</code> if it cannot be computed.
@@ -254,21 +254,20 @@ public final class InequalityGraph extends Graph<Projection> {
     }
    
     /**
-     * return the "cumulative" degree of this graph'X vertexes with the specified
+     * return the "cumulative" degree of this graph's vertexes with the specified
      * index (disregarding by the way implicit relations between similar vertices)
      * @param i the vertices' index
      * @return the cumulative degree of vertexes with index <code>i</code>
      * @throws NullPointerException if there are no such vertices
      */
-    public int degree(int i) {
+    public int degree(final int i) {
         Collection<? extends Projection> vset = vertexSet(i);
-        int di = 0, auto = vset.size(); //the "auto-degree"
-        if (auto < 2) 
-            di = degree (vset.iterator().next());
-        else {
+        var di = 0;
+        final var autod = vset.size(); //the "auto-degree"
+        if (autod > 1) {
             di = vset.stream().map( v -> degree(v)).reduce(di, Integer::sum);
-            di -= auto * (auto -1) ; // >= 0
-        }
+            di -= autod * (autod -1) ; // >= 0
+        } else di = degree (vset.iterator().next());
         
         return di ; 
     }
@@ -356,7 +355,7 @@ public final class InequalityGraph extends Graph<Projection> {
     
     /**
      * 
-     * @return the index-sets of connected components of <tt>this</tt> graph
+     * @return the index-sets of connected components of <code>this</code> graph
      * (it builds on the superclass method)
      */
     public Set<HashSet<Integer>> connectedIndices () {
@@ -446,7 +445,7 @@ public final class InequalityGraph extends Graph<Projection> {
      */
     public int monoBound (final int k, final List<? extends SetFunction> t) {
         try {
-            return clone().monoBoundDestr(t, k, 0);
+            return clone().monoBound(t, k, 0);
         } catch (NullPointerException e) {
             return -1;
         }
@@ -463,37 +462,33 @@ public final class InequalityGraph extends Graph<Projection> {
     }
     
     /**
-     * recursively computes the projection monotonicit bound by firt removing
+     * recursively computes the projection monotonicity bound by firt removing
      * all nodes (greater than k) with a degree less than than the lower bound
      * of the corresponding tuple-component (operates destructively)
      * @param t the tuple
-     * @param k the projection bound
-     * @return <code>this</code>
+     * @param k the projection's size
+     * @param min the current bound
+     * @return  the projection's monotonicity bound; @param min if after the preliminary node removal
+     * the projection can be directly solved (the process is recursive=; -1 if such a bound doesn't exist
      */
-    private int monoBoundDestr (final List<? extends SetFunction> t, final int k, final int min) {
-        Integer p = null;
-        var next_min = Integer.MAX_VALUE;
-        for (int i : remAbundant(t, k). imap.keySet()) {  
-            if (i > k ) { 
-                var d_i = degree(i) - t.get(i-1).card().lb() + 1;
-                if (d_i < next_min) {
-                    next_min = d_i;
-                    p = i;
-                }
-            }
-        }
-        
-        if (p == null) { // no vertex with index > k left (the projection can be solved immediately)
+    private int monoBound (final List<? extends SetFunction> t, final int k, final int min) {
+        Set<Integer> s = remAbundant(t, k).indexSetGt(k); 
+        if (s.isEmpty()) { // no vertex with index > k left (the projection can be solved immediately)
             return min;
+        } else{
+            long next_min = Integer.MAX_VALUE + 1L;
+            int p = 0;
+            for (var i : s) { 
+                var d_i = degree(i) - t.get(i-1).card().lb() + 1; // this quantity is > 0
+                    if (t.get(i-1).card().fit(d_i) && d_i < next_min) {
+                        next_min = d_i;
+                        p = i;
+                    }
+            }
+            return p > 0 ? remove(p).monoBound(t, k,  Math.max((int) next_min, min)) : -1; // if p > 0 we may found a projection bound by splitting the constraint    
         }
-        if (this.cc.fit(next_min) ) { // we can find a projection bound by splitting the constraint
-            return remove(p).monoBoundDestr(t, k, Math.max( next_min, min) );
-        }
-        
-        return next_min; // no projection bound can be found 
     }
-    
-    
+       
     /**
     calculates the sum of i-th vertex's degree and the gap of the corresponding tuple's component
     @throws NullPointerException if the component's cardinality is undefined
@@ -501,4 +496,5 @@ public final class InequalityGraph extends Graph<Projection> {
     private int degreePlusGap(final int i,  final List<? extends SetFunction> t) {
         return degree(i) + t.get(i-1).gap();
     }
+    
 }

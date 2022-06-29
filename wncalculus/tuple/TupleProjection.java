@@ -192,7 +192,7 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
         }
         return this; 
     }    
-    
+    //nuova versione che usa igraph.monoBound (nuovo)
     public FunctionTuple specSimplify( ) {
         System.out.println("TupleProjection:\n"+toStringDetailed()); //debug
         if (this.k == this.ftuple.size())  // the Projection is the identity
