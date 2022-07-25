@@ -108,17 +108,17 @@ public interface ParametricExpr extends Expression {
      * @param verbose indicates whether resulting terms have to be printed, with some profiling info
      * @return a collection of equivalent normalized terms
      */
-    default Set<? extends ParametricExpr> simplify (boolean verbose) {
-        long startTime = System.currentTimeMillis();
+    default Set<? extends ParametricExpr> simplify (final boolean verbose) {
+        var startTime = System.currentTimeMillis();
         Set<ParametricExpr>  res_set    = new LinkedHashSet<>(); // the list of normalization results
-        List<ParametricExpr> to_simplify = Util.singletonList(this);
-        for (ListIterator<ParametricExpr> ite = to_simplify.listIterator(1); ite.hasPrevious();) {
-            ParametricExpr tx = ite.previous();
+        var to_simplify = Util.singletonList(this);
+        for (var ite = to_simplify.listIterator(1); ite.hasPrevious();) {
+            var tx = ite.previous();
             //System.out.println("tx: "+tx.toStringDetailed()); // debug
             ite.remove();
             Collection<? extends ParametricExpr> split_terms;
             if (tx.isParametric() && (split_terms = tx.split()). size() > 1) 
-                split_terms.forEach( t -> {
+                split_terms.forEach( (var t) -> {
                     //System.out.println("tx split: "+t.toStringDetailed()); // debug
                     t.setSimplified(false);
                     ite.add((ParametricExpr) t.normalize()); } );

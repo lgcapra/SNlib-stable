@@ -8,7 +8,6 @@ import wncalculus.expr.*;
 import wncalculus.guard.Equality;
 import wncalculus.util.Util;
 import static wncalculus.classfunction.Projection.*;
-import wncalculus.util.Pair;
 
 /**
  *
@@ -21,26 +20,11 @@ public final class InequalityGraph extends Graph<Projection> {
     private ColorClass cc; //the inequations' color class    
     private HashMap<Integer, HashSet<Projection>> imap; // the "index" map of this graph ("hashing")
     
-    /**
-     * builds an empty graph of inequalities (private)
-     */
-    /*private*/public InequalityGraph () {
-    }
+    //cache
+    Integer delim;
     
-    private static InequalityGraph Empty; //empty 
-    
-    /**
-     * @param cc a color class
-     * @return an empty inequality graph
-     */
-    public static InequalityGraph Empty(ColorClass cc) {
-        if (Empty == null) {
-            Empty = new InequalityGraph();
-            Empty.cc = cc;
-        } 
-        return Empty;
-    }
-    
+    public InequalityGraph() {}
+            
     /** builds an inequation graph from a (non-empty) set of inequalities (assumed of the same colour)
      *  by adding (if needed) the implicit ones
      *  the resulting graph has a "minimal" form, possibly different from the "canonical" form of inequations
@@ -103,8 +87,9 @@ public final class InequalityGraph extends Graph<Projection> {
                     v2 = prset2.iterator().next() ; // we take one with index 2 ..
                     v1 = v1.setExp( v2.getSucc() - succ2);
                 }
-        } else if (! (prset1.contains (v1) && prset2.contains (v2)) )  { // there exist both a vertex with index 1 and one with index 2
-                boolean found = false;
+        } 
+        else if (! (prset1.contains (v1) && prset2.contains (v2)) )  { // there exist both a vertex with index 1 and one with index 2
+                var found = false;
                 search: for (Projection n1 : prset1) {
                            for (Projection n2: prset2)
                                if (offset(n2.getSucc(), n1.getSucc()) == succ2) {
@@ -120,16 +105,17 @@ public final class InequalityGraph extends Graph<Projection> {
         }
         
         if ( super.addVertex(v1) ){ // v1 is new 
-            if ( prset1 != null ) // there were other vertices with the same index
+            if ( prset1 != null ) { // there were other vertices with the same index
                 addImplicitIneqs(v1, prset1); // implicit inequalities between v1 and existing vertices with the same index
+            }
             setImap(v1);     
         }
         if ( super.addVertex(v2) ){ // v2 is new (as above) .. 
-            if ( prset2 != null ) 
+            if ( prset2 != null ) {
                 addImplicitIneqs(v2, prset2); 
+            }
             setImap(v2);
         }
-        //System.out.println("aggiunto "+ v1+','+v2);
         return super.addEdge(v1, v2); // the new arc is built; 
     }
     
@@ -138,7 +124,7 @@ public final class InequalityGraph extends Graph<Projection> {
      * computes the difference mod-n (considering the colour class constant size in the non-parametric case)
      * @param a a value
      * @param b a value
-     * @return computes the difference (a-b) mod-n (considering the graph's colour class)
+     * @return computes the difference (a-b) mod-n (considering the graph'isetGtk colour class)
      */
     private int offset(int a, int b) {
         int size = this.cc.fixedSize(), diff = a - b;
@@ -201,7 +187,7 @@ public final class InequalityGraph extends Graph<Projection> {
     }
         
     /**
-     * safely removes the node(s) with given index from <code>this</code> graph
+     * safely removes the node(isetGtk) with given index from <code>this</code> graph
      * @param i an index
      * @return <code>this</code> graph
      */
@@ -211,7 +197,6 @@ public final class InequalityGraph extends Graph<Projection> {
             removeVertices(x);
             this.imap.remove(i);
         }
-        
         return this;
     }
     
@@ -228,33 +213,33 @@ public final class InequalityGraph extends Graph<Projection> {
      * @param k a specified position (it usually denotes the original fixedSize of an extended tuple..)
      * @return the set of graph'X vertex indexes greater than k  
      */
-    public Set<Integer> indexSetGt (int k) {
-        Set<Integer> iset = new HashSet<>();
-        this.imap.keySet().stream().filter( i -> i > k).forEachOrdered( i -> { iset.add(i); });
-
-        return iset;
+    public Set<Integer> indexSetGt (final int k) {
+        var indexSetGtk = new HashSet<Integer>();
+        this.imap.keySet().stream().filter( i -> i > k).forEachOrdered( i -> { indexSetGtk.add(i); });
+        return indexSetGtk;
     }
         
     
     /**
-     * computes the cardinality of the sum of tuple's components (representing variable domains
+     * computes the cardinality of the sum of tuple'isetGtk components (representing variable domains
      * referred to by inequalities
      * @param t the right-tuple, in the form of a list
      * @return the cardinality of the sum of components; <code>null</code> if it cannot be computed.
      * @throws ClassCastException if any term in t is not a SetFunction
      */
-    public Interval ineqDomainCard (List<? extends SetFunction> t)  {
-       Set<SetFunction> comps = new HashSet<>(); //tuple components corresponding to inequalities
+    public Interval ineqDomainCard (final List<? extends SetFunction> t)  {
+       final Set<SetFunction> comps = new HashSet<>(); //tuple components corresponding to inequalities
        vertexSet().forEach((var p) -> { comps.add (Successor.factory( p.getSucc() , t.get( p.getIndex() - 1 )) ); });
-       SetFunction u = Union.factory(comps,false);
-       if (u instanceof NonTerminal) //optimization
+       var u = Union.factory(comps,false);
+       if (u instanceof NonTerminal) {//optimization
            u =  (SetFunction) u.normalize( );
+       }
        //System.out.println("card di: "+comps + " ->"+ u); //debug
        return u.card();
     }
    
     /**
-     * return the "cumulative" degree of this graph's vertexes with the specified
+     * return the "cumulative" degree of this graph'isetGtk vertexes with the specified
      * index (disregarding by the way implicit relations between similar vertices)
      * @param i the vertices' index
      * @return the cumulative degree of vertexes with index <code>i</code>
@@ -267,8 +252,10 @@ public final class InequalityGraph extends Graph<Projection> {
         if (autod > 1) {
             di = vset.stream().map( v -> degree(v)).reduce(di, Integer::sum);
             di -= autod * (autod -1) ; // >= 0
-        } else di = degree (vset.iterator().next());
-        
+        }
+        else { 
+            di = degree (vset.iterator().next());
+        }
         return di ; 
     }
     
@@ -295,7 +282,7 @@ public final class InequalityGraph extends Graph<Projection> {
      * if there are not two such vertices
      */
     public Projection[] getIndependentNodesLe(int k) {
-        Set<Projection> vset_k = vertexSetLe(k);
+        final var vset_k = vertexSetLe(k);
         Projection[] a = null;
         for (Projection v : vset_k ) {
             if ( degree(v) < order() -1) {// the vertex degree is not max
@@ -310,7 +297,6 @@ public final class InequalityGraph extends Graph<Projection> {
                 }
             }
         }
-        
         return a;
     }
     
@@ -324,15 +310,9 @@ public final class InequalityGraph extends Graph<Projection> {
         copy.cc = this.cc;
         copy.imap = new HashMap<>(); // deep copy
         this.imap.entrySet().forEach( e -> { copy.imap.put(e.getKey(), new HashSet<>(e.getValue())); });
-        
         return copy;
     }
-        
-    @Override
-    public String toString () {
-        return super.toString() +'\n'+this.cc+ (isSimpleForm() ? "\nsingle form" : "")+'\n'+this.imap;
-    }
-    
+       
     /**
      * 
      * @param l the (possibly null) associated tuple
@@ -340,17 +320,21 @@ public final class InequalityGraph extends Graph<Projection> {
      * the maximal offset between successors (with the same index ?)
      */
     public int splitDelimiter(List<? extends SetFunction> l) {
-        int delim = isSimpleForm() ? 0 : succDelim(maxSuccOffset(vertexSet(), this.cc), this.cc);
-        if (delim == 0 && l != null) { //may we restrict to ordered classes?
-           Interval ineqCard = ineqDomainCard(l);
-           if (ineqCard == null)
-               ineqCard = this.cc.card(); // if the variables "domains" cannot be computed we consider the "worst" case
-           var X = chromaticNumber() - ineqCard.lb();
-           if ( X  > 0)
-               delim = X;
+        if (this.delim == null) {
+            this.delim = isSimpleForm() ? 0 : succDelim(maxSuccOffset(vertexSet(), this.cc), this.cc);
+            if (this.delim == 0 && l != null) { //may we restrict to ordered classes?
+               var ineqCard = ineqDomainCard(l);
+               if (ineqCard == null) {
+                   ineqCard = this.cc.card(); // if the variables "domains" cannot be computed we consider the "worst" case
+               }
+               final var X = chromaticNumber() - ineqCard.lb();
+               if ( X  > 0) {
+                   this.delim = X;
+               }
+            }
         }
         //System.out.println("splitdelim di "+this+": "+delim);
-        return delim;
+        return this.delim;
     }
     
     /**
@@ -361,7 +345,7 @@ public final class InequalityGraph extends Graph<Projection> {
     public Set<HashSet<Integer>> connectedIndices () {
     	Set<HashSet<Integer>> i_set = new HashSet<>();
         connectedComponents().stream().map((var x) -> {
-            HashSet<Integer> i_x = new HashSet<>();
+            var i_x = new HashSet<Integer>();
             x.forEach(p -> { i_x.add(p.getIndex()); });
             return i_x;
         }).forEachOrdered(i_x -> {
@@ -372,83 +356,14 @@ public final class InequalityGraph extends Graph<Projection> {
     }
     
     /**
-     * find a minimal upper bound (monotonicity bound) for the the (k-)projection of [g']T to be
-     * equivalent to the syntactical restriction of the [g']T.
-     * tuple's components cardinalities are taken into account
-     * @param g the inequation graph associated with the filter
-     * @return a minimal upper bound for the k-projection to be equivalent to the (syntactical) k-restriction;
-     * -1 if this value cannot be calculated
-     */
-    public int prMonoBound (final int k, final List<? extends SetFunction> t) {
-        try {
-            return clone().prMonoBoundDestr(t, k);
-        } catch (NullPointerException e) {
-            return -1;
-        }
-    }
-    
-    /**
-     * auxiliary method operating in a destructivr way (for efficiency)
+     * founds a projection monotonicity bound
+     * @param k the projection's size
      * @param t the tuple to project
-     * @param k the projection's size
-     * @return the projection's monotonicity bound (@see prMonoBound)
-     * @throws NullPointerException
-     */
-    private int prMonoBoundDestr (final List<? extends SetFunction> t, final int k) {   
-        Set<Integer> iset ;
-        if (isEmpty() || (iset = indexSetGt(k)). isEmpty()) 
-            return 0;
-        else{
-            var p = min_degree_vset(t, iset);
-            p.getKey().forEach(this::remove);
-            return Math.max(p.getValue(), prMonoBoundDestr(t, k) );
-        }
-    }
-    
-    
-    /**
-     * calculates the set of indices {i}, s.t., i > k and degree(v_i)+gap_i == minlb({degree(v_i)+gap(i)} );
-     * gap(i) is the constant "gap" associated to the domain represented by the application of the i-th component
-     * of the specified (extended) tuple; k is the tuple's Projection bound;
-     * @param sd the (initially empty) set to fill with those vertices i such that i > k and degree(i)+gap(i) is min
-     * @param isetgt_k the pre-calculated set of vertices with index > k
-     * @return a pair containing the set minlb({degree(i)+gap(i)}, i > k) and (for convenience) 
-     * @throws NoSuchElementException if <code>isetgt_k</code> is empty
-     * @throws NullPointerException
-     */
-    public Pair<Set<Integer>,Integer> min_degree_vset(final List<? extends SetFunction> t, final Set<? extends Integer> isetgt_k) {
-        var sd = new HashSet<Integer>();
-        var it = isetgt_k.iterator();
-        int i = it.next(), min = degreePlusGap(i,t);
-        for (sd.add(i); it.hasNext(); i = it.next()) { 
-            var d_i = degreePlusGap(i,t);
-            if ( d_i <= min) {
-                if (d_i < min) {
-                    min = d_i;
-                    sd.clear();
-                }
-                sd.add(i);
-            }
-        }
-        return new Pair<>(sd, min);
-    }
-    
-    //alternative
-    
-    /**
-     * founds a projection monotonicit bound
-     * @param k the projection's size
-     * @param t the tuple
      * @return 0 if the projection can be immediately solved; a projection monotonicity bound otherwise
-     * NOTE if the returned non-zero value exceeds the current constraint's size, it means that the
-     * projection cannot be solved
+     * -1, if no monotonicity bound does exist
      */
     public int monoBound (final int k, final List<? extends SetFunction> t) {
-        try {
-            return clone().monoBound(t, k, 0);
-        } catch (NullPointerException e) {
-            return -1;
-        }
+        return clone().monoBound(t, k, 0);
     }
     
     private InequalityGraph remAbundant (final List<? extends SetFunction> t, final int k) {
@@ -472,29 +387,22 @@ public final class InequalityGraph extends Graph<Projection> {
      * the projection can be directly solved (the process is recursive=; -1 if such a bound doesn't exist
      */
     private int monoBound (final List<? extends SetFunction> t, final int k, final int min) {
-        Set<Integer> s = remAbundant(t, k).indexSetGt(k); 
-        if (s.isEmpty()) { // no vertex with index > k left (the projection can be solved immediately)
+        var isetGtk = remAbundant(t, k).indexSetGt(k); 
+        if (isetGtk.isEmpty()) { // no vertex with index > k left (the projection can be solved immediately)
             return min;
-        } else{
+        } 
+        else{
             long next_min = Integer.MAX_VALUE + 1L;
-            int p = 0;
-            for (var i : s) { 
-                var d_i = degree(i) - t.get(i-1).card().lb() + 1; // this quantity is > 0
-                    if (t.get(i-1).card().fit(d_i) && d_i < next_min) {
-                        next_min = d_i;
-                        p = i;
-                    }
+            var p = 0;
+            for (var i : isetGtk) { 
+                final var d_i = degree(i) - t.get(i-1).card().lb() + 1; //  > 0
+                if (t.get(i-1).card().fit(d_i) && d_i < next_min) {
+                    next_min = d_i;
+                    p = i;
+                }
             }
             return p > 0 ? remove(p).monoBound(t, k,  Math.max((int) next_min, min)) : -1; // if p > 0 we may found a projection bound by splitting the constraint    
         }
     }
-       
-    /**
-    calculates the sum of i-th vertex's degree and the gap of the corresponding tuple's component
-    @throws NullPointerException if the component's cardinality is undefined
-    */
-    private int degreePlusGap(final int i,  final List<? extends SetFunction> t) {
-        return degree(i) + t.get(i-1).gap();
-    }
-    
+           
 }

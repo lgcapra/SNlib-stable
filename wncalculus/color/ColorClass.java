@@ -322,13 +322,8 @@ public final class ColorClass extends Sort implements Color {
      * @param d a delimiter offset
      * @return a (possibly) ajusted value for d
      */
-    public int setDelim(int d) {
-        //if (! unbounded() ) //more general
-             //d = Math.min(d, ub() - lb() );
-        if (!unbounded() )
-             d = Math.min(d, ub() - lb());
-        
-        return d;
+    public int setDelim(final int d) {
+        return  unbounded() ?  d : Math.min(d, ub() - lb());
     }
     
                          

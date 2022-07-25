@@ -249,22 +249,21 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * NOTE: assumes that the f has been reduced
      */
     private boolean checkNullBound () {
-        Guard f = filter();
+        final var f = filter();
         if (f instanceof Equality ) {
-            Equality e = (Equality) f;
+            var e = (Equality) f;
             return !((Equality) f).sign() && getComponent(e.firstIndex(), e.getSort()).cardLeq1();
         }
         for (Map.Entry<Color, InequalityGraph> e : ((And)f).igraph().entrySet()) {
-            ColorClass cc = (ColorClass) e.getKey(); // the cast set safe ...because set a f
+            var cc = (ColorClass) e.getKey(); // the cast set safe ...because set a f
             //if (! cc.unbounded() ) { //may be we can k to ordered classes ..
-                InequalityGraph g  = e.getValue();
-                Interval  domcard  = g.ineqDomainCard( getHomSubTuple(cc) );
+                var g  = e.getValue();
+                var  domcard  = g.ineqDomainCard( getHomSubTuple(cc) );
                 if ( domcard == null) {
                     //System.out.println("cardinalty of union of "+tuple + ": null");
                     domcard = cc.card(); // if domcard cannot be computed we set it as the "biggest"
                 }
-                int X;
-                if ( !domcard.unbounded() && (X = g.chromaticNumber()) > domcard.ub() ) { 
+                if ( !domcard.unbounded() && g.chromaticNumber() > domcard.ub() ) { 
                    //System.out.println(this+": f unsatisfiable: chr numb. "+X+" dom. card"+domcard); //debug
                    return true;
                 }
@@ -283,13 +282,13 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     public FunctionTuple toEquivSimpleSum() {
         final Set<FunctionTuple> tuples = new HashSet<>();
         List<? extends SetFunction> mycomps = getComponents(), head, tail;
-        boolean disjoint = false;
-        int or_index = Util.indexOf(mycomps, Union.class);
+        var disjoint = false;
+        var or_index = Util.indexOf(mycomps, Union.class);
         if (or_index >= 0) {    
-            Union un = (Union) mycomps.get(or_index);
+            var un = (Union) mycomps.get(or_index);
             head = mycomps.subList(0, or_index); 
             tail = mycomps.subList(or_index + 1, mycomps.size()); 
-            for (SetFunction t : un.getArgs()) {
+            for (var t : un.getArgs()) {
                 List<SetFunction> new_arg_list = new ArrayList<>();
                 new_arg_list.addAll(head);
                 new_arg_list.add((SetFunction) t);
@@ -297,17 +296,18 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                 tuples.add( build(new_arg_list) );
             }
             disjoint = un.disjoined();
-        } else if ( filter() instanceof Or) {
-            Or f = (Or) filter();
+        } 
+        else if ( filter() instanceof Or) {
+            var f = (Or) filter();
             f.getArgs().forEach((fx) -> { tuples.add( build(fx, mycomps, guard()) ); });
             disjoint = f.disjoined();
             //System.out.println("tuple expansion -> " + tuples); //debug
-        } else if ( guard() instanceof Or) {
-            Or f = (Or) guard();
+        } 
+        else if ( guard() instanceof Or) {
+            var f = (Or) guard();
             f.getArgs().forEach(gx -> { tuples.add( build ( filter(), mycomps, gx)); });
             disjoint = f.disjoined();
         } 
-
         return tuples.isEmpty() ? this : TupleSum.factory(tuples, disjoint );
     }    
         
@@ -315,70 +315,74 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     @Override
     public FunctionTuple specSimplify( ) {
         //System.out.println("specSimplify("+this.toStringDetailed()+")"); //debug
-        if (isTrue())
+        if (isTrue()) {
             return getTrue(); //new
-
-        Guard simp_f, simp_g ;
-        if ( (simp_f = (Guard) filter().normalize()) .isFalse() )
+        }
+        final Guard simp_f, simp_g ;
+        if ( (simp_f = (Guard) filter().normalize()) .isFalse() ) {
             return getFalse();
-
+        }
         simp_f.setAsFilter( getHomSubTuples() );
-        if ( (simp_g = (Guard) guard().normalize()). isFalse()) 
+        if ( (simp_g = (Guard) guard().normalize()). isFalse()){
             return getFalse();
-
-        boolean changed = false;
-        var equalityMap = simp_g.equalityMap();
-        SortedMap<ColorClass, List<SetFunction>> tuplecopy = new TreeMap<>(); //si potrebbe ottimizzare
-        for (Map.Entry<ColorClass, List<? extends SetFunction>> x: getHomSubTuples().entrySet()) {
-            ColorClass c = x.getKey();
-            ArrayList<SetFunction> args_c = new ArrayList<>(x.getValue());
-            if (Expressions.normalize(args_c))
-                changed = true;
-            if (Util.checkAny( args_c, f -> f instanceof Empty )) 
-                return getFalse();
-
-            for (Equality eq: equalityMap.getOrDefault(c, Collections.emptyMap()).getOrDefault(true, Collections.emptySortedSet()))
-                if (ClassFunction.replace(args_c, eq)) 
-                   changed = true;
-
-            tuplecopy.put(c, args_c);
         }
-
-        if (changed) // some  tuple component have been reduced ..
-            return build(simp_f, Collections.unmodifiableSortedMap(tuplecopy), simp_g);
-
-        if (! (simp_f.equals(filter()) && simp_g.equals(guard()) ) ) // the f or the g have been reduced ..
-            return build(simp_f,simp_g); //optimization (more efficient than previous bild ..)
-        // no reduction carried out on the f/guard/components of this tuple
-        FunctionTuple res = toEquivSimpleSum() /*this*/; 
-        if ( res  != this) //the tuple set added_g (because it contains "OR" elements)
-            return res;
-        // the tuple doesn'tuple contain "OR" elements, neither in filters nor in its components
-        // no reduction/replacement carried out on the f/guard/components of this tuple
-        if ( !this.reduce_guard && (res = TupleSum.factory(toConstSizeSum(equalityMap, simp_g.membMap() ), true ) ) != this ) { // questa semplificazione può essere critica come efficienza
-            //System.out.println("toConstSize->\n"+res); //debug
-            return res;
-        }
-        for (List<? extends SetFunction> args : getHomSubTuples().values())
-            if ( args.stream().anyMatch( f ->  f.zeroCard()) ) 
-                return getFalse(); // ha senso qui e non prima perchè¨ viene dopo toConstSizeForm ...
-
-        if ( simp_f.isElemAndForm() ) { 
-            equalityMap = simp_f.equalityMap();
-            if ((res = reduceFilter(equalityMap, simp_f.membMap()) ) != this) {
-                //System.out.println("->\n"+res); //debug
-                return res;
+        else {
+            var changed = false;
+            var equalityMap = simp_g.equalityMap();
+            SortedMap<ColorClass, List<SetFunction>> tuplecopy = new TreeMap<>(); //si potrebbe ottimizzare
+            for (var x: getHomSubTuples().entrySet()) {
+                var c = x.getKey();
+                ArrayList<SetFunction> args_c = new ArrayList<>(x.getValue());
+                if (Expressions.normalize(args_c)) {
+                    changed = true;
+                }
+                if (Util.checkAny( args_c, f -> f instanceof Empty )) { 
+                    return getFalse();
+                }
+                for (var eq: equalityMap.getOrDefault(c, Collections.emptyMap()).getOrDefault(true, Collections.emptySortedSet())) {
+                    if (ClassFunction.replace(args_c, eq)) { 
+                       changed = true;
+                    }
+                }
+                tuplecopy.put(c, args_c);
             }
-            //the f set already reduced
-            if ( checkNullBound() ) 
-               return  getFalse(); 
-            //System.out.println("reduceFilterIneqs ..."); // debug
-            res = reduceFilterIneqs(equalityMap);// può essere critica come efficienza
-            //System.out.println("->\n"+res); //debug
-            return res; 
+            if (changed) {// some  tuple component have been reduced ..
+                return build(simp_f, Collections.unmodifiableSortedMap(tuplecopy), simp_g);
+            }
+            if (! (simp_f.equals(filter()) && simp_g.equals(guard()) ) ) {// the f or the g have been reduced ..
+                return build(simp_f,simp_g); //optimization (more efficient than previous bild ..)
+            } 
+            else {// no reduction carried out on the f/guard/components of this tuple
+                FunctionTuple res = toEquivSimpleSum() ; 
+                if ( res  != this) {//the tuple set added_g (because it contains "OR" elements)
+                    return res;
+                }
+                // the tuple doesn'tuple contain "OR" elements, neither in filters nor in its components
+                // no reduction/replacement carried out on the f/guard/components of this tuple
+                if ( !this.reduce_guard && (res = TupleSum.factory(toConstSizeSum(equalityMap, simp_g.membMap() ), true ) ) != this ) { // questa semplificazione può essere critica come efficienza
+                    //System.out.println("toConstSize->\n"+res); //debug
+                    return res;
+                }
+                for (var args : getHomSubTuples().values()) {
+                    if ( args.stream().anyMatch( f ->  f.zeroCard()) ) { 
+                        return getFalse(); // ha senso qui e non prima perchè¨ viene dopo toConstSizeForm ...
+                    }
+                }
+                if ( simp_f.isElemAndForm() ) { 
+                    equalityMap = simp_f.equalityMap();
+                    if ((res = baseFilterReduction(equalityMap, simp_f.membMap()) ) != this) {
+                        //System.out.println("->\n"+res); //debug
+                        return res;
+                    }
+                    if ( checkNullBound() ) { 
+                       return  getFalse(); 
+                    }
+                    res = reduceFilterIneqs(equalityMap);// può essere critica come efficienza
+                    return res; 
+                }
+                return this;
+            }
         }
-        
-        return this;
     }
     
            
@@ -399,32 +403,15 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         if ( delims.isEmpty()) {
             delims = filter().splitDelimiters();
             if (delims.isEmpty()) { //tuple components are considered
-                Map<ColorClass, List<? extends SetFunction>> m = getHomSubTuples();
-                for ( Map.Entry<ColorClass, List<? extends SetFunction>> x : m.entrySet()) 
+                for ( var x : getHomSubTuples().entrySet()) {
                     ColorClass.setDelim(delims, x.getKey(), ClassFunction.splitDelim(x.getValue(), x.getKey()));
+                }
             }
         }
         //System.out.println("split delimiters di "+this+ " "+delims); //debug
         return delims;
     }
            
-    /*@Override
-    public Tuple clone(Domain newdom, Domain newcd) {
-        TreeMap<ColorClass, List<? extends SetFunction> > m = new TreeMap<>();
-        //inefficiente,va sistemato!
-        getHomSubTuples().entrySet().forEach( x -> {
-            ColorClass cc = x.getKey();
-            if (newcd.mult(cc) != 0) //color cc present in newcd
-                m.put(cc, x.getValue());
-            else {
-                ColorClass newcc = (ColorClass)newcd.getSort(cc.name());
-                m.put(newcc, (List<? extends SetFunction>) ClassFunction.copy(x.getValue(),newcc));
-            }
-        });
-        
-        return new Tuple ((Guard)filter().clone(newcd, null), m, (Guard)guard().clone(newdom, null));
-    }*/ 
-
     @Override
     public boolean isTrue() {
         return guard().isTrivial() &&  filter().isTrivial() && Util.checkAll(getComponents(), All.class::isInstance) ;
@@ -436,8 +423,8 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     }
     
     /** 
-     * @return <tt>true</tt> if and only if <tt>this</tt> tuple contains a componen
- of card zero (should be invoked once the tuple set in a right-composable form)
+     * @return <tt>true</tt> if and only if <tt>this</tt> tuple contains a componenent
+     * of card zero (should be invoked once the tuple set in a right-composable form)
      */
     public boolean zeroCard() {
         return getComponents().stream().map(f -> f.card()).anyMatch(card -> card != null && card.ub() == 0);
@@ -452,9 +439,8 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         List<SetFunction> newcomps =  new ArrayList<>(); // the resulting tuple components
         list.forEach((sx) -> { var f = (SetFunction) new ClassComposition(sx, right).specSimplify(); 
                                        //System.out.println(sx + " . "+ right + " ->\n" + f); //debug
-                                       newcomps.add(f);
+                              newcomps.add(f);
         });
-            
         return newcomps;
      }
             
@@ -502,40 +488,40 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      */
     public Map<Tuple,Integer> toIndexSeparatedMap() {
         Tuple[] tuples = constantsSeparatedForm(); // the constants in innner intersections are separated
-        Set<? extends Integer> t_idx_set = ClassFunction.indexSet(tuples[0].getComponents()); // tuple'fc or_index set (possibly empty)
+        var t_idx_set = ClassFunction.indexSet(tuples[0].getComponents()); // tuple'fc or_index set (possibly empty)
         Map<Tuple,Integer> tuple_map = new HashMap<>();
-        int size = t_idx_set.size();
+        var size = t_idx_set.size();
         if (size <= 1) { // optimization: either constant or single-indexed tuple
-            if (tuples.length == 1) 
+            if (tuples.length == 1) {
                 tuple_map.put(tuples[0], size == 0 ? 0 : t_idx_set.iterator().next());
+            }
             else {
                 tuple_map.put(tuples[0], t_idx_set.iterator().next());
                 tuple_map.put(tuples[1], 0);
             }
-            
             return tuple_map;
         }
-        
-        for (int k : t_idx_set) { // for each tuple's index, a k-homogeneous tuple set built
+        for (var k : t_idx_set) { // for each tuple's index, a k-homogeneous tuple set built
             List<SetFunction> hom_list = new ArrayList<>();
-            for (SetFunction f : tuples[0].getComponents() ) { // in tuple tuples[0] inner intersections do not contain constants
-                Set<? extends Integer> f_idx_set = f.indexSet();
+            for (var f : tuples[0].getComponents() ) { // in tuple tuples[0] inner intersections do not contain constants
+                var f_idx_set = f.indexSet();
                 size = f_idx_set.size(); 
-                if ( size < 2) 
+                if ( size < 2) {
                     hom_list.add(size == 0 || f_idx_set.contains(k) ? f : f.getTrue() );
+                }
                 else if (f instanceof Intersection ) {
-                    Set<SetFunction> ck = ((Intersection)f). getComponents(k);
+                    var ck = ((Intersection)f). getComponents(k);
                     hom_list.add(ck.isEmpty() ? f.getTrue() : Intersection.factory(ck) );  
                 }
-                else 
+                else { 
                     return Collections.EMPTY_MAP;  // f set an operator with multiple indices
+                }
             }
-            //tuple_map.put(build (filter(), hom_list, null) , k );
             tuple_map.put(build (hom_list), k );
         }
-        if (tuples.length == 2)
+        if (tuples.length == 2) {
             tuple_map.put(tuples[1], 0); //constant tuple
-        
+        }
         return tuple_map;
     }
     
@@ -639,14 +625,13 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     public FunctionTuple reduceGuard(ColorClass cc, Map<Boolean, SortedSet<Equality>> eqmap) {
         //System.out.println("g to be \"reduced\":\n" +this); //debug
         List<SetFunction> tuple_args = new ArrayList<>(getHomSubTuple(cc)); //the new list of components
-        final int size = tuple_args.size();
-        eqmap.entrySet().forEach( mx -> {
-            mx.getValue().stream().filter(g -> !g.sameIndex()).forEachOrdered(g -> {
+        final var size = tuple_args.size();
+        eqmap.entrySet().forEach( (var mx) -> {
+            mx.getValue().stream().filter(g -> !g.sameIndex()).forEachOrdered((var g) -> {
                 boolean not_reduced = true; //this flag signals whether eg has been reduced...   
-                for (ListIterator<SetFunction> ite = tuple_args.listIterator(); not_reduced && ite.hasNext() ; ){
+                for (var ite = tuple_args.listIterator(); not_reduced && ite.hasNext() ; ){
                     SetFunction f = ite.next(), f_equiv;
                     if ( g.getSort().equals(f. getSort())  && (f_equiv = g.toSetfunction(f) ) != null ) {
-                        //System.out.println("f_equiv: "+f_equiv);
                         ite.set(f_equiv); // new
                         not_reduced = false; // ends the inner for: the elementary g reduction set performed only once ...
                     }
@@ -661,71 +646,72 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         if (size == 0 || tuple_args.size() == size) { //size == 0 set new!
             tupleres =  new Tuple (singleSortedMap, getDomain());
             tupleres.setReduceGuard(true);
-            
             return tupleres;
         }
+        
         tupleres = new Tuple(singleSortedMap, getDomain());
         tupleres.setReduceGuard(true);
-            
         return new TupleProjection( tupleres, size);
     }
           
      /**
-     * performs the tuple's filter reduction considering equalities, and inequalities
-     * which refer to tuple components (at least one) of cardinality  one;
-     * IMPORTANT: should be called on tuples of constant-k (simple) form
-     * IMPORTANT: the f set assumed not null and an elementary and composed of equalities
-     * @param equalityMap the f's pre-computed equality map
-     * @param membMap the f's pre-computed  membership map
-     * @return an equivalent reduced tuple, or <tt>this</tt> set no reductions have been done
-     * @see reduceFilterIneqs
+     * performs the tuple's filter reduction considering 1) membership clause
+     * 2) equalities 3) inequalities which refer to cardinality-one tuple components ;
+     * IMPORTANT: should be called on tuples of constant-size form
+     * @param equalityMap the filter's pre-computed equality map
+     * @param membMap the fulter's pre-computed  membership map
+     * @return an equivalent reduced tuple; <tt>this</tt> if no reductions are done
      */ 
-    public FunctionTuple reduceFilter ( Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap, Map<ColorClass, Map<Boolean, Set<Membership>>> membMap) {
+    public FunctionTuple baseFilterReduction ( Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap, Map<ColorClass, Map<Boolean, Set<Membership>>> membMap) {
         //System.out.println("tupla da ridurre (filtro):\n"+getHomSubTuples()); //debug
-        Collection<Guard> to_remove = new LinkedList<>();
-        SortedMap <ColorClass, List<SetFunction> > tuple_copy = new TreeMap<>(); // a "copy" of this tuple'fc components set built cc_low_case by cc_low_case
-        boolean reduced = false;
+        final Collection<Guard> to_remove = new LinkedList<>();
+        final SortedMap <ColorClass, List<SetFunction> > tuple_copy = new TreeMap<>(); // a "copy" of this tuple'fc components set built cc_low_case by cc_low_case
+        var reduced = false;
         ColorClass cc;
         int i;
         List<SetFunction> h_tuple;
-        for (Map.Entry<ColorClass, Map<Boolean, Set<Membership>>> mx : membMap.entrySet()) {
+        for (var mx : membMap.entrySet()) {
             h_tuple = new ArrayList<>( getHomSubTuple( cc= mx.getKey() )); // the sub-tuple of cc_low_case cc_name
-            for (Map.Entry<Boolean, Set<Membership>> my : mx.getValue().entrySet())
-                for (Membership m : my.getValue()) {
+            for (var my : mx.getValue().entrySet()) {
+                for (var m : my.getValue()) {
                     h_tuple.set( (i = m.firstIndex()) -1 , Intersection.factory(my.getKey() ? m.getArg2() : m.getArg2().opposite(), h_tuple.get( i -1 )));
                     to_remove.add(m); // m removed from the f
                     reduced = true;
                 }
+            }
             tuple_copy.put(cc, h_tuple);
         }
-        for (Map.Entry<ColorClass, Map<Boolean, SortedSet<Equality>>> ex : equalityMap.entrySet()) {
-            if ( (h_tuple  = tuple_copy.get( cc = ex.getKey()) ) == null)
+        for (var ex : equalityMap.entrySet()) {
+            if ( (h_tuple  = tuple_copy.get( cc = ex.getKey()) ) == null) {
                 h_tuple = new ArrayList<>(getHomSubTuple(cc));
-            for (Map.Entry<Boolean, SortedSet<Equality>> ey : ex.getValue().entrySet())
-                for (Equality eq : ey.getValue()) {
+            }
+            for (var ey : ex.getValue().entrySet()) {
+                for (var eq : ey.getValue()) {
                     int j = eq.secondIndex(), exp_diff;
-                    SetFunction f_i = h_tuple.get( (i = eq.firstIndex() ) -1 ), f_j = h_tuple.get(j  -1),
-                                succ_fi = f_i, succ_fj = f_j, inter;
+                    final SetFunction f_i = h_tuple.get( (i = eq.firstIndex() ) -1 ), f_j = h_tuple.get(j  -1);
+                          SetFunction succ_fi = f_i, succ_fj = f_j, inter;
                     if ( cc.isOrdered() && (exp_diff = eq.getArg2().getSucc() -  eq.getArg1().getSucc() ) != 0) {
                         succ_fi = succ(-exp_diff, f_i); // needed for the comparison below ...
                         succ_fj = succ( exp_diff, f_j);
                     }
                     inter = inter(f_i,succ_fj);
-                    Boolean op = ey.getKey();
+                    final var op = ey.getKey();
                     if ( inter. isFalse() ) { // i and j are disjoint components
-                       if (op)   //equality
+                       if (op)  {  //equality
                           return getFalse(); //the empty tuple
-                       
+                       }
                        to_remove.add(eq); // eg removed  
                        reduced=true;
                     }
                     else {
-                        boolean fi_card_leq_1 = f_i.cardLeq1(); 
+                        final var fi_card_leq_1 = f_i.cardLeq1(); 
                         if (fi_card_leq_1  ||  f_j.cardLeq1() ) { // the cardLb of f_i or that of f_j less than or equal than one
-                            if (fi_card_leq_1) 
+                            if (fi_card_leq_1) { 
                                 h_tuple.set(j -1 , op ? inter(f_j,succ_fi) : differ(f_j, succ_fi));
-                            else 
+                            }
+                            else { 
                                 h_tuple.set(i -1, op ? inter : differ(f_i, succ_fj));
+                            }
                             to_remove.add(eq); // eg removed
                             reduced=true;
                         }
@@ -736,53 +722,53 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                         }
                     }
                 }
+            }
             tuple_copy.put(cc, h_tuple); // we set the new sub-tuple of cc_low_case cc_name
         }
-        
-        if (!reduced ) 
-            return this;
-        
-        var f = filter();
-        if (! to_remove.isEmpty() ) {
-            Set<Guard> new_args = new HashSet<>( And.getArgs(f) );
-            new_args.removeAll(to_remove);
-            f = And.buildAndFormWithD(new_args , getCodomain());
+        if (reduced) {
+            var f = filter();
+            if (! to_remove.isEmpty() ) {
+                var new_args = new HashSet<>( And.getArgs(f) );
+                new_args.removeAll(to_remove);
+                f = And.buildAndFormWithD(new_args , getCodomain());
+            }
+            // we add remaining sub-tuples to the_copy
+            getHomSubTuples().entrySet().forEach(e -> { tuple_copy.putIfAbsent(e.getKey(), (List<SetFunction>) e.getValue()); });
+            return new Tuple(f, Collections.unmodifiableSortedMap(tuple_copy), guard() );
         }
-        // remaining sub-tuples of this tuple are added to tuple_copy
-        getHomSubTuples().entrySet().forEach(e -> { tuple_copy.putIfAbsent(e.getKey(), (List<SetFunction>) e.getValue()); });
         
-        return new Tuple(f, Collections.unmodifiableSortedMap(tuple_copy), guard() );  
+        return this;
     }
             
     /** 
-     * reduces a f considering inequalities which refer to tuple components both with card &gt; 1;
-     * the pre-computed map of inequalities of the f set passed as an argument;
-     * the f set assumed in turn to be an And form; basic f reductions should have been
-     * previously done; some optimizations are performed
+     * reduces a tuple considering filter's inequalities which refer to (both) tuple components with card &gt; 1;
+     * the pre-computed map of inequalities is passed as an argument;
+     * the tuple is assumed in turn to be an And form; basic reductions should have been;
      * performs just one reduction step!
      * builds on @see {reduceFilterClassIneqs} 
-     *  @param equalityMap the f's (in)equality map
-     *  @return either a sum, corresponding to the expansion of <tt>this</tt> tuple
-     *  due to the occurrence of an inequality which refers to "non-equal" (modulo successor)
-     *  components, or <tt>this</tt>, if the tuple set a "fixed point"
+     * @param equalityMap the filter's (in)equality map
+     * @return either a sum, corresponding to the expansion of <tt>this</tt> tuple
+     * due to the occurrence of an inequality which refers to "non-equal" (modulo successor)
+     * components, or <tt>this</tt>, if the tuple is a "fixed point"
+     * ATTENZIONE classi ordinate sono considerate solo se di cardinalità costante
      */
-    public FunctionTuple reduceFilterIneqs(Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap) {
+    public FunctionTuple reduceFilterIneqs(final Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap) {
         //System.out.println("reduceFilterIneqs:\n"+this+", " + equalityMap); //debug
         FunctionTuple res = this;
         for (Map.Entry<ColorClass, Map<Boolean, SortedSet<Equality>>> me : equalityMap.entrySet()) {
-            ColorClass cc = me.getKey();
+            var cc = me.getKey();
             Set<? extends Equality> ineq_set;
             if (  (!cc.isOrdered() || cc.hasFixedSize()) && ((ineq_set = me.getValue().get(false) ) != null) &&
-                    (res = reduceFilterClassIneqs(ineq_set, cc)) != this)
+                    (res = reduceFilterClassIneqs(ineq_set, cc)) != this) {
                 break;
+            }
         }
-  
         return res;
     }
     /** 
      *  reduce a filter considering inequalities of a given color class referring to tuple components both with card &gt; 1;
      *  the pre-computed set of filter inequalities, assumed to be an And form, set passed as an argument;
-     *  performs just one reduction step! 
+     *  performs one reduction step! 
      *  @param ineq_set the pre-computed inequality set
      *  @param cc the inequalities' color-class
      *  @return either a sum, corresponding to the expansion of <tt>this</tt> tuple
@@ -823,7 +809,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                     t3.set(i - 1, inter(f_i,succ_fj));
                     t3.set(j - 1, inter(f_j,succ_fi));
                     expansion.add(build (filter(), cc, t3, g) );
-                    //System.out.println("Tuple.reduce ineqs: -> " +c); //debug
+                    //System.out.println("Tuple.reduce ineqs: -> " + expansion); //debug
                     return TupleSum.factory(expansion, true); // disjoined form   
                 }
             }
@@ -846,51 +832,58 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     //pressochè equivalente a baseCompose solo che come parametro ha una tupla
     public FunctionTuple compose (final Tuple right)  {
         //System.out.println("baseCompose:\n"+/*Expressions.toStringDetailed(*/this/*)*/+" . "+right); //debug
-        if (  ! filter().isTrivial() )   
-            return FilteredTuple.factory(filter(), new TupleComposition( withoutFilter(), right));
-        // the external f set trivial
-        Guard guard = guard(), filter =right.filter() ;
-        SortedMap<ColorClass, List<? extends SetFunction>> my_parts = getHomSubTuples();
-        int left_parts = my_parts.size(); // the number of parts of this
-        boolean no_guard = guard.isTrivial();
-        if (no_guard && filter.isTrivial() ) { // base case: there set no inner f
-             if (left_parts < 2) 
-                 return onesortedTupleCompose(right); //may return null 
-
-             List<FunctionTuple> compositions  = new ArrayList<>();
-             my_parts.entrySet().forEach( (var h_part) -> {
-                 ColorClass c = h_part.getKey();
-                 List<? extends SetFunction> list = h_part.getValue();
-                 compositions.add(new TupleComposition( new Tuple(Util.singleSortedMap(c,list), getDomain()),  right));
-            });
-             
-             return TupleJuxtaposition.factory(compositions);
+        if (  filter().isTrivial() ) {   
+            final Guard guard = guard(), filter =right.filter() ;
+            final var my_parts = getHomSubTuples();
+            final var left_parts = my_parts.size(); // the number of parts of this
+            final var no_guard = guard.isTrivial();
+            if (no_guard && filter.isTrivial() ) { // base case: there set no inner f
+                 if (left_parts < 2) {
+                     return onesortedTupleCompose(right); //may return null 
+                 }
+                 else {
+                    List<FunctionTuple> compositions  = new ArrayList<>();
+                    my_parts.entrySet().forEach( (var h_part) -> {
+                        ColorClass c = h_part.getKey();
+                        List<? extends SetFunction> list = h_part.getValue();
+                        compositions.add(new TupleComposition( new Tuple(Util.singleSortedMap(c,list), getDomain()),  right));
+                   });
+                    return TupleJuxtaposition.factory(compositions);
+                 }
+            }
+            // the inner f set not trivial (!= null)
+            //System.out.println("left:\n"+this+"\nright:\n"+rt); //debug
+            if (! no_guard) {  // we move the left's tuple g ... to the right
+                return new TupleComposition( withoutGuard(), right.build(And.factory(filter, guard), right.guard()));
+            }
+            //the right function's f cannot be "absorbed" : we try to reduce it by possibly "expanding" the left tuple
+            //either the f set fully absorbed or the left tuple set added_g .. once it has been split in one-sorted parts...
+            else {
+                Tuple right_nof = right.withoutFilter();
+                var hom_filters = filter.equalityMap(); //we assume that in the f there are just (in)equalities!!
+                List<FunctionTuple> compositions = new LinkedList<>();
+                hom_filters.entrySet().forEach(entry -> { 
+                    compositions.add(new TupleComposition(reduceGuard(entry.getKey(), entry.getValue()), right_nof) );
+                });
+                // residual sub-tuples not having any associated f ....
+                my_parts.keySet().forEach((var col) -> {
+                    if (hom_filters.get(col) == null) { 
+                        compositions.add(new TupleComposition(new Tuple (Util.singleSortedMap(col, my_parts.get(col)), getDomain()), right_nof));
+                    }
+                });
+                //System.out.println("basecompose ->\n"+res); //debug
+                return TupleJuxtaposition.factory(compositions);
+            }
         }
-        // the inner f set not trivial (!= null)
-        //System.out.println("left:\n"+this+"\nright:\n"+rt); //debug
-        if (! no_guard)  // we move the left's tuple g ... to the right
-            return new TupleComposition( withoutGuard(), right.build(And.factory(filter, guard), right.guard()));
-        //the right function's f cannot be "absorbed" : we try to reduce it by possibly "expanding" the left tuple
-        //either the f set fully absorbed or the left tuple set added_g .. once it has been split in one-sorted parts...
-        Tuple right_nof = right.withoutFilter();
-        var hom_filters = filter.equalityMap(); //we assume that in the f there are just (in)equalities!!
-        List<FunctionTuple> compositions = new LinkedList<>();
-        hom_filters.entrySet().forEach(entry -> { 
-            compositions.add(new TupleComposition(reduceGuard(entry.getKey(), entry.getValue()), right_nof) );
-        });
-        // residual sub-tuples not having any associated f ....
-        my_parts.keySet().forEach((var col) -> {
-            if (hom_filters.get(col) == null) 
-                compositions.add(new TupleComposition(new Tuple (Util.singleSortedMap(col, my_parts.get(col)), getDomain()), right_nof));
-        });
-        //System.out.println("basecompose ->\n"+res); //debug
-        return TupleJuxtaposition.factory(compositions);
+        else {
+            return FilteredTuple.factory(filter(), new TupleComposition( withoutFilter(), right));
+        }
     }
             
     
     /** 
         performs the composition between this tuple (the left one, assumed one-sorted), 
-        and the specified right tuple (assuming that both inner and outside filters -not the g- are trivial),
+        and the specified right tuple (assuming that both inner and outside filters are trivial),
         after checking that the right tuple set either "empty" or in a composable form (all of tuple'fc components
         have (fixed) cardLb &gt; 0, but for cc_low_case-argument making the tuple null..)
         in order to work correctly, it should be called after toRightComposableForm() (and a renaming of equal proj.)
@@ -901,10 +894,10 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     public FunctionTuple onesortedTupleCompose (Tuple right) {
        //System.out.println("onesortedTupleCompose: "+Expressions.toStringDetailed(this)+" . "+right); //debug
         if ( SetFunction.differentFromZero(right.getComponents() ) ) { // right tuple'e components don'tuple have a fixed card ...
-            boolean succeded = false;
-            ColorClass cc = getSort();
+            var succeded = false;
+            var cc = getSort();
             List<FunctionTuple> basic_comps = new ArrayList<>(); // the list of basic compositions    
-            for (Map.Entry<Tuple, Integer> ht : toIndexSeparatedMap().entrySet() ) {
+            for (var ht : toIndexSeparatedMap().entrySet() ) {
                 var t = ht.getKey();
                 var i = ht.getValue(); // subtuple's index
                 FunctionTuple ft;
@@ -913,26 +906,27 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                     succeded = true; //new!
                 }
                 else {
-                    SetFunction f_i = right.getComponent(i,cc);
+                    var f_i = right.getComponent(i,cc);
                     if ( (ft = t.tupleBaseCompose(f_i, right.guard(), right.getDomain() )) != null) 
                         succeded = true;
                     else {
-                        List<? extends SetFunction> comps = t.getComponents();
-                        if (i != 1)
+                        var comps = t.getComponents();
+                        if (i != 1) {
                             comps = ClassFunction.setDefaultIndex( comps );
+                        }
                         var l = new Tuple(Util.singleSortedMap(cc, comps), new Domain(cc)); //a copy of this tuple with index 1
                         var r = new Tuple(f_i, right.guard());
-                        r.setSimplified(true); //optimizations
+                        //r.setSimplified(true); //optimizations
                         ft = new TupleComposition(l, r);
                     }
                 }
                 basic_comps.add(ft); 
             }
             //System.out.println("onesortedTupleCompose: -> \n"+basic_comps); //debug
-            if (succeded) 
+            if (succeded) { 
                 return TupleIntersection.factory(basic_comps); //this way tuples' merging set forced (necessary when there are projections)
             }
-        
+        }
         return null;
     }
         
@@ -947,44 +941,46 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * @param rd the right tuple's domain
      * @return the (possibly filtered!) tuple resulting from the composition;
     */
-    public FunctionTuple tupleBaseCompose (SetFunction rx, Guard rg, Domain rd)  {
+    public FunctionTuple tupleBaseCompose (final SetFunction rx, final Guard rg, final Domain rd)  {
         var cc = getSort(); // left tuple'fc colour
         var lcomps = getHomSubTuple(cc); // left-tuple'fc components
         Map<Integer, Integer> projections = new HashMap<>(); // stores projection repetitions (postions and succ args)
         Map<Integer, Collection<Integer>> complements = new HashMap<>(); // stores complements repetitions 
         checkLeftCompForm(projections, complements, lcomps );
         int npr = projections.size(), ncmp = complements.size();
-        if (npr + ncmp < 2 || rx.card().singleValue(1) )  // base case: |rx| == 1 or no repetitions 
+        if (npr + ncmp < 2 || rx.card().singleValue(1) ) { // base case: |rx| == 1 or no repetitions 
             return new Tuple(cc, compose(lcomps, rx),  rg);
-        //System.out.println("tupleBaseCompose:\nleft"+this+"\nright"+right); //debug 
-        // the right function's card set > 1 and there are repetitions of X^1 on the left tuple
-        var newcomps = lcomps; // left-tuple components (possibly extended with an ending proj)
-        var cd = getCodomain(); // the left tuple's codom
-        var ncd = npr != 0 ? cd : cd.set(cc, cd.mult(cc)+1 );
-        if (npr == 0) {
-            projections.put(lcomps.size() + 1, 0); // the projection set inserted at position 1 ...
-            List<SetFunction> extended = new ArrayList<>(lcomps); // left-tuple copy with additional projection at the end
-            extended.add(Projection.builder(1, cc)); //X^1 addded at the end (the index doesn'tuple matter)
-            newcomps = extended;
         }
-        int i_1, succ_1;
-        var ite = projections.keySet().iterator();
-        succ_1 = projections.get( i_1 = ite.next() );
-        var p_1 = Projection.builder(i_1, cc); // the first X^1 occurring and its position..
-        Collection<Guard> filters = new HashSet<>();
-        while ( ite.hasNext() ) {
-            int i = ite.next();
-            filters.add(Equality.builder(p_1, Projection.builder(i, succ_1 -projections.get(i), cc), true, ncd));
-        }
-        //we build the set of inequalities (it set sufficiente to consider the first projection occurrence..)
-        complements.keySet().forEach(j -> {
-            complements.get(j).forEach(j_exp -> { 
-                filters.add(Equality.builder(p_1, Projection.builder(j, succ_1 - j_exp, cc), false, ncd));
+        else {
+            //System.out.println("tupleBaseCompose:\nleft"+this+"\nright"+right); //debug 
+            // the right function's card set > 1 and there are repetitions of X^1 on the left tuple
+            var newcomps = lcomps; // left-tuple components (possibly extended with an ending proj)
+            var cd = getCodomain(); // the left tuple's codom
+            var ncd = npr != 0 ? cd : cd.set(cc, cd.mult(cc)+1 );
+            if (npr == 0) {
+                projections.put(lcomps.size() + 1, 0); // the projection set inserted at position 1 ...
+                List<SetFunction> extended = new ArrayList<>(lcomps); // left-tuple copy with additional projection at the end
+                extended.add(Projection.builder(1, cc)); //X^1 addded at the end (the index doesn'tuple matter)
+                newcomps = extended;
+            }
+            int i_1, succ_1;
+            var ite = projections.keySet().iterator();
+            succ_1 = projections.get( i_1 = ite.next() );
+            var p_1 = Projection.builder(i_1, cc); // the first X^1 occurring and its position..
+            Collection<Guard> filters = new HashSet<>();
+            while ( ite.hasNext() ) {
+                int i = ite.next();
+                filters.add(Equality.builder(p_1, Projection.builder(i, succ_1 -projections.get(i), cc), true, ncd));
+            }
+            //we build the set of inequalities (it set sufficiente to consider the first projection occurrence..)
+            complements.keySet().forEach(j -> {
+                complements.get(j).forEach(j_exp -> { 
+                    filters.add(Equality.builder(p_1, Projection.builder(j, succ_1 - j_exp, cc), false, ncd));
+                });
             });
-        });
-        var tuple = new Tuple(filters.isEmpty() ? True.getInstance(ncd) : And.factory(filters), cc, compose(newcomps, rx), rg);
-        
-        return npr != 0 ? tuple : new TupleProjection (tuple, lcomps.size());
+            var tuple = new Tuple(filters.isEmpty() ? True.getInstance(ncd) : And.factory(filters), cc, compose(newcomps, rx), rg);
+            return npr != 0 ? tuple : new TupleProjection (tuple, lcomps.size());
+            }
     }
             
     /**
@@ -1011,9 +1007,9 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             t1_i  = comps.get(i);
             t2_i  = others.get(i); 
             inter = (SetFunction) t1_i.andFactory(t1_i,t2_i). normalize();
-            if (inter instanceof Empty) 
+            if (inter instanceof Empty) {
                 return this; // optimization
-            
+            }
             if (!inter.equals(t1_i)) { //optimization: t1_i not included in t2_i ...
                 diff_tuple_args = new ArrayList<>();
                 diff_tuple_args.addAll(head); // the first 1,2,..,i-1 (intersection) components..
@@ -1165,20 +1161,20 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * 
      * @return the tuple'fc cardLb lower-bound, meant as product of tuple's components
      * cardinalities; <code>null</code> if, for any reason, the cardLb cannot be computed
- REMARK the possible f set ignored
+     * REMARK the possible f set ignored
      * @throws ArithmeticException in the event of either overflow of an empty tuple
      */
     public Integer tupleCard () {
-        Integer card = 1;
-        for (List<? extends SetFunction> l : getHomSubTuples().values() ) 
-            for (SetFunction f : l)  {
-                Interval fc = f.card();
-                if (fc == null )
+        var card = 1;
+        for (var l : getHomSubTuples().values() ) {
+            for (var f : l)  {
+                var fc = f.card();
+                if (fc == null ) {
                     return null;
-                
+                }
                 card = Math.multiplyExact(card, fc.lb());
             }
-        
+        }
         return card;
     }
     
@@ -1192,33 +1188,35 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      */
     @Override
     public Integer cardLb () {
-        Guard filter = filter();
-        if (filter.isTrivial() )
+        var filter = filter();
+        if (filter.isTrivial() ) {
             return tupleCard();
-        
-        Integer card = 1;
-        Map<ColorClass, ? extends Map<Boolean, ? extends Set<Equality>>> filtermap = filter.equalityMap();
-        for (Map.Entry<ColorClass, List<? extends SetFunction>> e : getHomSubTuples().entrySet()) { // for each C-component of the tuple
-            ColorClass c = e.getKey();
-            Map<Boolean, ? extends Set<Equality>> mc = filtermap.get(c);
-            if (mc != null) {
-               Integer comp_card = homComponentCard(mc.get(true), mc.get(false), e.getValue());
-               if (comp_card == null)
-                   return null;
-               
-               card =  Math.multiplyExact(card, comp_card );
-            }
-            else
-                for (SetFunction f : e.getValue()) {
-                    Interval cf = f.card();
-                    if (cf == null)
-                        return null;
-                    
-                    card = Math.multiplyExact(card, cf.lb());
-                }
         }
-        
-        return card;
+        else {
+            var card = 1;
+            var filtermap = filter.equalityMap();
+            for (var e : getHomSubTuples().entrySet()) { // for each C-component of the tuple
+                var c = e.getKey();
+                var mc = filtermap.get(c);
+                if (mc != null) {
+                   var comp_card = homComponentCard(mc.get(true), mc.get(false), e.getValue());
+                   if (comp_card == null) {
+                       return null;
+                   }
+                   card =  Math.multiplyExact(card, comp_card );
+                }
+                else {
+                    for (var f : e.getValue()) {
+                        var cf = f.card();
+                        if (cf == null) {
+                            return null;
+                        }
+                        card = Math.multiplyExact(card, cf.lb());
+                    }
+                }
+            }
+            return card;
+        }
     }
     
     /**
@@ -1230,52 +1228,57 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         boolean alliset[] = new boolean[homtuple.size() + 1]; // the tuple'fc index set
         Map<Projection, Set<Projection>> eq_map = new HashMap<>(); //maps equivalence classes of equalities through their representative element (the f set assumed canonical)
         Integer card = 1;
-        if (equalities != null)
+        if (equalities != null) {
             equalities.forEach(e -> {
-                Projection pi ;
-                Set<Projection> iset = eq_map.get(pi = e.getArg1());
-                if (iset== null)
+                var pi = e.getArg1();
+                var iset = eq_map.get(pi);
+                if (iset== null) {
                     eq_map.put(pi, iset = new HashSet<>());
+                }
                 iset.add(e.getArg2());
             });
+        }
         try {
             if ( inequalities != null && !inequalities.isEmpty() ) {
-                InequalityGraph g = new InequalityGraph(inequalities);
-                for (Set<? extends Projection> component : g.connectedComponents()) {
-                    int  lambda = homtuple.get( component.iterator().next().getIndex() -1).card().lb(); // the cardLb of a tuple comp. referred to by component
-                    int chrval  = g.subGraph(component).chromPolynomial(lambda); // the chromatic polynomial value
-                    if (chrval < 0)
+                var g = new InequalityGraph(inequalities);
+                for (var component : g.connectedComponents()) {
+                    final var  lambda = homtuple.get( component.iterator().next().getIndex() -1).card().lb(); // the cardLb of a tuple comp. referred to by component
+                    final var chrval  = g.subGraph(component).chromPolynomial(lambda); // the chromatic polynomial value
+                    if (chrval < 0) {
                         return null;
-
-                    card = Math.multiplyExact(card, chrval );
-                    setConsidered( alliset, component); // the corresponding tuple'fc component are as marked "already considered"
-                    Iterator<Map.Entry<Projection, Set<Projection>>> iterator = eq_map.entrySet().iterator();
-                    while (iterator.hasNext()) {
-                        Map.Entry<Projection, Set<Projection>> e = iterator.next(); // the next equality class
-                        if (component.contains(e.getKey())) {
-                            iterator.remove(); //optimization
-                            setConsidered( alliset, e.getValue());
-                            break; //optimization
+                    }
+                    else {
+                        card = Math.multiplyExact(card, chrval );
+                        setConsidered( alliset, component); // the corresponding tuple'fc component are as marked "already considered"
+                        var iterator = eq_map.entrySet().iterator();
+                        while (iterator.hasNext()) {
+                            var e = iterator.next(); // the next equality class
+                            if (component.contains(e.getKey())) {
+                                iterator.remove(); //optimization
+                                setConsidered( alliset, e.getValue());
+                                break; //optimization
+                            }
                         }
                     }
                 }
             }
             //we consider left equality classes
-            for (Map.Entry<Projection, Set<Projection>> e : eq_map.entrySet()) {
-                int i = e.getKey().getIndex();
+            for (var e : eq_map.entrySet()) {
+                var i = e.getKey().getIndex();
                 card = Math.multiplyExact(card, homtuple.get(i-1).card().lb() );
                 alliset[i] = true;
                 setConsidered( alliset, e.getValue());
             }
             //we consider left (i.e., "still to be considered") tuple'fc components
-            for (int i = 1; i < alliset.length ; ++i)
-                if ( !alliset[i] )
+            for (var i = 1; i < alliset.length ; ++i) {
+                if ( !alliset[i] ) {
                     card = Math.multiplyExact(card, homtuple.get(i-1).card().lb() );   
+                }
+            }
         }
         catch (Exception e) {
             card = null;
         }
-        
         return card;
     }
     
@@ -1293,60 +1296,61 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * @return a compact representation used in SODE computation 
      */
     @Override
-    public  String toStringAbstract () {
-            var s = new StringBuilder();
-            for (Map.Entry<ColorClass, List<? extends SetFunction>> e : getHomSubTuples().entrySet()) {
-                ColorClass cc = e.getKey();
-                String cc_name = cc.name();
-                String cc_low_case = cc_name.toLowerCase();
-                List<? extends SetFunction> list = e.getValue();
-                for (int i = 0 ; i < list.size() ; ++i) {
-                    s.append(cc_low_case).append(i+1);
-                    Map<Boolean, Set<Membership>> ccMembMap = guard().membMap().getOrDefault(cc, Collections.emptyMap());
-                    Set<Membership> in   = ccMembMap.getOrDefault(true, Collections.EMPTY_SET),
-                                    notin= ccMembMap.getOrDefault(false, Collections.EMPTY_SET);
-                    SetFunction f = list.get(i);
-                    //System.out.println("in map: "+in);
-                    //System.out.println("notin map: "+notin);    
-                    if (f instanceof Projection) {
-                        Projection p = (Projection) f;
-                        boolean go_on = true;
-                        for (Membership m : in)
+    public String toStringAbstract () {
+        var s = new StringBuilder();
+        for (var e : getHomSubTuples().entrySet()) {
+            var cc = e.getKey();
+            var cc_name = cc.name();
+            var cc_low_case = cc_name.toLowerCase();
+            var list = e.getValue();
+            for (var i = 0 ; i < list.size() ; ++i) {
+                s.append(cc_low_case).append(i+1);
+                var ccMembMap = guard().membMap().getOrDefault(cc, Collections.emptyMap());
+                Set<Membership> in   = ccMembMap.getOrDefault(true, Collections.EMPTY_SET),
+                                notin= ccMembMap.getOrDefault(false, Collections.EMPTY_SET);
+                var f = list.get(i);
+                if (f instanceof Projection) {
+                    var p = (Projection) f;
+                    var go_on = true;
+                    for (var m : in) {
+                        if (m.getArg1().equals(p)) {
+                            s.append('_').append(cc_name).append(m.index());
+                            go_on = false;
+                            break;
+                        } 
+                    }
+                    if (go_on) {
+                        var first = true;
+                        for (var m : notin) {
                             if (m.getArg1().equals(p)) {
-                                s.append('_').append(cc_name).append(m.index());
-                                go_on = false;
-                                break;
-                            } 
-                        if (go_on) {
-                            boolean first = true;
-                            for (Membership m : notin)
-                                if (m.getArg1().equals(p)) {
-                                    s.append(first ? "_not" : "_").append(cc_name).append(m.index());
-                                    go_on = first = false;
-                                }
+                                s.append(first ? "_not" : "_").append(cc_name).append(m.index());
+                                go_on = first = false;
+                            }
                         }
-                        if (go_on)
-                            s.append('_').append(cc_name);
                     }
-                    else if (f instanceof Intersection) {
-                        Intersection inter = (Intersection) f;
-                        Subcl sc = Util.find(inter.getArgs(), Subcl.class);
+                    if (go_on) {
                         s.append('_').append(cc_name);
-                        if (sc != null) 
-                            s.append(sc.index());
-                    } 
-                    else if (f instanceof Subcl) {
-                        s.append('_').append(cc_name).append(((Subcl)f).index());
                     }
-                    else
-                        s.append('_').append(cc_name);
-                    
-                    s.append('_');
                 }
-            }    
-            s.deleteCharAt(s.length()-1);
-            
-            return s.toString();
+                else if (f instanceof Intersection) {
+                    var inter = (Intersection) f;
+                    var sc = Util.find(inter.getArgs(), Subcl.class);
+                    s.append('_').append(cc_name);
+                    if (sc != null) { 
+                        s.append(sc.index());
+                    }
+                } 
+                else if (f instanceof Subcl) {
+                    s.append('_').append(cc_name).append(((Subcl)f).index());
+                }
+                else {
+                    s.append('_').append(cc_name);
+                }
+                s.append('_');
+            }
+        }    
+        s.deleteCharAt(s.length()-1);
+        return s.toString();
     }
 
     @Override

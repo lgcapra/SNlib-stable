@@ -14,16 +14,13 @@ import wncalculus.util.Util;
  * @param <E> the tuple's elements' type (either BoolFunction or BagFunction)
  */
 public abstract class AbstractTuple<E extends ClassFunction> implements Expression, Transposable  {
-    
     //we assume that tuple's components color-classes are consistent: c1.equals(c2) <-> c1.compareTo(c2) (i.e. different colors must have different names)
     private  final    SortedMap<ColorClass , List<? extends E>> hom_parts ; // the map between colors and homogenous sub-tuples composing this tuple 
     private  final    Guard   filter, guard; 
-    
     //cache
     private String   str; // caching (to get efficiency when ordering)
-    private List</*? extends*/ E>  components; //caching
+    private List<E>  components; //caching
     private boolean  simplified;
-    
         
     /* checks for the tuple's parameters (the filter is trivial) */
     private void checkPar(final SortedMap<ColorClass, List<? extends E>> m, final Guard g) {
@@ -163,10 +160,11 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
       */
      static <E extends ClassFunction> HashMap<ColorClass, Integer> buildTupleCodom (final SortedMap<ColorClass , List<? extends E>> map, final Domain dom) {
             /*Sorted*/HashMap<ColorClass, Integer> tcd = new /*Tree*/HashMap<>(); // the tcd's structure
-            map.entrySet().forEach((Map.Entry<ColorClass, List<? extends E>> entry) -> {
+            map.entrySet().forEach((var entry) -> {
                 var st = entry.getValue();
-                if (st.isEmpty())
+                if (st.isEmpty()) {
                     throw new IllegalDomain();
+                }
                 else {
                     var cc = entry.getKey();
                     if (dom != null) {
@@ -254,18 +252,18 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      * @return (an unmodifiable view of) the tuple components;
      * the list is ordered w.r.t. colour-classes
      */
-    public final List</*? extends*/ E> getComponents() {
+    public final List<E> getComponents() {
         if (this.components == null) {
-            ColorClass c = getSort();
-            if (c != null) 
+            var c = getSort();
+            if (c != null){
                 this.components = (List<E>) this.hom_parts.get(c);
+            }
             else {
                 List<E> mycomps = new ArrayList<>();
                 this.hom_parts.entrySet().forEach(x -> {mycomps.addAll(x.getValue()); });
                 this.components = Collections.unmodifiableList(mycomps);
             }
         }
-        
         return this.components;
     }
             
@@ -290,13 +288,14 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      * <code>this</code> if the filter is trivial
      */
     public final <T extends AbstractTuple> T withoutFilter () {
-        if (this.filter.isTrivial())
+        if (this.filter.isTrivial()) {
             return cast();
-        
-        T copy = build (True.getInstance(getCodomain()), this.guard);
-        copy.setSimplified( simplified() );
-        
-        return copy;
+        }
+        else {
+            T copy = build (True.getInstance(getCodomain()), this.guard);
+            //copy.setSimplified( simplified() );
+            return copy;
+        }
     }
     /**
      * 
@@ -304,13 +303,14 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      * or <code>this</code> if the guard is trivial
      */
     public final <T extends AbstractTuple> T withoutGuard() {
-        if (this.guard.isTrivial())
+        if (this.guard.isTrivial()) { 
             return cast();
-        
-        T copy = build (this.filter, True.getInstance(getDomain()));
-        copy.setSimplified( simplified() );
-        
-        return copy;
+        }
+        else {
+            T copy = build (this.filter, True.getInstance(getDomain()));
+            //copy.setSimplified( simplified() );
+            return copy;
+        }
     }
     
     /**
@@ -328,18 +328,6 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     }
     
     /**
-     * efficient overriding of the single-argument clone methods
-     * @param nd the tuple's new domain
-     * @return a copy of <tt>this</tt> tuple with new domain, assumed compliant with ("including")
-     * the current domain
-     */
-    /*@Override
-    public final AbstractTuple clone(Domain nd) {
-        return nd.equals(getDomain()) ? this : build(filter(), guard().clone(nd) );
-    }*/
-    
-    
-    /**
      * eficiently clones the tuple's components
      * @param split_map a map from old and new sorts
      * @return a (sorted) map containing the cloned sub-tupls
@@ -347,15 +335,14 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     protected final SortedMap<ColorClass, List<? extends E> > cloneComps (final  Map<Sort, Sort> split_map) {
         SortedMap<ColorClass, List<? extends E> > m = new TreeMap<>();
         this.hom_parts.entrySet().forEach( (var x) -> {
-            ColorClass cc = x.getKey(),
-                       n_cc = (ColorClass) split_map.get(cc);
-            if (n_cc == null) // color cc not mapped 
+            ColorClass cc = x.getKey(), n_cc = (ColorClass) split_map.get(cc);
+            if (n_cc == null) { // color cc not mapped 
                 m.put(cc, x.getValue());
+            }
             else {
                 m.put(n_cc, (List<? extends E>) ClassFunction.copy(x.getValue(),n_cc));
             }
         });
-        
         return m;
     }
     
@@ -363,23 +350,21 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     @Override
     public final String toString () {
         if (this.str == null) {
-            String t = "<";
+            var t = "<";
             t = getComponents().stream().map( x -> x.toString() + ',').reduce(t, String::concat);
             t = t.substring(0,t.length()-1)+'>';
             this.str = (filter.isTrivial() ? "" : "[" + filter + ']')  + t + (guard.isTrivial() ? "" : "[" +guard + ']');
         }
-        
         return this.str;
     }
     
     @Override
     public final boolean equals(Object o) {
-        boolean res = super.equals(o);
+        var res = super.equals(o);
         if (! res && o != null && getClass().equals( o.getClass() ) )  {
-            AbstractTuple t = (AbstractTuple)o;
+            var t = (AbstractTuple)o;
             res =  t.guard.equals(this.guard) && t.filter.equals(this.filter) && Objects.equals(t.hom_parts,this.hom_parts);
         }
-        
         return res;
     }
 
@@ -389,7 +374,6 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
         hash = 97 * hash + Objects.hashCode(this.hom_parts);
         hash = 97 * hash + Objects.hashCode(this.filter);
         hash = 97 * hash + Objects.hashCode(this.guard);
-        
         return hash;
     }
     
@@ -400,7 +384,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
 
     @Override
     public final void setSimplified(boolean simplified) {
-        this.simplified = simplified;
+       this.simplified = simplified;
     }
     
     @Override
