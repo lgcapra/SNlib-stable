@@ -54,6 +54,8 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     //redundant. used by the CLI
     public Tuple (final Guard f, final List<? extends SetFunction> l, final Guard g, final Domain dom) {
         this (f, l, g != null ? g : True.getInstance(dom));
+        //SortedMap<ColorClass, List<? extends SetFunction>> cmap = Util.sortedmapFeatureToList(l, ClassFunction::getSort);
+        //HashMap<ColorClass, Integer> tdom = AbstractTuple.buildTupleCodom(cmap, null);
     }
 
     /**
@@ -553,8 +555,11 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             }
         }
         
-        return found ?  new Tuple [] { build( filter(), tuple1_args, null), build (filter(), const_tuple_args, null)}
-                : new Tuple [] {this};
+        if (found) {
+            True t = True.getInstance(getDomain());
+            return new Tuple [] { build( filter(), tuple1_args, t), build (filter(), const_tuple_args, t)};
+        }
+        return new Tuple [] {this};
     }
          
       /** 

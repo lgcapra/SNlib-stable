@@ -49,8 +49,14 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
      */
     public AbstractTuple (final Guard f, final SortedMap<ColorClass, List<? extends E>> m, final Guard g, /*final*/ boolean check) {
         //checkPar(f, m, g);
-        check = true;
-        HashMap<ColorClass, Integer> tcd = buildTupleCodom(m, check ? g.getDomain() : null);
+        check = true; // check forzato: sistemare
+        HashMap<ColorClass, Integer> tcd;
+        try {
+            tcd = buildTupleCodom(m, check ? g.getDomain() : null);
+        } catch (NullPointerException e) {
+            System.err.println("guard: " + g + ": null domain");
+            throw e; 
+        }
         if (f==null)
             this.filter = True.getInstance(new Domain(tcd)); //messo per compatibilità con cli ...
         else if (check && !tcd .equals( f.getDomain().asMap()))  // the tuple's codomain and the filter domain must coincide
