@@ -98,14 +98,13 @@ public class Expressions {
                 if (l.size() > 1) {
                    HashMap<E,List<Sort>> sorts_map = new HashMap<>(); //map between terms and their sorts (the list are ordered)
                    l.forEach( t -> { sorts_map.put(t, t.getSorts()); });
-                   Comparator<E> tcomp = (t1, t2) -> { //comparator for ordered list of sorts (of the same fixedSize)
+                   Collections.sort(l, (Comparator<E>) (t1, t2) -> { //comparator for ordered list of sorts (of the same fixedSize)
                        int cmp = 0;
                        List<Sort> l1 = sorts_map.get(t1), l2 = sorts_map.get(t2); //l1 and l2 should have the same fixedSize
                        for (int i = 0; i < l1.size() && (cmp = l1.get(i).compareTo(l2.get(i))) == 0 ; ++i) {}
                        
                        return cmp;
-                   };
-                   Collections.sort(l, tcomp); // "identical" terms have been ordered w.r.t. their sorts
+                   }); // "identical" terms have been ordered w.r.t. their sorts
                    ListIterator<E> ite = l.listIterator();
                    for (E p = ite.next() , c; ite.hasNext() ; p = l.get(ite.previousIndex())) {
                        Map<Sort,Sort> glued = mergeConstraint(sorts_map.get(p), sorts_map.get(c = ite.next()));

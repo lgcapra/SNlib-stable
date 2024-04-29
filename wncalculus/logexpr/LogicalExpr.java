@@ -27,7 +27,7 @@ public interface LogicalExpr extends ParametricExpr  {
      default LogicalExpr normalize(boolean todisjoin) {
         LogicalExpr e = normalize(); 
         //System.out.println("normalize(true) -- res intermedio ->\n"+e);
-        return todisjoin && e instanceof OrOp ? ((OrOp) e).disjoinAndNormalize() : e;
+        return todisjoin && e instanceof OrOp ? ((OrOp<?>) e).disjoinAndNormalize() : e;
      }
      
     /**
@@ -206,9 +206,10 @@ public interface LogicalExpr extends ParametricExpr  {
         for (ParametricExpr e : simplify(/*false*/true) ) {
             LogicalExpr tx = (LogicalExpr) e;
             if (tx instanceof OrOp ) {
-                OrOp or = (OrOp) tx;    
-                if (todisjoin && ( tx  = or.disjoinAndNormalize() ) instanceof OrOp )
-                    tx = ( (OrOp)tx). merge();
+                final var or = (OrOp<?>) tx;    
+                if (todisjoin && ( tx  = or.disjoinAndNormalize() ) instanceof OrOp ) {
+                    tx = ( (OrOp<?>)tx). merge();
+                }
                 if ( tx. truthEquivalent() ) 
                     tx = tx.getTrue();
             }

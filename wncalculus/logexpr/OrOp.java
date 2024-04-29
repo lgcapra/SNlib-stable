@@ -88,7 +88,9 @@ public interface OrOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E>  {
         E res = N_aryOp.super.genSimplify();
         if (res instanceof OrOp ) {
             E True = getTrue().cast();
-            OrOp<E> orop = (OrOp<E>) res;
+            @SuppressWarnings("unchecked")
+            final
+            var orop = (OrOp<E>) res;
             Collection<? extends E> args = orop. getArgs(); 
             if ( args. contains(True) || ! type().equals( FunctionTuple.class) && checkComplementary(args) )
                 return True ;
