@@ -25,7 +25,7 @@ public interface LogComposition<E extends LogicalExpr> extends SetExpr, Composit
             if ( (left = logcomp.left()).isFalse() || (right = logcomp.right()).isFalse())
                 return  getFalse().cast();
             
-            if (left.isConstant() && right.differentFromZero() /*&& left.getDomain().equals(right.getDomain())*/)  //optimization could be generalized
+            if (left.isConstant() && right.differentFromZero() )  //optimization could be generalized
                 res = left.clone(right.getDomain()).cast(); 
         }
      

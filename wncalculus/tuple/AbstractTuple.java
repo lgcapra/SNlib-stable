@@ -395,7 +395,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     
     @Override
     public final AbstractTuple<E> clone(Domain newdom) {
-        return build(filter.clone(newdom), guard.clone(newdom)) ; 
+        return build(filter, guard.clone(newdom)) ;
     }
         
 }
