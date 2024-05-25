@@ -5,7 +5,7 @@ import java.util.Collection;
 
 /**
  * this interface is the super-type for unary (sorted) operators
- * in which the operandand operator's types coincide
+ * in which the operand and operator's types coincide
  * @author Lorenzo Capra
  * @param <E> the operand's type
  */

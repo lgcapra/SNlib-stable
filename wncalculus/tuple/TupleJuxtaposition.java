@@ -23,7 +23,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
     base constructor
     */
     private TupleJuxtaposition (List<? extends FunctionTuple> tuples, boolean check)  {
-        //if (check)
+        if (check) 
             Expressions.checkDomain(tuples);
         this.codom  =  buildCodomain( tuples );
         this.tuples =  Collections.unmodifiableList(tuples);
@@ -80,7 +80,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
      *infers the juxtaposition co-domain from its argument list
      */
     private Domain buildCodomain( List<? extends FunctionTuple> tuples) {
-        /*Sorted*/HashMap<Sort,Integer> d = new /*Tree*/HashMap<>();
+        HashMap<Sort,Integer> d = new HashMap<>();
         tuples.forEach( ft -> { 
             Map<? extends Sort, Integer> cd = ft.getCodomain().asMap();
             if (cd.size() == 1) {
@@ -147,9 +147,10 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
        int t_pos;
        FunctionTuple res = this;
        Domain cd = getCodomain(), d = getDomain();
+       
        if ( Util.find(this.tuples, EmptyTuple.class ) != null)
           res = EmptyTuple.getInstance(cd, d); //optimization
-       else if (Util.checkAll(this.tuples , (e -> e instanceof Tuple || e instanceof AllTuple) ) ) { // the are only (constant) Tuples (non extended) ..
+       else if (Util.checkAll(this.tuples , (e -> e instanceof Tuple || e instanceof AllTuple) ) ) { // there are only (constant) Tuples (non extended) ..
            List<SetFunction> t_list = new ArrayList<>();
            Set<Guard> g = new HashSet<>(), f = new HashSet<>();
            for (FunctionTuple x : this.tuples ) {
@@ -170,7 +171,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
             }
             res = TupleSum.factory(t_jxtp_list, t_op.disjoined()); // juxtaposition preserves disjoinedness
        }
-
+       //System.out.println("res: " + res);
        return res ;
     }
 

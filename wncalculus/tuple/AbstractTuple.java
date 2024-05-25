@@ -50,13 +50,8 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
     public AbstractTuple (final Guard f, final SortedMap<ColorClass, List<? extends E>> m, final Guard g, /*final*/ boolean check) {
         //checkPar(f, m, g);
         check = true; // check forzato: sistemare
-        HashMap<ColorClass, Integer> tcd;
-        try {
-            tcd = buildTupleCodom(m, check ? g.getDomain() : null);
-        } catch (NullPointerException e) {
-            System.err.println("guard: " + g + ": null domain");
-            throw e; 
-        }
+        final HashMap<ColorClass, Integer> tcd = buildTupleCodom(m, check ? g.getDomain() : null);
+        
         if (f==null)
             this.filter = True.getInstance(new Domain(tcd)); //messo per compatibilità con cli ...
         else if (check && !tcd .equals( f.getDomain().asMap()))  // the tuple's codomain and the filter domain must coincide
@@ -165,7 +160,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Expressi
       * @throws IllegalDomain if some variable index doesn't match the specified (non-null) domain
       */
      static <E extends ClassFunction> HashMap<ColorClass, Integer> buildTupleCodom (final SortedMap<ColorClass , List<? extends E>> map, final Domain dom) {
-            /*Sorted*/HashMap<ColorClass, Integer> tcd = new /*Tree*/HashMap<>(); // the tcd's structure
+            HashMap<ColorClass, Integer> tcd = new HashMap<>(); // the tcd's structure
             map.entrySet().forEach((var entry) -> {
                 var st = entry.getValue();
                 if (st.isEmpty()) {

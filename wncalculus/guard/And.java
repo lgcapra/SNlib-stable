@@ -165,7 +165,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
             if (! (inequalities == null || inequalities.isEmpty() ) )  
                 this.igraph =  Util.singleMap(cc, new InequalityGraph(inequalities ));
             else
-                this.igraph = Collections.EMPTY_MAP;
+                this.igraph = Collections.emptyMap();
         }
         //System.out.println("igraph di "+this +": "+this.igraph); //debug
         return this.igraph;
@@ -182,17 +182,17 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * <code>null</code> if for any reasons the check fails, or there are no memebership clauses
      */
     private SubclSet checkDomain (Set<? extends Projection> vset, ColorClass cc) {
-        Map<Boolean, Set<Membership>> m = membMap().get(cc);
+        final Map<Boolean, Set<Membership>> m = membMap().get(cc);
         if (m != null) {
-            Set<Membership> in    = m.getOrDefault(true,Collections.emptySortedSet()), 
-                            notin = m.getOrDefault(false, Collections.emptySortedSet());
+            final Set<Membership> in    = m.getOrDefault(true,Collections.emptySortedSet()), 
+                                  notin = m.getOrDefault(false, Collections.emptySortedSet());
             if ( notin.isEmpty() && ! in.isEmpty()) { // the notin list is empty
-                Subcl v = Util.isConstantSurjective(Membership.mapSymbolsNoRep(in), vset);
+                final Subcl v = Util.isConstantSurjective(Membership.mapSymbolsNoRep(in), vset);
                 if (v != null)
                     return new SubclSet(v);
             }
             else if ( in.isEmpty() && ! notin.isEmpty() ) { // the in list is empty
-                Set<Subcl> sv = Util.isConstantSurjective(Membership.mapSymbols(notin), vset);
+                final Set<Subcl> sv = Util.isConstantSurjective(Membership.mapSymbols(notin), vset);
                 if (sv != null)
                     return new SubclSet(sv);
             }
@@ -232,8 +232,8 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @return <tt>true</tt> if and only if the set is modified
      */
     public /*private*/static boolean toCanonicalForm (SortedSet<Equality> es) {
-        List<Equality> processed  = new ArrayList<>(),
-                       to_process = new ArrayList<>(); // already processed
+        final List<Equality> processed  = new ArrayList<>(),
+                             to_process = new ArrayList<>(); // already processed
         boolean rep = false;
         do  {
             Equality eq ;
@@ -273,7 +273,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
             if (elgs instanceof SortedSet && g.firstIndex() > eq.secondIndex())
                 break; //optimization
             
-            Guard f = g.replace(eq);
+            final Guard f = g.replace(eq);
             if (f instanceof False) 
                 return null;
             
@@ -300,7 +300,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      */
     /*private*/ public static <E extends ElementaryGuard> Boolean replaceEq (Set<E> egs, SortedSet<? extends Equality> eqs) {
         boolean done = false;
-        List<E> replaced = new ArrayList<>();
+        final List<E> replaced = new ArrayList<>();
         //System.out.print("replacment:" + egs +',' + eqs);
         for (Equality eq : eqs) {
             Boolean some_repl = replaceEq( egs, eq, replaced);
@@ -393,8 +393,8 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
                 
                 return true;
             }
-            Set<Subcl> notin1 = notinmap.getOrDefault(p1, Collections.emptySet()) , 
-                       notin2 = notinmap.getOrDefault(p2, Collections.emptySet()) ;
+            final Set<Subcl> notin1 = notinmap.getOrDefault(p1, Collections.emptySet()) , 
+                             notin2 = notinmap.getOrDefault(p2, Collections.emptySet()) ;
             if (! notin1.equals(notin2) ){
                 Set<Subcl> setdiff = new HashSet<>(notin2);
                 setdiff.removeAll(notin1); // notin2 - notin1
@@ -532,31 +532,30 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     }
     
     /* 
-     * DA FINIRE 
-     * @return the parition of the variable indices into independent parts
+     * @return the partition of the variable indices into independent parts
      * should be invoked on single-color guards 
      * assume that the guard has been simplified, in particular, symbol replacement
      * has been carried out 
      */
-    public Set<HashSet<Integer>> independentSets () {
-    	ColorClass cc = getSort();
+    /*public Set<HashSet<Integer>> independentSets () {
+    	final ColorClass cc = getSort();
         if (cc != null && simple()) {
-            SortedSet<Equality> es = equality(cc, true);
-            Set<HashSet<Integer>> connectedIndices = igraph().get(cc).connectedIndices(); //independent inequalities
+            final SortedSet<Equality> es = equality(cc, true);
+            final Set<HashSet<Integer>> connectedIndices = igraph().get(cc).connectedIndices(); //independent inequalities
             if (es.isEmpty())
                 return connectedIndices;
-            Map<Integer,Set<Integer>> indep_m = new HashMap<>(); //partition of equalities based on their first index (see the assumption)
+            
+            final Map<Integer,Set<Integer>> indep_m = new HashMap<>(); //partition of equalities based on their first index (see the assumption)
             es.forEach(e -> { Util.addElem(e.firstIndex(), e.secondIndex(), indep_m); });
-            Iterator<HashSet<Integer>> ite;
             for (Map.Entry<Integer, Set<Integer>> x : indep_m.entrySet())
-                for (ite = connectedIndices.iterator() ; ite.hasNext(); ) {
-                    HashSet<Integer> iset = ite.next();
+                for (Iterator<HashSet<Integer>> ite = connectedIndices.iterator() ; ite.hasNext(); ite.remove()) {
+                    final var iset = ite.next();
                     if (iset.contains(x.getKey()))  // logicamente : aggiungi a iset tutte le uguaglianze corrispondenti a x
-                        iset.addAll(x.getValue());
-                    ite.remove();
+                            iset.addAll(x.getValue());
                 }
         }
+
     	return cc == null ? Collections.emptySet() : igraph().get(cc).connectedIndices();
-    }
+    }*/
     
 }

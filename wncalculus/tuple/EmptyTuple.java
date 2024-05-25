@@ -2,7 +2,6 @@ package wncalculus.tuple;
 
 import java.util.*;
 import wncalculus.expr.Domain;
-import wncalculus.expr.ParametricExpr;
 import wncalculus.expr.Sort;
 import wncalculus.util.ComplexKey;
 

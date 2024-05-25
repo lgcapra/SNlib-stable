@@ -1,6 +1,8 @@
 package wncalculus.tuple;
 
 import java.util.*;
+import java.util.Map.Entry;
+
 import wncalculus.classfunction.*;
 import wncalculus.color.*;
 import wncalculus.expr.*;
@@ -516,7 +518,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                     hom_list.add(ck.isEmpty() ? f.getTrue() : Intersection.factory(ck) );  
                 }
                 else { 
-                    return Collections.EMPTY_MAP;  // f set an operator with multiple indices
+                    return Collections.emptyMap();  // f set an operator with multiple indices
                 }
             }
             tuple_map.put(build (hom_list), k );
@@ -617,17 +619,17 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     }
                 
      /** 
-     * applies to this tuple g-reduction rules; the g set expressed through an equality map
-     * if the tuple set one sorted, and it contains any clauses that cannot be reduced,
-     * then it set "extended" to a tuple of greater fixedSize, whose projection set equivalent to the original one;
+     * applies to this tuple guard-reduction rules; the guard is expressed through an equality map
+     * if the tuple is one sorted, and it contains any clauses that cannot be reduced,
+     * then it is "extended" to a tuple of greater size, whose projection is equivalent to the original one;
      * @param cc a cc_low_case-class
      * @param eqmap the equality map
-     * @return an equivalent (possibly modulo projection) elementary tuple which comes from applying f rules;
-     * <tt>this</tt>, if the g set trivial; <tt>null</tt> if the g set not trivial but the tuple
-     * set not elementary and one-sorted
-     * The algorithm could be further simplified if equalities were first applied in the tuple
+     * @return an equivalent (possibly modulo projection) elementary tuple which comes from applying g-rules;
+     * <tt>this</tt>, if the guard is trivial; <tt>null</tt> if the guard is not trivial but the tuple
+     * is not elementary and one-sorted
+     * The algorithm could be further simplified if equalities were first applied to the tuple
      */
-    public FunctionTuple reduceGuard(ColorClass cc, Map<Boolean, SortedSet<Equality>> eqmap) {
+    public FunctionTuple reduceGuard(final ColorClass cc, final Map<Boolean, SortedSet<Equality>> eqmap) {
         //System.out.println("g to be \"reduced\":\n" +this); //debug
         List<SetFunction> tuple_args = new ArrayList<>(getHomSubTuple(cc)); //the new list of components
         final var size = tuple_args.size();
@@ -635,28 +637,22 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             mx.getValue().stream().filter(g -> !g.sameIndex()).forEachOrdered((var g) -> {
                 boolean not_reduced = true; //this flag signals whether eg has been reduced...   
                 for (var ite = tuple_args.listIterator(); not_reduced && ite.hasNext() ; ){
-                    SetFunction f = ite.next(), f_equiv;
-                    if ( g.getSort().equals(f. getSort())  && (f_equiv = g.toSetfunction(f) ) != null ) {
+                    var f_equiv = g.toSetfunction(ite.next());
+                    if ( f_equiv  != null ) {
                         ite.set(f_equiv); // new
-                        not_reduced = false; // ends the inner for: the elementary g reduction set performed only once ...
+                        not_reduced = false; // ends the inner for: the elementary g reduction is performed only once ...
                     }
                 }  
-                if (not_reduced) 
-                    tuple_args.add(g.toSetfunction(g.getArg1())); //trucco
+                if (not_reduced) // the guard has not been absorbed
+                    tuple_args.add(g.toSetfunction(g.getArg1())); // trucco: the guard is associated to an extra X^i
             }); 
         });
         //System.out.println("g \"reduction\" outcome\n" +tuple_args); //debug
-        Tuple tupleres;
-        SortedMap<ColorClass, List<? extends SetFunction>> singleSortedMap = Util.singleSortedMap(cc, tuple_args);
-        if (size == 0 || tuple_args.size() == size) { //size == 0 set new!
-            tupleres =  new Tuple (singleSortedMap, getDomain());
-            tupleres.setReduceGuard(true);
-            return tupleres;
-        }
-        
-        tupleres = new Tuple(singleSortedMap, getDomain());
+        //PARTE DA RIVEDERE -- USARE ColorRestriction ?
+        Tuple tupleres =  new Tuple (Util.singleSortedMap(cc, tuple_args), getDomain());
         tupleres.setReduceGuard(true);
-        return new TupleProjection( tupleres, size);
+        //System.out.println("reduce guard ->  "+ tupleres);       
+        return /*size == 0 ||*/ tuple_args.size() == size ? tupleres : new TupleProjection( tupleres, size);
     }
           
      /**
@@ -834,55 +830,61 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         return (SetFunction) Successor.factory(k,f). normalize();
     }
     
-    //pressochè equivalente a baseCompose solo che come parametro ha una tupla
+    // core of the composition algorithm (it takes a Tuple as a parameter, differently from baseCompose)
     public FunctionTuple compose (final Tuple right)  {
         //System.out.println("baseCompose:\n"+/*Expressions.toStringDetailed(*/this/*)*/+" . "+right); //debug
-        if (  filter().isTrivial() ) {   
-            final Guard guard = guard(), filter =right.filter() ;
+        if ( filter().isTrivial() ) {   
+            final Guard  filter = right.filter() ;
             final var my_parts = getHomSubTuples();
-            final var left_parts = my_parts.size(); // the number of parts of this
-            final var no_guard = guard.isTrivial();
-            if (no_guard && filter.isTrivial() ) { // base case: there set no inner f
-                 if (left_parts < 2) {
-                     return onesortedTupleCompose(right); //may return null 
-                 }
-                 else {
-                    List<FunctionTuple> compositions  = new ArrayList<>();
-                    my_parts.entrySet().forEach( (var h_part) -> {
-                        ColorClass c = h_part.getKey();
-                        List<? extends SetFunction> list = h_part.getValue();
-                        compositions.add(new TupleComposition( new Tuple(Util.singleSortedMap(c,list), getDomain()),  right));
-                   });
-                    return TupleJuxtaposition.factory(compositions);
-                 }
-            }
-            // the inner f set not trivial (!= null)
-            //System.out.println("left:\n"+this+"\nright:\n"+rt); //debug
-            if (! no_guard) {  // we move the left's tuple g ... to the right
-                return new TupleComposition( withoutGuard(), right.build(And.factory(filter, guard), right.guard()));
-            }
-            //the right function's f cannot be "absorbed" : we try to reduce it by possibly "expanding" the left tuple
-            //either the f set fully absorbed or the left tuple set added_g .. once it has been split in one-sorted parts...
-            else {
-                Tuple right_nof = right.withoutFilter();
-                var hom_filters = filter.equalityMap(); //we assume that in the f there are just (in)equalities!!
-                List<FunctionTuple> compositions = new LinkedList<>();
-                hom_filters.entrySet().forEach(entry -> { 
-                    compositions.add(new TupleComposition(reduceGuard(entry.getKey(), entry.getValue()), right_nof) );
-                });
-                // residual sub-tuples not having any associated f ....
-                my_parts.keySet().forEach((var col) -> {
-                    if (hom_filters.get(col) == null) { 
-                        compositions.add(new TupleComposition(new Tuple (Util.singleSortedMap(col, my_parts.get(col)), getDomain()), right_nof));
+            final var no_guard = guard().isTrivial();
+            if (no_guard) {
+                List<FunctionTuple> resparts  = new ArrayList<>();
+                if (filter.isTrivial() ) { // base case: there is no inner f
+                    if (my_parts.size() < 2) // the number of parts of this
+                         return onesortedTupleCompose(right); //may return null 
+                    else {
+                        my_parts.entrySet().forEach( (var h_part) -> {
+                            ColorClass c = h_part.getKey();
+                            List<? extends SetFunction> list = h_part.getValue();
+                            resparts.add(new TupleComposition( new Tuple(Util.singleSortedMap(c,list), getDomain()),  right));
+                        });
+                        //System.out.println("TupleJuxtaposition (1) ->\n"+resparts); //debug
+                        return TupleJuxtaposition.factory(resparts);
                     }
-                });
-                //System.out.println("basecompose ->\n"+res); //debug
-                return TupleJuxtaposition.factory(compositions);
-            }
-        }
-        else {
+                }
+                //  for each one-sorted part of the tuple, either the corresponding f (if any) is absorbed or the part is expanded
+                else { //the right function's f cannot be "absorbed" : we try to reduce it by possibly "expanding" the left tuple 
+                    final var hom_filters = filter.equalityMap(); //we assume that in the f there are just (in)equalities!!
+                    final Tuple right_nof = right.withoutFilter();
+                    my_parts.keySet().forEach((var col) -> { // sub-tuples with no associated guard ....
+                        Map<Boolean, SortedSet<Equality>> eqmap = hom_filters.get(col);
+                        if (eqmap == null)  // the sub-tuple has no associated guard
+                            resparts.add(new TupleComposition(new Tuple (Util.singleSortedMap(col, my_parts.get(col)), getDomain()), right_nof));
+                        else 
+                            resparts.add(new TupleComposition( reduceGuard(col, eqmap), right_nof) ) ;
+                    });
+                    // we consider possible residual parts of the inner filter not matched by any sub-tuple
+                    final Set<ColorClass> restriction = new HashSet<>();
+                    hom_filters.entrySet().forEach(entry -> {
+                        final var cc =  entry.getKey();
+                        if (my_parts.get(cc) == null) {
+                            restriction.add(cc);
+                            final var rdom = new Domain(cc, this.getDomain().mult(cc));
+                            final var  s = new HashSet<Equality>();
+                            for (Entry<Boolean, SortedSet<Equality>> b : entry.getValue().entrySet())
+                              for (Equality g : b.getValue()) 
+                                  s.add((Equality) g.clone(rdom));
+                            // add to resparts a tuple with filter getValue() e built of the cc component of right
+                            resparts.add(new Tuple(And.factory(s), right.getHomSubTuple(cc), right.getDomain()));
+                        }
+                    });
+                    //System.out.println("TupleJuxtaposition (2) ->\n"+resparts); //debug
+                    return ColorRestriction.factory(TupleJuxtaposition.factory(resparts), restriction) ; //if restriction is empty return TupleJuxt..
+                } 
+            } else  // the (left) tuple has guard : we move it ... to the right
+                return new TupleComposition( withoutGuard(), right.build(And.factory(filter, guard()), right.guard()));
+        } else 
             return FilteredTuple.factory(filter(), new TupleComposition( withoutFilter(), right));
-        }
     }
             
     

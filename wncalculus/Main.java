@@ -44,6 +44,7 @@ import wncalculus.guard.Guard;
 import wncalculus.guard.Membership;
 import wncalculus.guard.Neg;
 import wncalculus.logexpr.LogicalExprs;
+import wncalculus.tuple.ColorRestriction;
 import wncalculus.tuple.FilteredTuple;
 import wncalculus.tuple.FunctionTuple;
 import wncalculus.tuple.Tuple;
@@ -1087,7 +1088,11 @@ public class Main {
         tcom_trans = new TupleTranspose(tcom_trans);
         System.out.println(tcom_trans+"\n-->");
         Expressions.printResults(tcom_trans.simplify());
-        
+        ColorRestriction tr = (ColorRestriction) ColorRestriction.factory(tcom_trans, Collections.singleton(C));
+        System.out.println(tr+"\n-->");
+        Expressions.printResults(tr.simplify());
+        //if (true)
+           //System.exit(0);
         
     }
 

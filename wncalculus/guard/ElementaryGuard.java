@@ -1,7 +1,6 @@
 package wncalculus.guard;
 
 import java.util.HashSet;
-import java.util.Map;
 import wncalculus.color.ColorClass;
 import wncalculus.classfunction.*;
 import wncalculus.expr.*;

@@ -1,6 +1,8 @@
 package wncalculus.expr;
 
 import java.util.*;
+import java.util.Map.Entry;
+
 import wncalculus.util.Util;
 
 //SI POTREBBE DEFINIRE COME GENERICA RISPETTO AL TIPO DI SORTE
@@ -69,7 +71,7 @@ public final class Domain {
     
     /**
      * 
-     * @return the domain's fixedSize, i.e., the fixedSize of its support  
+     * @return the domain's size, i.e., the size of its support  
      */
     public int size() {
         return this.domain.size();
@@ -173,6 +175,23 @@ public final class Domain {
         s.deleteCharAt(s.length()-1);
         
         return s;
+    }
+
+    //new
+
+    
+    /**
+     * @param r a subset of sorts
+     * @return the restriction of the domain without the specified sorts
+     */
+    public Domain restriction(Set<? extends Sort> r) {
+        HashMap<Sort,Integer> sm = new HashMap<>();
+        for (Entry<Sort, Integer> x : this.domain.entrySet()) {
+            if (!r.contains(x.getKey())) {
+                sm.put(x.getKey(), x.getValue());
+            } 
+        }
+        return new Domain(sm);
     }
             
 }

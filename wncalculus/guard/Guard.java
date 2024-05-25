@@ -5,7 +5,6 @@ import java.util.*;
 import wncalculus.classfunction.SetFunction;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.Domain;
-import wncalculus.expr.Sort;
 import wncalculus.util.Util;
 
 /**
@@ -241,7 +240,7 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
      * this default implementation has to be redefined 
      */
     public Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap() {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
     
     /**
@@ -250,7 +249,23 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
      * this default implementation has to be redefined 
      */
     public Map<ColorClass, Map<Boolean, Set<Membership>>> membMap() {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
+    }
+
+
+    /**
+     * Sould work on and-forms only
+     * @param cc a color class
+     * @return the entire set of (in)equalities of that color class
+     */
+    Set<Equality> in_equality(ColorClass cc) {
+        final var eqm = equalityMap().get(cc);
+        if (eqm != null) {
+            HashSet<Equality> s = new HashSet<Equality>(eqm.getOrDefault(true, Collections.emptySortedSet()));
+            s.addAll(eqm.getOrDefault(false, Collections.emptySortedSet()));
+        }
+        
+        return null;
     }
     
 }

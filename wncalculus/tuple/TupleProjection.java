@@ -87,7 +87,7 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
             
     @Override
     public FunctionTuple specSimplify( ) {
-        System.out.println("TupleProjection:\n"+toStringDetailed()); //debug
+        //System.out.println("TupleProjection:\n"+toStringDetailed()); //debug
         if (this.k == this.ftuple.size())  // the Projection is the identity
             return this.ftuple;
         if (this.ftuple instanceof AllTuple) 
