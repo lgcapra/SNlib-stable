@@ -1,0 +1,33 @@
+5 8
+set C:= {10}
+set Z:= {1, 1, 1, 1}
+set X:= {1}
+IdleTechs, Clients, OpenRequests, Assigned, MovetoZ, ControlRoomDispatch, Idles, Finished
+assignSameZone C,Z 1.0 pri:3
+{
+   3   | <c_1,z_1> | 
+   2  <c_1,z_1> |  | 
+   0  <z_1> |  | 
+}
+assignNearZone C,Z^2 1.0 g:[z_2 != z_1] pri:2
+{
+   2  <c_1,z_1> |  | 
+   4   | <c_1,z_2,z_1> | 
+   0  <z_2> |  | 
+}
+assignMunicipality C,Z 1.0 pri:1
+{
+   2   | <c_1,z_1> | 
+   5  <c_1> |  | 
+}
+assignFar C,Z^2 1.0 g:[((z_2 in Z{1}), (z_1 in Z{4})) + ((z_2 in Z{4}), (z_1 in Z{1}))] pri:1
+{
+   2  <c_1,z_1> |  | 
+   4   | <c_1,z_2,z_1> | 
+   0  <z_2> |  | 
+}
+end C 1.0 pri:1
+{
+   7  <c_1> |  | 
+   1   | <c_1> | 
+}

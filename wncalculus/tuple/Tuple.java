@@ -869,7 +869,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                         final var cc =  entry.getKey();
                         if (my_parts.get(cc) == null) {
                             restriction.add(cc);
-                            final var rdom = new Domain(cc, this.getDomain().mult(cc));
+                            final var rdom = new Domain(cc, this.getDomain().mult(cc)); //restriction of the domain to cc
                             final var  s = new HashSet<Equality>();
                             for (Entry<Boolean, SortedSet<Equality>> b : entry.getValue().entrySet())
                               for (Equality g : b.getValue()) 
