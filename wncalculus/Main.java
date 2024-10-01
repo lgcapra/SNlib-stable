@@ -4,14 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import wncalculus.bagexpr.BagComp;
 import wncalculus.bagexpr.BagDiff;
 import wncalculus.bagexpr.BagExpr;
@@ -31,6 +26,7 @@ import wncalculus.classfunction.SetFunction;
 import wncalculus.classfunction.Subcl;
 import wncalculus.classfunction.Successor;
 import wncalculus.classfunction.Union;
+import wncalculus.color.Color;
 import wncalculus.color.ColorClass;
 import wncalculus.expr.Domain;
 import wncalculus.expr.Expressions;
@@ -43,7 +39,6 @@ import wncalculus.guard.Equality;
 import wncalculus.guard.Guard;
 import wncalculus.guard.Membership;
 import wncalculus.guard.Neg;
-import wncalculus.logexpr.LogicalExprs;
 import wncalculus.tuple.ColorRestriction;
 import wncalculus.tuple.FilteredTuple;
 import wncalculus.tuple.FunctionTuple;
@@ -66,59 +61,28 @@ import wncalculus.wnbag.WNtuple;
  */
 public class Main {
    
+    public Main() {super();}
    
    static final Interval
-                   i1 = new Interval(2,2),
                    i2 = new Interval(1,1),
                    i3 = new Interval(2),
-                   i4 = new Interval(3,6),
-                   i5 = new Interval(3),
-                   i6 = new Interval(4,4),
                    i7 = new Interval(1),
                    i = new Interval(3,3);
 
    static /*final*/ ColorClass 
                      c1 = new ColorClass(1,i3/*i5*/,true),
-                     c1bis = new ColorClass(1,i4,true), //compatible with c1
                      c2 = new ColorClass(2,new Interval[] {i2,i2,i7}), // split
-                     c3 = new ColorClass(3,i4),
-                     c4 = new ColorClass(4,i5),
-                     c5 = new ColorClass(5,i5,false),
-                     c5bis = new ColorClass(5,i4,false), //compatible with c5
-                     c2bis = new ColorClass(2,i3), // NON sameName with c2
-                     c3bis = new ColorClass(3,i5), // sameName with c3
                      X = new ColorClass("X",i,true), 
-                     c6 = new ColorClass(6,i6,true), // a fixed-k color class of card 4;
                      C = new ColorClass("C",new Interval[] {i,i}),
                      c_neutral = new ColorClass("N", i2); // neutral class
     
     
-     /*
-    a comparator for equalities (assumed homogenous and of the same sign) considering
-    first the indices then the successors
-    */
-    private static final Comparator<Equality> COMPEQ = (e1, e2) -> {
-        if (e1 == e2)
-            return 0; //just for efficiency
-        
-        int c = e1.firstIndex().compareTo(e2.firstIndex());
-        if (c!= 0)
-            return c;
-           
-        if ( (c  = e1.secondIndex().compareTo(e2.secondIndex())) != 0 || ! e1.getSort().isOrdered())
-            return c;
-        
-        return e1.getSucc().compareTo(e2.getSucc());
-        
-    };
     
     private static void test0 () {
         Projection f = Projection.builder (1,X) , 
                    sf = Projection.builder (1,1,X);
         SetFunction fc=ProjectionComp.factory(f).cast(), sfc = ProjectionComp.factory(sf).cast(),
                     succ = Successor.factory(2,sfc), un = Union.factory(false, fc, succ);
-        Domain d = new Domain(X);
-        Tuple t = new Tuple(d,un);
         System.out.println(un);
         System.out.println(un.normalize().toStringDetailed());
         //System.out.println(t.simplify());
@@ -168,7 +132,7 @@ public class Main {
         Util.getChar();
         SetFunction f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f1c; 
         
-        Collection<? extends ParametricExpr> cf1, cf2, cf3;
+        Collection<? extends ParametricExpr> cf1;
         
         //testGuard();
         //testInequalitygraph();
@@ -195,7 +159,7 @@ public class Main {
         System.out.println("ecco il complemento di "+f2 +'\n'+Expressions.toStringDetailed(Complement.factory(f2).simplify()));  
         f2 = f1;
         f15= Successor.factory(1,(Projection)f2);
-        System.out.println("SEMPLIFICO "+(f15=Successor.factory(-4,f15))+'\n'+ Expressions.toStringDetailed(cf3 = f15.simplify()));
+        System.out.println("SEMPLIFICO "+(f15=Successor.factory(-4,f15))+'\n'+ Expressions.toStringDetailed(f15.simplify()));
         f3 = All.getInstance(c1);
         f4 = Empty.getInstance(c1);
         //f4 = ProjectionComp.factory(2,cc1);
@@ -316,7 +280,7 @@ public class Main {
         
         System.out.println("normalizzo\n"+ f7+ "\n"+Expressions.toStringDetailed(f7.simplify()));
         Tuple t1,t2,t3;
-        Domain d2 = new Domain(c2,c2), d1;
+        Domain d2 = new Domain(c2,c2);
         t1 = new Tuple(d2, f6); t2 = new Tuple(d2, f7);
         TupleSum ts = (TupleSum) TupleSum.factory(false,t1,t2);
         System.out.println("semplifico\n"+ ts+ "\n"+Expressions.toStringDetailed(ts.simplify()));
@@ -375,8 +339,7 @@ public class Main {
         System.out.println("b4: "+b4);
         System.out.println("b4 normalizzato: "+b4.normalize());
         System.out.println("map guardie-> max coeff: "+b4.mapGuardsToMaxCoefficients());
-        Equality e1 = (Equality) Equality.builder((Projection) f1, (Projection)f2, true, d2),
-                 e2 = e1.opposite();
+        Equality e1 = (Equality) Equality.builder((Projection) f1, (Projection)f2, true, d2);
         LogicalBag<FunctionTuple> b5 = (LogicalBag<FunctionTuple>) mset_c.build(FilteredTuple.factory(e1,t4), FilteredTuple.factory(e1,t4), FilteredTuple.factory(e1,t5));
         System.out.println("b5: "+b5);
         System.out.println("b5 normalizzato: "+ (b5 = (LogicalBag<FunctionTuple>) b5.normalize()));
@@ -435,7 +398,7 @@ public class Main {
 
         System.out.println("semplifico\n"+ f10);
         System.out.println(Expressions.toStringDetailed(f10.simplify()));
-        System.out.println("semplifico\n"+ f4+"\n"+(cf3=f4.simplify()));
+        System.out.println("semplifico\n"+ f4+"\n"+ f4.simplify());
         System.out.println("semplifico compl. di \n"+ f6+"\n"+ Expressions.toStringDetailed(Complement.factory(f6).simplify()));
         //NEW
         System.out.println("semplifico compl. di \n"+ f7+"\n"+ Expressions.toStringDetailed(Complement.factory(f7).simplify()));
@@ -458,7 +421,7 @@ public class Main {
         System.out.println("semplifico\n"+ f17);
         System.out.println("splitdelim: "+ f17.splitDelim()); 
 
-        System.out.println(Expressions.toStringDetailed((cf2=f17.simplify())));//critical
+        System.out.println(Expressions.toStringDetailed(f17.simplify()));//critical
         
         f11 = Complement.factory(f17);
         System.out.println("semplifico\n"+ f11+"\n"+Expressions.toStringDetailed(f11.simplify()));
@@ -508,7 +471,7 @@ public class Main {
         System.out.println(Expressions.toStringDetailed(bc.simplify()));
         
         Subcl sc3 = Subcl.factory(3, c2);
-        Projection    p4  = Projection.builder (2,c2),  p3 = Projection.builder (3,c2), p5 = Projection.builder (3,c2);
+        Projection    p4  = Projection.builder (2,c2),  p3 = Projection.builder (3,c2);
         SetFunction p4c = ProjectionComp.factory(p4).cast(),
                    p3c =ProjectionComp.factory(p3).cast(), all = All.getInstance(p3.getSort()) ;
         bc = new ClassComposition(sc3,p4c,true);
@@ -522,15 +485,15 @@ public class Main {
         System.out.println("\n******** tuple ***********\n");
         Domain d1 = new Domain(c1,c1,c2,c2,c2) /*null*/;
         System.out.println("d1: "+d1);
-        FunctionTuple in , f_t;
+        FunctionTuple in;
         TupleSum sum;
         Projection p1_bis  = Projection.builder (1,c2), p2_bis  = Projection.builder (2,c2);
         Tuple t1  = new Tuple(d1,inter1,sc3,p1_1,p2,Intersection.factory(false,p4c,p3,sc3),/*new Unionp3,*/p4/*)*/),
               t0_1 = new Tuple(d1, p3c, all, p3c), t0_2 = new Tuple(d1, p3,  all, p3c);
         System.out.println(t0_1 + "(codom) " + t0_1.getCodomain()+ " (dom) " + t0_1.getDomain());
-        Equality eq = (Equality) Equality.builder(p1_bis/*p3*/,p2_bis,true, t0_1.getCodomain());
         Tuple t0_0 = new Tuple(d1, p1_bis, p1_bis, p1_bis),
-              t0_3 = new Tuple(d1, ProjectionComp.factory(p1_bis).cast() ,ProjectionComp.factory(p1_bis).cast(), (SetFunction) p1_1.andFactory(p4,p3)),
+              t0_3 = new Tuple(d1, ProjectionComp.factory(p1_bis).cast() ,ProjectionComp.factory(p1_bis).cast(), 
+                               (SetFunction) p1_1.andFactory(p4,p3)),
               t0_4 = new Tuple(d1, all ,all, p3),
               t0_5 = new Tuple(d1, ProjectionComp.factory(p1_bis).cast(),ProjectionComp.factory(p2_bis).cast());
         
@@ -648,7 +611,7 @@ public class Main {
         Tuple t4 = new Tuple(d1,inter1,sc3,p1_1,Diff.factory(sc3,p4), (SetFunction) p1_1.andFactory(p4c,sc3),p3,p4),
               t3 = new Tuple(t4.getCodomain(), (SetFunction) p1_1.andFactory(p0c,p1c),p2c, (SetFunction) p1_1.andFactory(p1_1,p2),p4,p4);
         
-        FunctionTuple comp_res, res;
+        FunctionTuple comp_res;
         //for (WNFunctionTuple t : simplify(t4))
             //System.out.println(Util.toStringDetailed(t));
         System.out.println("\ncomposizione di "+t3.toStringDetailed()+" e\n"+ t4.toStringDetailed());
@@ -672,13 +635,14 @@ public class Main {
         int j = 0;
         for (ColorClass cc : th_list.keySet()) {
             at[j++] = th_list.get(cc).toArray(new SetFunction[0]);
+            //at[j++] = th_list.get(cc).toArray(at[j]);
         }
         t3_1 = new Tuple(Arrays.asList(at[0]), t3.getDomain()); 
         t3_2 = new Tuple(null, Arrays.asList(at[1]), t3.getDomain());
         ft = TupleJuxtaposition.factory (true, t3_1,t3_2);
         System.out.println("giustapposizione delle parti omogenee di t3\n"+ ft );
         System.out.println("ecco la semplificazione ..\n"+ ft.simplify() );
-        Guard eq1 = Equality.builder(p1_0,p2,false,t3.getDomain()), eq2 = Equality.builder(p1_1,p2,false,t3.getDomain()),
+        Guard eq1 = Equality.builder(p1_0,p2,false,t3.getDomain()),
               eq1_f = Equality.builder(p1_0,p2,false,t3_1.getCodomain()), eq2_f = Equality.builder(p1_1,p2,false,t3_1.getCodomain()),
               eq3_f , f3 = (Guard) eq1.andFactory(eq1_f, eq2_f/*,eq3_f*/);
         
@@ -715,27 +679,26 @@ public class Main {
     public static void testExtra() {
         final Interval in = new Interval(3,5/*5*/);
         ColorClass A = new ColorClass("A",in,true);
-        final Projection a1,a1_4,a2,a2_1,a2_4,a3,a3_1,a3_2,a3_3,a4;
+        final Projection a1,a1_4,a2,a2_1,a2_4,a3,a3_2,a3_3;
         a1= Projection.builder(1,A);
         a2= Projection.builder(2,A);
         a3 = Projection.builder(3,A);
-        a4 = Projection.builder(4,A);
+        //a4 = Projection.builder(4,A);
         a2_4= Projection.builder(2,4,A);
         a3_2 =Projection.builder(3,2,A);
         a3_3 =Projection.builder(3,3,A);
         a1_4 = Projection.builder(1,4,A);
         a2_1 = Projection.builder(2,1,A);
-        a3_1 = Projection.builder(3,1,A);
+        //a3_1 = Projection.builder(3,1,A);
         final SetFunction p1_4c = ProjectionComp.factory(a1_4).cast(),
                               p2c = ProjectionComp.factory(a2).cast(),
                               p1c = ProjectionComp.factory(a1).cast(),
                               p2_1c = ProjectionComp.factory(a2_1).cast();
-        final Equality eq1, eq2, ineq1, ineq2,ineq3,ineq4, ineq5, ineq6, ineq7;
+        final Equality eq1, eq2, ineq1, ineq2,ineq3,ineq4;// ineq5, ineq6, ineq7;
         final Intersection in1 = (Intersection) Intersection.factory(false,p1_4c, p2c),
                            in2 = (Intersection) Intersection.factory(false,p1c, p2_1c);
-        final And guard, filter, guard2;
-        Domain d3 = new Domain(A,A,A),
-                d2  = new Domain(A,A);
+        final And guard, filter;
+        Domain d3 = new Domain(A,A,A);
         
         //filter
         eq1 = (Equality) Equality.builder(a1,a2_4,true,d3);
@@ -755,10 +718,10 @@ public class Main {
         System.out.println(tp);
         //System.out.println("semplifico:\n"+Expressions.verbNormalize(tp,LogExprSimplifier.builder(false)));
         System.out.println();
-        ineq5 =  (Equality) Equality.builder(a1,a2_1,false,d3);
-        ineq6 = (Equality) Equality.builder(a1,a3_1,false,d3);
-        ineq7 = (Equality) Equality.builder(a2,a3,false,d3);
-        guard2  = (And) And.factory(ineq5 ,ineq6 ,ineq7);
+        //ineq5 =  (Equality) Equality.builder(a1,a2_1,false,d3);
+        //ineq6 = (Equality) Equality.builder(a1,a3_1,false,d3);
+        //ineq7 = (Equality) Equality.builder(a2,a3,false,d3);
+        //guard2  = (And) And.factory(ineq5 ,ineq6 ,ineq7);
         
         //System.out.println(gf);
         //System.out.println("semplifico:\n"+Expressions.verbNormalize(gf,LogExprSimplifier.builder(false))+'\n');
@@ -783,8 +746,8 @@ public class Main {
      *
      */
     public static void testGuard()  {
-        Projection p1,p2,p3,p4,p5;
-        Subcl sc1,sc2,sc3,sc4;
+        Projection p1,p2,p3,p4;
+        Subcl sc1,sc2,sc3;
         Guard g0,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,g11,g12;
         p1 = Projection.builder(1,-2,c1);
         p2 = Projection.builder(2,1,c1);
@@ -810,9 +773,8 @@ public class Main {
         sc1 = Subcl.factory(1, c2);
         sc2 = Subcl.factory(2, c2);
         sc3 = Subcl.factory(3, c2);
-        Projection np1 = Projection.builder(1,c2), np2 = Projection.builder(2,c2),
-                   np3 = Projection.builder(3, c2), np4 = Projection.builder(4,c2),
-                   np5 = Projection.builder(5,c2);
+        Projection np2 = Projection.builder(2,c2),
+                   np3 = Projection.builder(3, c2), np4 = Projection.builder(4,c2);
         Membership m1 = (Membership) Membership.build(np4,sc2,true,new Domain(c2,c2,c2,c2)),
                    m2 = (Membership) Membership.build(np4,sc1,false,new Domain(c2,c2,c2,c2));
         g0 = (Guard) g2.andFactory(m1, m2/*, false*/);
@@ -822,10 +784,10 @@ public class Main {
         Domain d1 = new Domain(c1,c1,c1,c1,c2,c2,c2,c2,c2);
         System.out.println("d1: "+d1);
         Equality eq1 = (Equality) Equality.builder(np2,np3,false,d1), 
-                 eq2 = (Equality) Equality.builder(np3,np4,false,d1), 
-                 eq3 = (Equality) Equality.builder(np4,np2,false,d1),
-                 eq4 = (Equality) Equality.builder(np1,np3,true,d1),
-                 eq5 = (Equality) Equality.builder(np3,np5,true,d1);
+                 eq2 = (Equality) Equality.builder(np3,np4,false,d1); 
+                 //eq3 = (Equality) Equality.builder(np4,np2,false,d1),
+                 //eq4 = (Equality) Equality.builder(np1,np3,true,d1),
+                 //eq5 = (Equality) Equality.builder(np3,np5,true,d1);
         //And and = (And) And.factory(eq1,eq2,eq3);
         //System.out.println("parti indipendenti di "+and+'\n'+And.independentParts(Arrays.asList(eq1,eq2,eq3)));
         g2 = And.factory(eq1, Membership.build(np4,sc1,true,d1), eq2, Membership.build(np3,sc1,true,d1));
@@ -852,42 +814,17 @@ public class Main {
         System.out.println("ecco not(g8) semplificato\n"+Expressions.toStringDetailed(Neg.factory(g8).simplify()));
         
         //parte per testare nuovi metodi di canonizzazione
-        TreeSet<Equality> es = new TreeSet<>(COMPEQ), ies = new TreeSet<>(COMPEQ);
-        es.addAll(Arrays.asList(new Equality[] {eq1.opposite(),eq2.opposite(),eq3.opposite(),eq4,eq5}));
-        System.out.println(es);
-        And.toCanonicalForm(es);
-        System.out.println("forma canonica ->\n"+es);
-        
-        ies.addAll(Arrays.asList(new Equality[] {eq1,(Equality)Equality.builder(np3,np5,false,d1)}));
-        System.out.println(ies);
-        And.replaceEq(ies, es);
-        System.out.println("dopo aver sostituito: "+es+"\n-> \n"+ies);
-        Util.getChar();
-        
         p1= Projection.builder(1,c1);
         Projection p1_1 = Projection.builder(1,1, c1);
         p2 = Projection.builder(2,-1,c1);
         p3 = Projection.builder(3,c1);
         p4 = Projection.builder(2,c1);
-        p5 = Projection.builder(4,c1);
+        //p5 = Projection.builder(4,c1);
         
         g1 = Equality.builder(p1_1,p2,true,d1);
         g3 = Equality.builder(p3,p4,true,d1);
         g2 = Equality.builder(p1_1,p3,true,d1);
-        g5 = Equality.builder(p4,p5,true,d1);
-        es.clear();
-        es.addAll(Arrays.asList(new Equality[] {(Equality)g1,(Equality)g2,(Equality)g3,(Equality)g5}));
-        System.out.println(es);
-        //And.toCanonicalForm(es);
-        System.out.println(es);
-        
-        Set<Equality> l = new HashSet<>(ies);
-        l.addAll(es);
-        System.out.println(l);
-        LogicalExprs.disjoin/*New*/(l);
-        System.out.println(l);
-        //System.exit(0);
- 
+
         g4 = (Guard) g2.orFactory(false,g1,g3);
         System.out.println("ecco g3\n"+ g4.toStringDetailed());
         System.out.println("ecco g3 semplificato\n"+Expressions.toStringDetailed(g4.simplify()));
@@ -906,7 +843,7 @@ public class Main {
         p4 = Projection.builder(4,c1);
        
         g11 = And.factory(Equality.builder(p1,p4bis,false,d1), Equality.builder(p1,p2bis,false,d1), Equality.builder(p2,p3,false,d1),Equality.builder(p2,p4,false,d1),Equality.builder(p3,p4,false,d1));
-        InequalityGraph ig = ((And)g11).igraph().get(g11.getSorts().iterator().next());
+        InequalityGraph ig = ((And)g11).igraph().get((Color)g11.getSorts().iterator().next());
         System.out.println("ecco g11\n"+ g11.toStringDetailed());
         System.out.println("ecco il grafo di g11\n"+ ig);
         System.out.println("componenti di g11\n" + ig.connectedComponents());
@@ -1060,9 +997,10 @@ public class Main {
     example used in PN2020 paper
     */
     static void petriNets20() {
-        ColorClass C = new ColorClass("C", true); //ordered class C s.t. |C| > 1
-        Interval i1 = new Interval(3,8), i2 = new Interval(2,2); // [3,8] and [2,2] (constraints)
-        ColorClass D = new ColorClass("D", new Interval[] {i1, i2}); // partitioned class D
+        C = new ColorClass("C", true); //ordered class C s.t. |C| > 1
+        
+        Interval i1 = new Interval(3,8), ni2 = new Interval(2,2) ; // [3,8] and [2,2] (constraints)
+        ColorClass D = new ColorClass("D", new Interval[] {i1, ni2}); // partitioned class D
         Projection c_1= Projection.builder(1, C), // c_1
                    c_2= Projection.builder(2, 1, C), // !c_2
                    d_1= Projection.builder(1, D); // d_1
