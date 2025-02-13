@@ -1,11 +1,11 @@
-package wncalculus.guard;
+package guard;
 
-import wncalculus.logexpr.LogicalExpr;
+import logexpr.LogicalExpr;
 import java.util.*;
-import wncalculus.classfunction.SetFunction;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
-import wncalculus.util.Util;
+import classfunction.SetFunction;
+import color.ColorClass;
+import expr.Domain;
+import util.Util;
 
 /**
  * This abstract class represents the root of the hierarchy describing SN guards/filters.
@@ -37,7 +37,7 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     }
     
     /**
-     * set <tt>this</tt> guard as a filter associated to a given tuple, expressed by
+     * set <code>this</code> guard as a filter associated to a given tuple, expressed by
      * a map of colors to corresponding class-function lists
      * @param m a map between colors and corresponding class-function lists, representing
      * a typle
@@ -48,8 +48,8 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     
     /**
      *
-     * @return the tuple (expressed as a map) which is associated with <tt>this</tt> guard,
-     * seen as a filter; <tt>null</tt> if no tuple is associayed with <tt>this</tt> guard
+     * @return the tuple (expressed as a map) which is associated with <code>this</code> guard,
+     * seen as a filter; <code>null</code> if no tuple is associayed with <code>this</code> guard
      */
     public Map<? extends ColorClass , List<? extends SetFunction>> getRightTuple() {
         return this.right_tuple;
@@ -67,7 +67,7 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     
     /** static version of indexSet working on a collection
      * @param c a given collection of guards
-     * @return  the set of projection indices in <tt>c</tt>
+     * @return  the set of projection indices in <code>c</code>
      */
     public static Set<Integer> indexSet(Collection<? extends Guard> c) {
         Set<Integer> idxset = new HashSet<>();
@@ -203,28 +203,28 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     //convenience method (to be redefined)
     
     /**
-     * @return <tt>true</tt> if and only <tt>this</tt> is an equality of type X^i == X^j
+     * @return <code>true</code> if and only <code>this</code> is an equality of type X^i == X^j
      */
     public boolean isEquality() {
         return false;
     }
     
     /**
-     * @return <tt>true</tt> if and only if @code{this} is an equality of type X^i != X^j
+     * @return <code>true</code> if and only if @code{this} is an equality of type X^i != X^j
      */
     public boolean isInEquality() {
         return false;
     }
     
     /**
-     * @return <tt>true</tt> if and only if @code{this} is a membership of type X^i in C_j
+     * @return <code>true</code> if and only if @code{this} is a membership of type X^i in C_j
      */
     public boolean isMembership() {
         return false;
     }
     
     /**
-     * @return  <tt>true</tt> if and only if  @code{this} is a membership of type X^i notin C_j
+     * @return  <code>true</code> if and only if  @code{this} is a membership of type X^i notin C_j
      */
     public boolean isNotinMembership() {
         return false;

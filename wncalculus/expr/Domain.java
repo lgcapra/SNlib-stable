@@ -1,9 +1,9 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
 import java.util.Map.Entry;
 
-import wncalculus.util.Util;
+import util.Util;
 
 //SI POTREBBE DEFINIRE COME GENERICA RISPETTO AL TIPO DI SORTE
 //si potrebbero usare metodi builder

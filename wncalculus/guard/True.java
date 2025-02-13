@@ -1,10 +1,8 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.HashMap;
 import java.util.Map;
-import wncalculus.expr.Domain;
-import wncalculus.expr.ParametricExpr;
-import wncalculus.expr.Sort;
+import expr.Domain;
 
 /**
  * This class implements the "true" constant guard.

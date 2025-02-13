@@ -1,7 +1,7 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.Map;
-import wncalculus.expr.*;
+import expr.*;
 
 /**
  * this class implements the bag's scalar product

@@ -1,9 +1,9 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.*;
-import wncalculus.expr.Domain;
-import wncalculus.expr.ParametricExpr;
-import wncalculus.expr.Sort;
+import expr.Domain;
+import expr.ParametricExpr;
+import expr.Sort;
 
 //Si potrebbe definire una super-interfaccia che rappresenta bag di qualsiasi tipo
 

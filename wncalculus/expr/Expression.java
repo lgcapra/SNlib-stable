@@ -1,4 +1,4 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
 
@@ -29,11 +29,11 @@ public interface Expression {
       }
       
      /**
-     * basic generic fixed-point normalization algorithm for <tt>this</tt> Expression;
+     * basic generic fixed-point normalization algorithm for <code>this</code> Expression;
      * it relies on <code>Expression.specSimplify</code> and <code>Expression.genSimplify()</code>;
      * this version performs generic reductions first, and works in an optimized
      * way, setting any fixed point expression as simplified
-     * @return an expression  equivalent to <tt>this</tt>
+     * @return an expression  equivalent to <code>this</code>
      */
     default Expression normalize( ) {
         long startTime = System.currentTimeMillis();
@@ -79,12 +79,12 @@ public interface Expression {
       }
       
       /** 
-       * @return the domain of <tt>this</tt> term: if the term is an operator then its domain
+       * @return the domain of <code>this</code> term: if the term is an operator then its domain
        *  is inferred from the operands */
      Domain getDomain();
      
      /** 
-      * @return the codomain of <tt>this</tt> term: usually, it is inferred from the form of the term
+      * @return the codomain of <code>this</code> term: usually, it is inferred from the form of the term
       */
      Domain getCodomain();
          
@@ -102,7 +102,7 @@ public interface Expression {
      
      /** 
      * @return the @code {List} of sorts appearing in the arity (i.e, domain and codomain)
-     * of <tt>this</tt> expression, ordered according to the getSort natural ordering
+     * of <code>this</code> expression, ordered according to the getSort natural ordering
      */
      default ArrayList<Sort> getSorts() {
          Set<Sort> supp = getDomain().support();
@@ -179,9 +179,9 @@ public interface Expression {
      <E extends Expression> Class<E> type();
     
     /**
-     * performs a cast of <tt>this</tt> expression to a given type
+     * performs a cast of <code>this</code> expression to a given type
      * @param <E> the type to cast
-     * @return <tt>this</tt>
+     * @return <code>this</code>
      */
     default <E extends Expression> E cast() {
         Class<E> x = type();
@@ -190,7 +190,7 @@ public interface Expression {
          
     /**
      *
-     * @return a description of <tt>this</tt> expression including the domain
+     * @return a description of <code>this</code> expression including the domain
      */
     default String toStringDetailed( ) {
         return this +", "+ getDomain();

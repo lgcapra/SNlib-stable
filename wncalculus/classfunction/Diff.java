@@ -1,9 +1,9 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.Map;
 import java.util.Set;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
+import color.ColorClass;
+import expr.*;
 
 /**
  * this class implements the difference between class-functions mapping to sets

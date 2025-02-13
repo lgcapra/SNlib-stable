@@ -1,4 +1,4 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
 
@@ -14,7 +14,7 @@ public abstract class Sort implements Comparable<Sort> {
      base constructor
      @param name the sort's name: the first character must be an upper-case letter
      (no other check is done)
-     @throws NullPointerException if the name is <tt>null</tt>
+     @throws NullPointerException if the name is null
      @throws IllegalArgumentException if the name doesn't start with an upper-case letter
      */
     public Sort( String name) {
@@ -35,9 +35,9 @@ public abstract class Sort implements Comparable<Sort> {
      }
      
      /**
-      * checks whether <tt>this</tt> sort and the specified one share the name
+      * checks whether this sort and the specified one share the name
       * @param s a sort 
-      * @return <tt>true</tt> iff <tt>this</tt> sort and the specified one share the name
+      * @return true iff this sort and the specified one share the name
       */
      public final boolean sameName(Sort s) {
          return this.name.equals(s.name);
@@ -68,10 +68,10 @@ public abstract class Sort implements Comparable<Sort> {
     
     
     /**
-     * split <tt>this</tt> sort, if possible (in the case of a parametric term)
+     * split this sort, if possible (in the case of a parametric term)
      * @param delim the split delimiter (should be greater than or equal to the lower bound
      * of sort's cardinality)
-     * @return a boolean map to the two sorts resulting from the split of <tt>this</tt>;
+     * @return a boolean map to the two sorts resulting from the split of this;
      * an empty map if no split is done (for any reasons)
      */
     public abstract Map<Boolean, Sort> split2 (int delim);

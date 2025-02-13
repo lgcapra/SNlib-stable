@@ -1,9 +1,9 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.IllegalDomain;
-import wncalculus.logexpr.OrOp;
-import wncalculus.util.Util;
+import expr.IllegalDomain;
+import logexpr.OrOp;
+import util.Util;
 
 
 /**

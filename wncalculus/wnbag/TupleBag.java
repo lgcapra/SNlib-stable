@@ -1,11 +1,11 @@
-package wncalculus.wnbag;
+package wnbag;
 
 import java.util.HashMap;
 import java.util.Map;
-import wncalculus.bagexpr.AbstractBag;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Sort;
-import wncalculus.guard.Guard;
+import bagexpr.AbstractBag;
+import expr.Domain;
+import expr.Sort;
+import guard.Guard;
 
 /**
  *

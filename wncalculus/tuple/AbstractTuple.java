@@ -1,11 +1,12 @@
-package wncalculus.tuple;
+package tuple;
 
+import expr.Expression;
 import java.util.*;
-import wncalculus.classfunction.ClassFunction;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
-import wncalculus.guard.*;
-import wncalculus.util.Util;
+import classfunction.ClassFunction;
+import color.ColorClass;
+import expr.*;
+import guard.*;
+import util.Util;
 
 /**
  * this class represents an arbitrary tuple of class-functions, that may be

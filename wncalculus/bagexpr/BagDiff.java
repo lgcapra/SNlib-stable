@@ -1,6 +1,6 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
-import wncalculus.expr.ParametricExpr;
+import expr.ParametricExpr;
 
 /**
  * @author lorenzo capra

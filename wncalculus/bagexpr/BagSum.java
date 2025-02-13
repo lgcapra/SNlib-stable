@@ -1,9 +1,9 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
-import wncalculus.util.Util;
+import util.Util;
 import java.util.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
+import color.ColorClass;
+import expr.*;
 
 
 /**

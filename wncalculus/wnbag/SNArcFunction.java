@@ -1,6 +1,6 @@
-package wncalculus.wnbag;
+package wnbag;
 
-import wncalculus.guard.Guard;
+import guard.Guard;
 
 /**
  * the super type of SNArcFunction

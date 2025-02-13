@@ -1,4 +1,4 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.Map;
 
@@ -6,6 +6,8 @@ import java.util.Map;
  * this interface is the super-type for unary (sorted) operators,
  * in which the operand and operator's types may be different
  * @author lorenzo capra
+ * @param <E> operand type
+ * @param <F> operator type
  */
 public interface SingleArg<E extends ParametricExpr, F extends ParametricExpr> extends NonTerminal {
     

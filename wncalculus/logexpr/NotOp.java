@@ -1,9 +1,9 @@
-package wncalculus.logexpr;
+package logexpr;
 
 import java.util.Collection;
 import java.util.HashSet;
-import wncalculus.expr.N_aryOp;
-import wncalculus.expr.UnaryOp;
+import expr.N_aryOp;
+import expr.UnaryOp;
 
 /**
  * this interface defines the super-type of boolean operators that can be viewed as "negations"

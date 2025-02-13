@@ -1,7 +1,7 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.*;
+import expr.*;
 
 /**
  *
@@ -56,9 +56,6 @@ public final class TupleTranspose implements FunctionTuple, UnaryOp<FunctionTupl
      * clone <tt>this</tt> transpose; the method is overridden because the
      * arity of the operand and that of the operator are "inverted"
      * of the operator are the same (to be overridden otherwise)
-     * @param newdom the new domain
-     * @param newcd the new codomain
-     * @param smap the map between old and new split sorts
      * @return a clone of <tt>this</tt> with the specified co-domain
      */
     /*

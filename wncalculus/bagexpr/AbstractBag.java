@@ -1,10 +1,10 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.*;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Expressions;
-import wncalculus.expr.NonTerminal;
-import wncalculus.expr.ParametricExpr;
+import expr.Domain;
+import expr.Expressions;
+import expr.NonTerminal;
+import expr.ParametricExpr;
 
 /**
  * @author Lorenzo Capra

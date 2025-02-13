@@ -1,15 +1,15 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.*;
-import wncalculus.graph.InequalityGraph;
-import wncalculus.logexpr.AndOp;
-import wncalculus.expr.*;
-import wncalculus.classfunction.Projection;
-import wncalculus.classfunction.Subcl;
-import wncalculus.color.Color;
-import wncalculus.color.ColorClass;
-import wncalculus.color.SubclSet;
-import wncalculus.util.Util;
+import graph.InequalityGraph;
+import logexpr.AndOp;
+import expr.*;
+import classfunction.Projection;
+import classfunction.Subcl;
+import color.Color;
+import color.ColorClass;
+import color.SubclSet;
+import util.Util;
 
 
 /**

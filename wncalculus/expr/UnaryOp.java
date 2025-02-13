@@ -1,4 +1,4 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +21,7 @@ public interface UnaryOp<E extends ParametricExpr>  extends SingleArg<E,E> {
    /**
      * checks whether <code>this</code> unary operator can be distributed over a n-ary operation
      * @param optk a n-ary operator's type
-     * @return <tt>true</tt> if and onll if <tt>this</tt> can be distibuted over the specified operator type
+     * @return <code>true</code> if and onll if <code>this</code> can be distibuted over the specified operator type
      */
     default boolean isDistributive (Class<? extends MultiArgs> optk) {
         return false;

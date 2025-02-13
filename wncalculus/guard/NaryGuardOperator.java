@@ -1,13 +1,13 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.*;
-import wncalculus.classfunction.Projection;
-import static wncalculus.classfunction.Projection.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
-import wncalculus.logexpr.LogicalExprs;
-import wncalculus.util.Util;
-import wncalculus.util.Pair;
+import classfunction.Projection;
+import static classfunction.Projection.*;
+import color.ColorClass;
+import expr.*;
+import logexpr.LogicalExprs;
+import util.Util;
+import util.Pair;
 
 /**
  * this class represents the super-type for n-ary boolean op.s

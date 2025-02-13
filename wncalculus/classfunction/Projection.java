@@ -1,12 +1,12 @@
-package wncalculus.classfunction;
+package classfunction;
 
-import wncalculus.expr.*;
+import expr.*;
 import java.util.*;
-import wncalculus.color.ColorClass;
-import wncalculus.guard.Equality;
-import wncalculus.util.ComplexKey;
-import wncalculus.util.Pair;
-import wncalculus.util.Util;
+import color.ColorClass;
+import guard.Equality;
+import util.ComplexKey;
+import util.Pair;
+import util.Util;
 
 /**
  * this class defines the projection function
@@ -15,7 +15,6 @@ import wncalculus.util.Util;
 public final class Projection extends ElementaryFunction implements ProjectionBased {
     
      private final int index, succ ;//index and successor "argument" of a projection
-     
      private static final Interval CARD =  new Interval(1,1); // the cardinality
      
     /**
@@ -96,8 +95,7 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
 
     /**
      * 
-     * @param new_index the new projection index
-     * @return a projection with the same color successor exponent as <tt>this</tt>,
+     * @return a projection with the same color successor exponent as <code>this</code>,
      * and with the new specified index
      */
     @Override

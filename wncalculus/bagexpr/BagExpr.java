@@ -1,7 +1,7 @@
 
-package wncalculus.bagexpr;
+package bagexpr;
 
-import wncalculus.expr.*;
+import expr.*;
 
 /**
  * the super-type of expressions on bags (of expressions) defined over a given domain;

@@ -1,8 +1,8 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Sort;
+import expr.Domain;
+import expr.Sort;
 
 /**
  * the super-type of "boolean" tuple-constants

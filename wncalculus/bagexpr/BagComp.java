@@ -1,8 +1,8 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.*;
-import wncalculus.expr.*;
-import wncalculus.logexpr.SetExpr;
+import expr.*;
+import logexpr.SetExpr;
 
 /**
  * the super-type of the composition of bags of (linear) functions

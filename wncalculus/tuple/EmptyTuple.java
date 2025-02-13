@@ -1,9 +1,9 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Sort;
-import wncalculus.util.ComplexKey;
+import expr.Domain;
+import expr.Sort;
+import util.ComplexKey;
 
 /**
  * "singleton-like" class implementing empty-set tuples (that is, constant function-tuples

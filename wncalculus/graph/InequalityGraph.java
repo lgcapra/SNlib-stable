@@ -1,13 +1,13 @@
-package wncalculus.graph;
+package graph;
 
 import java.util.*;
 import java.util.function.Function;
-import wncalculus.classfunction.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
-import wncalculus.guard.Equality;
-import wncalculus.util.Util;
-import static wncalculus.classfunction.Projection.*;
+import classfunction.*;
+import color.ColorClass;
+import expr.*;
+import guard.Equality;
+import util.Util;
+import static classfunction.Projection.*;
 
 /**
  *

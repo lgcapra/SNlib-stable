@@ -1,7 +1,7 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.Objects;
-import wncalculus.expr.*;
+import expr.*;
 
 /**
  * this class implements the (k-th) successor unary functional operator

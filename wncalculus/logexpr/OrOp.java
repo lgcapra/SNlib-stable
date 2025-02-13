@@ -1,13 +1,13 @@
-package wncalculus.logexpr;
+package logexpr;
 
 import java.util.Collection;
 import java.util.List;
-import wncalculus.expr.Expression;
-import wncalculus.expr.N_aryOp;
-import static wncalculus.logexpr.LogicalExprs.checkComplementary;
-import static wncalculus.logexpr.LogicalExprs.contained;
-import wncalculus.tuple.FunctionTuple;
-import wncalculus.util.Util;
+import expr.Expression;
+import expr.N_aryOp;
+import static logexpr.LogicalExprs.checkComplementary;
+import static logexpr.LogicalExprs.contained;
+import tuple.FunctionTuple;
+import util.Util;
 
 /**
  * this interface defines the super-type of boolean operators that can be viewed as "disjunctions"

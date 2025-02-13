@@ -1,9 +1,9 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Interval;
-import wncalculus.util.Pair;
+import color.ColorClass;
+import expr.Interval;
+import util.Pair;
 
 /**
  * this class defines the empty-set constant function
@@ -16,9 +16,9 @@ public final class Empty extends ConstantFunction  {
     private final static String SYMBOL ="0";
     
     /**
-     * build an <tt>Empty</tt> class-function
+     * build an <code>Empty</code> class-function
      * @param cc the function's color-class
-     * @return an <tt>Empty</tt> class-function of the specified color
+     * @return an <code>Empty</code> class-function of the specified color
      */
     public static final Empty getInstance(ColorClass cc) {
         Empty f;

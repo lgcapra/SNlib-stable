@@ -1,7 +1,7 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
-import wncalculus.util.Util;
+import util.Util;
 
 /**
  * This interface defines the ADT for n-ary (n greater than 1) associative operator

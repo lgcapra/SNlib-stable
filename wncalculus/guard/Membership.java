@@ -1,11 +1,11 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.*;
-import wncalculus.classfunction.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
-import wncalculus.util.ComplexKey;
-import wncalculus.util.Util;
+import classfunction.*;
+import color.ColorClass;
+import expr.*;
+import util.ComplexKey;
+import util.Util;
 
 /**
  * this class represents predicates checking for the membership of a

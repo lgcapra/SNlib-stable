@@ -1,9 +1,9 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.*;
-import wncalculus.expr.Domain;
-import wncalculus.expr.ParametricExpr;
-import wncalculus.util.Util;
+import expr.Domain;
+import expr.ParametricExpr;
+import util.Util;
 /**
  * this interface describes a generic bag builder
  * @author lorenzo capra

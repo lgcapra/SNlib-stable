@@ -1,12 +1,12 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.*;
-import wncalculus.graph.InequalityGraph;
-import wncalculus.classfunction.*;
-import wncalculus.color.ColorClass;
-import wncalculus.guard.*;
-import wncalculus.util.*;
+import expr.*;
+import graph.InequalityGraph;
+import classfunction.*;
+import color.ColorClass;
+import guard.*;
+import util.*;
 
 /**
  * this class defines the Projection on the first k components of a one-sorted WN function-tuple F 

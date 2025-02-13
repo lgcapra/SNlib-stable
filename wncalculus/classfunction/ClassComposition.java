@@ -1,9 +1,9 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.*;
-import wncalculus.expr.*;
-import wncalculus.color.ColorClass;
-import wncalculus.logexpr.LogComposition;
+import expr.*;
+import color.ColorClass;
+import logexpr.LogComposition;
 
 /**
  *

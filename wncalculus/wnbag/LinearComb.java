@@ -1,16 +1,16 @@
-package wncalculus.wnbag;
+package wnbag;
 
 import java.util.*;
-import wncalculus.bagexpr.LogicalBag;
-import wncalculus.classfunction.ClassFunction;
-import wncalculus.classfunction.ElementaryFunction;
-import wncalculus.classfunction.Projection;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
-import wncalculus.util.Util;
-import wncalculus.expr.IllegalDomain;
-import wncalculus.expr.Sort;
-import wncalculus.guard.Equality;
+import bagexpr.LogicalBag;
+import classfunction.ClassFunction;
+import classfunction.ElementaryFunction;
+import classfunction.Projection;
+import color.ColorClass;
+import expr.Domain;
+import util.Util;
+import expr.IllegalDomain;
+import expr.Sort;
+import guard.Equality;
 
 /**
  * this class defines linear combination of basic class-funtions

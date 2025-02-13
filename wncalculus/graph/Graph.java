@@ -1,4 +1,4 @@
-package wncalculus.graph;
+package graph;
 
 import java.util.*;
 

@@ -1,8 +1,8 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.*;
-import wncalculus.color.ColorClass;
+import expr.*;
+import color.ColorClass;
 
 /**
  * this class represent the super-type for tuple logical n-ary operators

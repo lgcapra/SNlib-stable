@@ -1,7 +1,7 @@
-package wncalculus.logexpr;
+package logexpr;
 
-import wncalculus.expr.CompositionOp;
-import wncalculus.expr.MultiArgs;
+import expr.CompositionOp;
+import expr.MultiArgs;
 
 /**
  * the ADT of composition of boolean functions

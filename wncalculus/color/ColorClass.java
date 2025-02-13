@@ -1,7 +1,7 @@
-package wncalculus.color;
+package color;
 
 import java.util.*;
-import wncalculus.expr.*;
+import expr.*;
 
 /**
  * This class defines descriptors for SN color classes of (possibly) parametric cardinality.
@@ -128,7 +128,7 @@ public final class ColorClass extends Sort implements Color {
 
     /**
      *
-     * @return <tt>true</tt> if and only if <tt>this</tt> color-class is ordered
+     * @return <code>true</code> if and only if <code>this</code> color-class is ordered
      */
     public boolean isOrdered() {
         return this.ordered;
@@ -144,7 +144,7 @@ public final class ColorClass extends Sort implements Color {
     
     /**
      *
-     * @return <tt>true</tt> if and only if <tt>this</tt> color-class is partitioned
+     * @return <code>true</code> if and only if <code>this</code> color-class is partitioned
      */
     public boolean isSplit() {
         return subclasses() > 1;
@@ -271,7 +271,7 @@ public final class ColorClass extends Sort implements Color {
     /**
      * performs a comparison between color classes, considering their constraints
      * @param o the other color class
-     * @return <tt>true</tt> if and only if <tt>this</tt> and <tt>o</tt> are equal
+     * @return <code>true</code> if and only if <code>this</code> and <code>o</code> are equal
      */
     @Override
     public boolean equals (Object o) {
@@ -295,7 +295,7 @@ public final class ColorClass extends Sort implements Color {
      * in case of a partitioned class, the only possible parametric subclass constraint is split accordingly
      * @param delim a given split-delimiter
      * @return a boolean map (false := 0, true := 1) to the two color-classes obtained from
-     * splitting the constraints <tt>this</tt> ;
+     * splitting the constraints <code>this</code> ;
      * an empty map  no split is performed
      */
     @Override

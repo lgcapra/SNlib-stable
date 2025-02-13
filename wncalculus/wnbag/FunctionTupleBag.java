@@ -3,16 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package wncalculus.wnbag;
+package wnbag;
 
 import java.util.HashMap;
 import java.util.Map;
-import wncalculus.bagexpr.LogicalBag;
-import wncalculus.expr.Domain;
-import wncalculus.expr.ParametricExpr;
-import wncalculus.guard.Guard;
-import wncalculus.tuple.FilteredTuple;
-import wncalculus.tuple.FunctionTuple;
+import bagexpr.LogicalBag;
+import expr.Domain;
+import guard.Guard;
+import tuple.FilteredTuple;
+import tuple.FunctionTuple;
 
 /**
  * this class defines SN functions as bags of <tt>FunctionTuple</tt>s

@@ -1,11 +1,11 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
-import wncalculus.guard.*;
-import wncalculus.logexpr.GuardedExpr;
-import wncalculus.logexpr.LogicalExpr;
+import color.ColorClass;
+import expr.*;
+import guard.*;
+import logexpr.GuardedExpr;
+import logexpr.LogicalExpr;
 
 /**
  * this abstract class defines function-tuples prefixed by a filter

@@ -1,9 +1,9 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.*;
-import wncalculus.logexpr.NotOp;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Sort;
+import logexpr.NotOp;
+import expr.Domain;
+import expr.Sort;
 
 /**
  * this class represent the boolean negation operator

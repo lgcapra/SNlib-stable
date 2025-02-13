@@ -1,8 +1,8 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.Objects;
-import wncalculus.logexpr.NotOp;
-import wncalculus.expr.Interval;
+import logexpr.NotOp;
+import expr.Interval;
 /**
  * this class implements the "complementary" functional operator for ClassFunction
  * its semantics is : Complement(f(X)) \equiv S - f(X) 

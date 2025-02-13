@@ -1,15 +1,16 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.Map;
 import java.util.Objects;
-import wncalculus.expr.CompositionOp;
-import wncalculus.expr.Domain;
-import wncalculus.expr.SingleArg;
-import wncalculus.logexpr.SetExpr;
+import expr.CompositionOp;
+import expr.Domain;
+import expr.SingleArg;
+import logexpr.SetExpr;
 
 /**
  * this class implements the bag-composition between set-expressions 
  * @author lorenzo capra
+ * @param <E> the operand type
  */
 public abstract class SetComp<E extends SetExpr> implements BagExpr<E>, CompositionOp<E,BagExpr<E>> {
 

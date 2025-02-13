@@ -1,11 +1,10 @@
-package wncalculus.classfunction;
+package classfunction;
 
 
 import java.util.Map;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Sort;
-import wncalculus.wnbag.LinearComb;
+import color.ColorClass;
+import expr.Sort;
+import wnbag.LinearComb;
 
 /**
  * this abstract class is the super type of elementary SN functions (including the empty function);

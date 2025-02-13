@@ -1,8 +1,7 @@
-package wncalculus.logexpr;
+package logexpr;
 
-import wncalculus.bagexpr.BagComp;
-import wncalculus.bagexpr.LogicalBag;
-import wncalculus.bagexpr.SetComp;
+import bagexpr.LogicalBag;
+import bagexpr.SetComp;
 
 /**
  * This interface represents expressions (function) representing parametric sets

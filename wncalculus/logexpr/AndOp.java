@@ -1,11 +1,10 @@
-package wncalculus.logexpr;
+package logexpr;
 
 import java.util.Collection;
-import java.util.function.Predicate;
-import wncalculus.expr.MultiArgs;
-import wncalculus.expr.N_aryOp;
-import wncalculus.tuple.FunctionTuple;
-import static wncalculus.logexpr.LogicalExprs.checkComplementary;
+import expr.MultiArgs;
+import expr.N_aryOp;
+import tuple.FunctionTuple;
+import static logexpr.LogicalExprs.checkComplementary;
 
 /**
  * this interface defines the super-type of boolean operators that can be viewed as "conjunctions"

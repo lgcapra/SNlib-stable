@@ -1,7 +1,7 @@
-package wncalculus.color;
+package color;
 
-import wncalculus.expr.Interval;
-import wncalculus.expr.Sort;
+import expr.Interval;
+import expr.Sort;
 
 /**
  * this interface defines a common super-type for color-classes

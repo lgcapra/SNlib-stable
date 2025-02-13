@@ -1,8 +1,8 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.HashMap;
 import java.util.Map;
-import wncalculus.expr.Domain;
+import expr.Domain;
 
 /**
  * This class implements the "false" constant guard.

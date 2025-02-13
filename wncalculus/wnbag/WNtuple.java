@@ -1,14 +1,14 @@
-package wncalculus.wnbag;
+package wnbag;
 
 import java.util.*;
 import java.util.Map.Entry;
-import wncalculus.classfunction.ElementaryFunction;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
-import wncalculus.guard.And;
-import wncalculus.guard.Guard;
-import wncalculus.tuple.AbstractTuple;
-import wncalculus.util.Util;
+import classfunction.ElementaryFunction;
+import color.ColorClass;
+import expr.*;
+import guard.And;
+import guard.Guard;
+import tuple.AbstractTuple;
+import util.Util;
 
 /**
  * this class defines generic SN function-tuples, possibly composed of linear combinations

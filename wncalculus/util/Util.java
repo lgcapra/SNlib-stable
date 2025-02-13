@@ -1,10 +1,10 @@
-package wncalculus.util;
+package util;
 
 import java.io.IOException;
 import java.util.function.*;
 import java.util.*;
 
-import wncalculus.expr.Expression;
+import expr.Expression;
 
 /**
  * this class collects utility methods for expressions manipulation

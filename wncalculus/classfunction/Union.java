@@ -1,9 +1,9 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.*;
-import wncalculus.logexpr.OrOp;
-import wncalculus.expr.Interval;
-import wncalculus.util.Util;
+import logexpr.OrOp;
+import expr.Interval;
+import util.Util;
 
 /**
  * this class defines unions over class functions; union is  an "OR" operator

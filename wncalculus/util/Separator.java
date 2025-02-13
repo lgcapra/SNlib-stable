@@ -1,4 +1,4 @@
-package wncalculus.util;
+package util;
 
 /**
  * this interface defines a generic separator for objects of a given type E, i.e.,

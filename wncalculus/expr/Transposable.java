@@ -1,4 +1,4 @@
-package wncalculus.expr;
+package expr;
 
 /**
  * this interface denotes expressions that can be transposed

@@ -1,18 +1,18 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import wncalculus.color.ColorClass;
-import wncalculus.guard.*;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Sort;
-import wncalculus.logexpr.LogicalExprs;
-import wncalculus.logexpr.OrOp;
-import wncalculus.logexpr.SetExpr;
-import wncalculus.tuple.AllTuple;
-import wncalculus.tuple.Tuple;
-import wncalculus.util.Pair;
-import wncalculus.util.Util;
+import color.ColorClass;
+import guard.*;
+import expr.Domain;
+import expr.Sort;
+import logexpr.LogicalExprs;
+import logexpr.OrOp;
+import logexpr.SetExpr;
+import tuple.AllTuple;
+import tuple.Tuple;
+import util.Pair;
+import util.Util;
 
 /**
  * This class provides an implementation for bags of boolean expressions

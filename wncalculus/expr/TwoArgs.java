@@ -1,11 +1,13 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
-import wncalculus.color.ColorClass;
+import color.ColorClass;
 
 /**
  *
  * @author lorenzo capra
+ * @param <E> operand type
+ * @param <F> operand type
  */
 public interface TwoArgs<E extends ParametricExpr, F extends ParametricExpr> extends MultiArgs<E,F>{
     /**
@@ -18,7 +20,7 @@ public interface TwoArgs<E extends ParametricExpr, F extends ParametricExpr> ext
     
     
     /**
-     * @return <tt>true</tt> if and only <tt>this</tt> operator is commutative 
+     * @return <code>true</code> if and only <code>this</code> operator is commutative 
      */
     default boolean isCommutative() {
         return false;

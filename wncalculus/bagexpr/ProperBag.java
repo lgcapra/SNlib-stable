@@ -1,8 +1,8 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.*;
-import wncalculus.expr.ParametricExpr;
-import wncalculus.expr.Sort;
+import expr.ParametricExpr;
+import expr.Sort;
 
 /**
  * this class defines a unary operator that extratcs the positive part of a bag

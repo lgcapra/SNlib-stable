@@ -1,6 +1,6 @@
-package wncalculus.tuple;
+package tuple;
 
-import wncalculus.bagexpr.SetComp;
+import bagexpr.SetComp;
 
 /**
  * this class defines the bag-composition between <tt>FunctionTuple</tt>s 

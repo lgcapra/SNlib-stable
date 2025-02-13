@@ -1,8 +1,8 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.*;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Sort;
+import expr.Domain;
+import expr.Sort;
 
 /**
  * the super-class of constant guards; note that for their particular

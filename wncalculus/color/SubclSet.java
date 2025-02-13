@@ -1,8 +1,8 @@
-package wncalculus.color;
+package color;
 
 import java.util.*;
-import wncalculus.classfunction.Subcl;
-import wncalculus.expr.*;
+import classfunction.Subcl;
+import expr.*;
 
 /**
  * this class represents a color type defined by a (proper, non-empty) subset of subclasses

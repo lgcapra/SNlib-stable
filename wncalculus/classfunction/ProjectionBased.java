@@ -1,8 +1,8 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.Collection;
-import wncalculus.expr.SingleSortExpr;
-import wncalculus.util.Pair;
+import expr.SingleSortExpr;
+import util.Pair;
 
 /**
  * this abstract class defines the template for projection-based functions
@@ -18,14 +18,14 @@ public interface ProjectionBased extends SingleSortExpr {
   
     /**
      *
-     * @return the successor parameter of <tt>this</tt> function
+     * @return the successor parameter of <code>this</code> function
      * (0 if the function's color-class is not ordered)
      */
     int getSucc();
     
     /**
      * 
-     * @return the complementary of <tt>this</tt> function 
+     * @return the complementary of <code>this</code> function 
      */
     ProjectionBased opposite();
     

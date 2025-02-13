@@ -1,4 +1,4 @@
-package wncalculus.util;
+package util;
 
 import java.util.Map;
 import java.util.Objects;

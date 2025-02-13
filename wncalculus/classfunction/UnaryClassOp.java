@@ -1,9 +1,9 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.Set;
-import wncalculus.expr.UnaryOp;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
+import expr.UnaryOp;
+import color.ColorClass;
+import expr.Domain;
 
 /**
  *

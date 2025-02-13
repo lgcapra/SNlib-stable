@@ -1,13 +1,13 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.logexpr.AndOp;
-import wncalculus.classfunction.Intersection;
-import wncalculus.expr.IllegalDomain;
-import wncalculus.guard.And;
-import wncalculus.guard.Guard;
-import wncalculus.util.Util;
-import wncalculus.classfunction.SetFunction;
+import logexpr.AndOp;
+import classfunction.Intersection;
+import expr.IllegalDomain;
+import guard.And;
+import guard.Guard;
+import util.Util;
+import classfunction.SetFunction;
 
 /**
  * this class defines the intersection of WN function-tuples  mapping on sets

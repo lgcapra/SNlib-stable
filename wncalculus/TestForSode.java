@@ -1,14 +1,14 @@
-package wncalculus;
+
 
 import java.util.*;
-import wncalculus.bagexpr.LogicalBag;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Interval;
-import wncalculus.tuple.*;
-import wncalculus.classfunction.*;
-import wncalculus.guard.*;
-import wncalculus.wnbag.FunctionTupleBag;
+import bagexpr.LogicalBag;
+import color.ColorClass;
+import expr.Domain;
+import expr.Interval;
+import tuple.*;
+import classfunction.*;
+import guard.*;
+import wnbag.FunctionTupleBag;
 
 
 /**

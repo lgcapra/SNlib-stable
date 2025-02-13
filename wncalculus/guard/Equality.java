@@ -1,14 +1,13 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.*;
-import wncalculus.classfunction.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
-import wncalculus.expr.IllegalDomain;
-import wncalculus.expr.ParametricExpr;
-import wncalculus.expr.Sort;
-import wncalculus.util.ComplexKey;
-import wncalculus.util.Util;
+import classfunction.*;
+import color.ColorClass;
+import expr.Domain;
+import expr.IllegalDomain;
+import expr.Sort;
+import util.ComplexKey;
+import util.Util;
 
 /**
  * this class represents predicates checking for the (in)equality of two
@@ -36,8 +35,8 @@ private Map<ColorClass, Map<Boolean, SortedSet<Equality>>> eqMap;
     }
         
     /**
-     * build an <tt>Equality</tt>; if the two variables (projections) have the same index it may result in
-     * <tt>True</tt> or <tt>False</tt>
+     * build an <code>Equality</code>; if the two variables (projections) have the same index it may result in
+     * <code>True</code> or <code>False</code>
      * @param p1 a projection
      * @param p2 a projection
      * @param op a flag denoting the sign
@@ -222,7 +221,7 @@ private Map<ColorClass, Map<Boolean, SortedSet<Equality>>> eqMap;
     }
     
     /**
-     * @return <tt>this</tt> if <tt>this</tt> is an equality of type X^i == X^j; @code{null} otherwise
+     * @return <code>this</code> if <code>this</code> is an equality of type X^i == X^j; @code{null} otherwise
      */
     @Override
     public boolean isInEquality() {

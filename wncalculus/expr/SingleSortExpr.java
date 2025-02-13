@@ -1,7 +1,7 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
-import wncalculus.color.ColorClass;
+import color.ColorClass;
 
 /**
  * this interface is represents expressions syntactically composed of terms of the same sort
@@ -10,7 +10,7 @@ import wncalculus.color.ColorClass;
 public interface SingleSortExpr extends ParametricExpr {
     
     /**
-     * @return <code>this</code> term's sort; <tt>null</tt> if
+     * @return <code>this</code> term's sort; <code>null</code> if
      * <code>this</code> term is many-sorted
      */
     Sort getSort() ;

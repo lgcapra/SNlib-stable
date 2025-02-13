@@ -1,7 +1,7 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.*;
-import wncalculus.expr.*;
+import expr.*;
 
 
 /**

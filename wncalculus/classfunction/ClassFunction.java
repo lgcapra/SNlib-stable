@@ -1,9 +1,9 @@
-package wncalculus.classfunction;
+package classfunction;
 
-import wncalculus.expr.*;
-import wncalculus.color.*;
+import expr.*;
+import color.*;
 import java.util.*;
-import wncalculus.guard.Equality;
+import guard.Equality;
 
 /**
  * This interface represents the root of the hierarchy describing
@@ -67,12 +67,12 @@ public interface ClassFunction extends SingleSortExpr {
     } 
     
     /**    
-     * creates a clone of <tt>this</tt> class-function, of a colour
+     * creates a clone of <code>this</code> class-function, of a colour
      * which is assumed compatible with the current one, in an optimized way
      * builds on @see {copy}
      * @param newcc a colour
      * @param <E> the type to which the term is "casted"
-     * @return a (casted) copy of <tt>this</tt>, or <tt>this</tt> if the specified colour
+     * @return a (casted) copy of <code>this</code>, or <code>this</code> if the specified colour
      * coincides with the current one
      */
     default <E extends ClassFunction> E clone (ColorClass newcc) {
@@ -88,15 +88,15 @@ public interface ClassFunction extends SingleSortExpr {
     }
     
     /**    
-     * creates a copy of <tt>this</tt> class-function with another colour
+     * creates a copy of <code>this</code> class-function with another colour
      * @param <E> the type to which the term is "casted"
      * @param newcc a new colour
-     * @return a copy of <tt>this</tt>
+     * @return a copy of <code>this</code>
      */
     abstract <E extends ClassFunction> E copy (ColorClass newcc);
     
     /**
-     * creates a copy of given a collection of <tt>ClassFunction</tt>s with a given
+     * creates a copy of given a collection of <code>ClassFunction</code>s with a given
      * new color; the type of returned collection (either a list or a set) is the same as the passed one
      * @param <E> the type of collection's elements (either set- or bag-functions)
      * @param arglist a collection of class-functions
@@ -115,7 +115,7 @@ public interface ClassFunction extends SingleSortExpr {
      * equality
      * @param <E> the function's type
      * @param eq an equality
-     * @return a function corresponding to <tt>this</tt>, modulo a replacement of symbols,
+     * @return a function corresponding to <code>this</code>, modulo a replacement of symbols,
      * according to the equality
      * default implementation - to override if needed
      */
@@ -129,7 +129,7 @@ public interface ClassFunction extends SingleSortExpr {
      * @param <E> function's elements type
      * @param lf the specified list of functions 
      * @param e an equality
-     * @return <tt>true</tt> if and only if the list is modified
+     * @return <code>true</code> if and only if the list is modified
      */
     public static <E extends ClassFunction> boolean replace(List<E> lf, Equality e) {
         boolean replaced = false;

@@ -1,7 +1,7 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
-import wncalculus.util.Util;
+import util.Util;
 
 /**
  * this class is a collector of generic algorithms for the

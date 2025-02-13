@@ -1,4 +1,4 @@
-package wncalculus.expr;
+package expr;
 
 /**
   this class defines possibly unbounded positive integer intervals;
@@ -178,7 +178,7 @@ package wncalculus.expr;
         }
         
         /**
-         * try to merge <tt>this</tt> interval with another, for example: [2,3].merge ([4,*]) &rarr; [2,*]
+         * try to merge this interval with another, for example: [2,3].merge ([4,*]) &rarr; [2,*]
          * in that order
          * @param other the interval to be merged with this
          * @return the interval resulting from merging, or <code>null</code>

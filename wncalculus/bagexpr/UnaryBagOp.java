@@ -1,10 +1,10 @@
-package wncalculus.bagexpr;
+package bagexpr;
 
 import java.util.Map;
 import java.util.Objects;
-import wncalculus.expr.Domain;
-import wncalculus.expr.ParametricExpr;
-import wncalculus.expr.UnaryOp;
+import expr.Domain;
+import expr.ParametricExpr;
+import expr.UnaryOp;
 
 /**
  * this abstract class represent any unary bag operator

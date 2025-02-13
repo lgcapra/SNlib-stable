@@ -1,7 +1,7 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
-import wncalculus.util.Util;
+import util.Util;
 
 /**
  * This interface represents any operator with more than one operands, of the same type.

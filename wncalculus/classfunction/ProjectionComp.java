@@ -1,13 +1,12 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
-import wncalculus.expr.Interval;
-import wncalculus.expr.Sort;
-import wncalculus.guard.Equality;
-import wncalculus.util.ComplexKey;
-import wncalculus.util.Pair;
+import color.ColorClass;
+import expr.Interval;
+import expr.Sort;
+import guard.Equality;
+import util.ComplexKey;
+import util.Pair;
 
 
 /**
@@ -63,7 +62,7 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
       
     /**
      *
-     * @return the <tt>Projection</tt> complemented
+     * @return the <code>Projection</code> complemented
      */
     public Projection getArg() {
         return this.pr;
@@ -75,7 +74,6 @@ public final class ProjectionComp extends SetFunction implements ProjectionBased
     @Override
     public Interval card() {
         Interval in = getConstraint();
-        
         return in.unbounded() ? new Interval(in.lb() - 1) : new Interval(in.lb() - 1, in.ub()-1);
     }
     

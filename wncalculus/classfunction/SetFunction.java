@@ -1,14 +1,14 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.*;
-import wncalculus.expr.*;
-import wncalculus.guard.Equality;
-import wncalculus.guard.Guard;
-import wncalculus.logexpr.LogicalExpr;
-import wncalculus.logexpr.SetExpr;
-import wncalculus.util.Pair;
-import wncalculus.util.Util;
-import wncalculus.wnbag.LinearComb;
+import expr.*;
+import guard.Equality;
+import guard.Guard;
+import logexpr.LogicalExpr;
+import logexpr.SetExpr;
+import util.Pair;
+import util.Util;
+import wnbag.LinearComb;
 
 /**
  * this abstract class is the super-type of class-functions mapping to sets
@@ -54,7 +54,7 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     
     /**
      * (default implementation to override)
-     * @return an elementary linear-combination composed of <tt>this</tt> term 
+     * @return an elementary linear-combination composed of <code>this</code> term 
      * DA TOGLIERE CON NUOVA IMPLEMENTAZIONE DEI BAG?
      */
     @Override
@@ -106,7 +106,7 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     /**
      *
      * @param ite a collection of class-functions mapping to sets
-     * @return <tt>true</tt> if and only if every function is not equivalent to "zero"
+     * @return <code>true</code> if and only if every function is not equivalent to "zero"
      */
     public final static boolean differentFromZero(Iterable<? extends SetFunction> ite) {
         for (SetFunction f : ite) 
@@ -118,8 +118,8 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
         
     /**
      *
-     * @return the size of any application of <tt>this</tt> function;
-     * <tt>null</tt> if it cannot be computed, for any reasons
+     * @return the size of any application of <code>this</code> function;
+     * <code>null</code> if it cannot be computed, for any reasons
      */
     public abstract Interval card();
     
@@ -130,7 +130,7 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     }
     
     /** 
-     * @return <tt>true</tt> if and only if this function has zero cardinality 
+     * @return <code>true</code> if and only if this function has zero cardinality 
      */
     public boolean zeroCard () {
         var constr = card();
@@ -145,7 +145,7 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
         
     /**
      *
-     * @return <tt>true</tt> if and only if the size (cardinality) of <tt>this</tt> function
+     * @return <code>true</code> if and only if the size (cardinality) of <code>this</code> function
      * is less than or equal to one
      */
     public final boolean cardLeq1 () {
@@ -157,8 +157,8 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     /**
      * calculates the composition between type-set class-functions,
      * disregarding projection indices (i.e., considering functions as if they were "unary")
-     * @param right the function to compose with <tt>this</tt>
-     * @return a pair holding the composition result (<tt>null</tt> if, for any reasons,
+     * @param right the function to compose with <code>this</code>
+     * @return a pair holding the composition result (<code>null</code> if, for any reasons,
      * the composition outcome cannot be derived) and an integer representing a split delimiter
      * required to solve the composition (in that case a pair (null,intval) would
      * be returned); if neither the composition outcome nor a split delimiter can be devised a
@@ -183,8 +183,8 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
      * @param inmap a map describing the membership "in" predicates
      * @param domain the guard domain
      * @param notinmap a map describing the membership "notin" predicates (there may be many, for a given variable)
-     * @return if <tt>this</tt> is an "elementary" intersection-form, an equivalent
-     * set (sum) of simple (guarded) class-functions, represented by <tt>Pair</tt>s (if any);
+     * @return if <code>this</code> is an "elementary" intersection-form, an equivalent
+     * set (sum) of simple (guarded) class-functions, represented by <code>Pair</code>s (if any);
      * otherwise, an empty-set
     */ 
     public Set<? extends Pair<? extends SetFunction, ? extends Guard> > toSimpleFunctions (Set<? extends Equality> ineqlist, Map<Projection, Subcl> inmap, Map<Projection, Set<Subcl>> notinmap, Domain domain) {

@@ -1,8 +1,8 @@
-package wncalculus.classfunction;
+package classfunction;
 
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Interval;
-import wncalculus.util.Pair;
+import color.ColorClass;
+import expr.Interval;
+import util.Pair;
 
 /**
  *

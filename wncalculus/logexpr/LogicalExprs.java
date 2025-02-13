@@ -1,7 +1,7 @@
-package wncalculus.logexpr;
+package logexpr;
 
 import java.util.*;
-import wncalculus.expr.*;
+import expr.*;
 
 /**
  * LogicalExprs is a collector of generic algorithms for the

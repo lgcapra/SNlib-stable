@@ -1,9 +1,9 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.HashSet;
-import wncalculus.color.ColorClass;
-import wncalculus.classfunction.*;
-import wncalculus.expr.*;
+import color.ColorClass;
+import classfunction.*;
+import expr.*;
 
 /**
  * this class defines the super-type for WN elementary guards;
@@ -161,10 +161,10 @@ public abstract class ElementaryGuard extends Guard implements SingleSortExpr  {
     }
     
     /**
-     * calculates the expression corresponding to <tt>this</tt> guard, which
+     * calculates the expression corresponding to <code>this</code> guard, which
      * is assumed to be associated to a given class-function
      * @param f a class-function mapping to a set
-     * @return the function corresponding to <tt>this</tt> guard, associated with @param f
+     * @return the function corresponding to <code>this</code> guard, associated with @param f
      */
     public SetFunction toSetfunction(SetFunction f) {
         if (f instanceof Projection)

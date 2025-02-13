@@ -1,11 +1,11 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.*;
-import wncalculus.guard.Equality;
-import wncalculus.logexpr.AndOp;
-import wncalculus.util.Util;
+import color.ColorClass;
+import expr.*;
+import guard.Equality;
+import logexpr.AndOp;
+import util.Util;
 
 /**
  * this abstract class defines the super-type for n-ary (n greater than one) class-function associative operators
@@ -70,8 +70,9 @@ public abstract class N_aryClassOperator  extends SetFunction implements N_aryOp
      * @return the subclass functions in the operand list
      */
     public final Set<Subcl> subclasses () {
-        if (this.subcls == null) 
+        if (this.subcls == null) {
             this.subcls = getSort().isSplit() ? Collections.unmodifiableSet(Util.getType(this.args, Subcl.class) ) : Collections.EMPTY_SET;
+        }
         
         return this.subcls;    
     }
@@ -79,13 +80,7 @@ public abstract class N_aryClassOperator  extends SetFunction implements N_aryOp
     Map<Integer, SortedSet<ProjectionBased>> similarCongrMap(boolean congr)  {
         return Util.mapFeature(congruent(congr), ProjectionBased::getIndex, (f1,f2)-> ((Integer)f1.getSucc()).compareTo(f2.getSucc()) );
     }
-     
-    /**
-     * @return the number of subclass operands
-     */
-    public int subclSize() {
-        return getSort().isSplit() ? subclasses().size() : 0;
-    }     
+          
  
     @Override
     public final ColorClass getSort() {
@@ -119,7 +114,7 @@ public abstract class N_aryClassOperator  extends SetFunction implements N_aryOp
      * 5. if the union contains all static subclass returns All
      * 6.  S-X_i U S-!X_i .. &rarr; All
      * 7. if the union contains all possible projection succ. returns All (card dep.).
-     *  @return the simplified term; <tt>this</tt> if no reduction has been cariied out;
+     *  @return the simplified term; <code>this</code> if no reduction has been cariied out;
      */
     @Override
     public SetFunction specSimplify() {

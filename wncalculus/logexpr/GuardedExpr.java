@@ -1,7 +1,7 @@
-package wncalculus.logexpr;
+package logexpr;
 
-import wncalculus.expr.Expression;
-import wncalculus.expr.NonTerminal;
+import expr.Expression;
+import expr.NonTerminal;
 
 /**
  * this interface defines an expression with an associated logical condition

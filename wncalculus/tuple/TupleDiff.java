@@ -1,7 +1,7 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.*;
+import expr.*;
 
 
 /**

@@ -1,9 +1,9 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.bagexpr.*;
-import wncalculus.expr.*;
-import wncalculus.wnbag.FunctionTupleBag;
+import bagexpr.*;
+import expr.*;
+import wnbag.FunctionTupleBag;
 
 
 /**

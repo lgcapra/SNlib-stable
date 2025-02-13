@@ -1,12 +1,12 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.*;
-import wncalculus.color.ColorClass;
-import wncalculus.guard.And;
-import wncalculus.guard.Guard;
-import wncalculus.util.Util;
-import wncalculus.classfunction.SetFunction;
+import expr.*;
+import color.ColorClass;
+import guard.And;
+import guard.Guard;
+import util.Util;
+import classfunction.SetFunction;
 
 /**
  * This class defines a kind of tuple juxtaposition operator.

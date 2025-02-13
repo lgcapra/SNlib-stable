@@ -1,15 +1,15 @@
-package wncalculus.wnbag;
+package wnbag;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import wncalculus.bagexpr.Bag;
-import wncalculus.bagexpr.BagExpr;
-import wncalculus.expr.Domain;
-import wncalculus.expr.MultiArgs;
-import wncalculus.expr.Sort;
-import wncalculus.guard.Guard;
-import wncalculus.tuple.FunctionTuple;
+import bagexpr.Bag;
+import bagexpr.BagExpr;
+import expr.Domain;
+import expr.MultiArgs;
+import expr.Sort;
+import guard.Guard;
+import tuple.FunctionTuple;
 
 /**
  *

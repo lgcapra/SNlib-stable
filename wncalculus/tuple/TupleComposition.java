@@ -1,9 +1,9 @@
-package wncalculus.tuple;
+package tuple;
 
-import wncalculus.expr.*;
-import wncalculus.logexpr.LogComposition;
-import wncalculus.logexpr.SetExpr;
-import wncalculus.wnbag.FunctionTupleBag;
+import expr.*;
+import logexpr.LogComposition;
+import logexpr.SetExpr;
+import wnbag.FunctionTupleBag;
 
 
 /**

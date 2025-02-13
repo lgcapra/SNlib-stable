@@ -1,14 +1,14 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.*;
-import wncalculus.expr.*;
-import wncalculus.guard.Guard;
-import wncalculus.logexpr.LogComposition;
-import wncalculus.logexpr.LogicalExpr;
-import wncalculus.logexpr.SetExpr;
-import wncalculus.util.Pair;
-import wncalculus.util.Util;
-import wncalculus.wnbag.FunctionTupleBag;
+import expr.*;
+import guard.Guard;
+import logexpr.LogComposition;
+import logexpr.LogicalExpr;
+import logexpr.SetExpr;
+import util.Pair;
+import util.Util;
+import wnbag.FunctionTupleBag;
 
 /**
  * @author Lorenzo Capra

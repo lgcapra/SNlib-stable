@@ -1,4 +1,4 @@
-package wncalculus.tuple;
+package tuple;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,17 +9,17 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
-import wncalculus.classfunction.SetFunction;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Domain;
-import wncalculus.expr.MultiArgs;
-import wncalculus.expr.Sort;
-import wncalculus.expr.UnaryOp;
-import wncalculus.guard.And;
-import wncalculus.guard.Equality;
-import wncalculus.guard.Guard;
-import wncalculus.guard.NaryGuardOperator;
-import wncalculus.guard.True;
+import classfunction.SetFunction;
+import color.ColorClass;
+import expr.Domain;
+import expr.MultiArgs;
+import expr.Sort;
+import expr.UnaryOp;
+import guard.And;
+import guard.Equality;
+import guard.Guard;
+import guard.NaryGuardOperator;
+import guard.True;
 
 public final class ColorRestriction implements FunctionTuple, UnaryOp<FunctionTuple> {
 

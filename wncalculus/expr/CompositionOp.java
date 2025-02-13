@@ -1,17 +1,15 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeSet;
 
 /**
  * this interface defines a composition operator between (sorted) terms
  * the type of composition operator may be different from the operands'type
  * (e.g., a composition of set-type expressions meant as bag)
  * @author Lorenzo Capra
- * @param <E> the operands type
+ * @param <E>  operand type
+ * @param <F>  operand type
  */
 public interface CompositionOp<E extends ParametricExpr, F extends ParametricExpr> extends TwoArgs<E,F> {
    
@@ -70,10 +68,7 @@ public interface CompositionOp<E extends ParametricExpr, F extends ParametricExp
     /**
      * overrides the ancestor method, taking into account the fact that the
      * left operands' domain has to match the right operand's codomain
-     * @param newdom the composition's new domain
-     * @param newcd the composition's new co-domain
-     * @param smap the map between orginal and split sorts
-     * @return a clone of <tt>this</tt> composition with the new co-domains
+     * @return a clone of <code>this</code> composition with the new co-domains
      */
     /*@Override
     default F clone (final Domain newdom, final Domain newcd) {

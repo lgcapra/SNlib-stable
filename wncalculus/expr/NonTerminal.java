@@ -1,7 +1,4 @@
-package wncalculus.expr;
-
-import java.util.Collection;
-
+package expr;
 /**
  * this interface is the super-type for any operator
  * @author Lorenzo Capra

@@ -1,7 +1,7 @@
-package wncalculus.logexpr;
+package logexpr;
 
 import java.util.*;
-import wncalculus.expr.*;
+import expr.*;
 
 /**
  * this interface defines the super-type for any sorted expression (term) of a "logical" domain (set, boolean, etc.)
@@ -120,7 +120,7 @@ public interface LogicalExpr extends ParametricExpr  {
      * @param e a logical term
      * @return <code>true</code> if and only if both <code>this</code> and e are "normal and forms"
      * and <code>this</code> implies (i,e, is included in) e
-     * @throws wncalculus.expr.IllegalDomain if the expressions' domains are different
+     * @throws expr.IllegalDomain if the expressions' domains are different
      */
      default boolean implies (LogicalExpr e) {
         return equals( andFactory(this, e).normalize() );
@@ -131,7 +131,7 @@ public interface LogicalExpr extends ParametricExpr  {
      * another term
      * @param e a logical term
      * @return t1 and not(e)
-     * @throws wncalculus.expr.IllegalDomain if the expressions' domains are different
+     * @throws expr.IllegalDomain if the expressions' domains are different
      */
     default  LogicalExpr  diff(LogicalExpr e)  {
         return andFactory(this, notFactory(e));
@@ -154,7 +154,7 @@ public interface LogicalExpr extends ParametricExpr  {
      * @return an "AND" operator for the collection of operands
      * if the specified collection is empty, its behaviour depends on the particular type
      * of logical expression
-     * @throws wncalculus.expr.IllegalDomain if the operands' domain are different
+     * @throws expr.IllegalDomain if the operands' domain are different
      */  
        LogicalExpr andFactory(Collection<? extends LogicalExpr> args);
       
@@ -163,7 +163,7 @@ public interface LogicalExpr extends ParametricExpr  {
      * build an "AND" operator
      * @param args a "list" of operands (expressed as a varargs)
      * @return an "AND" operator for the list of operands
-     * @throws wncalculus.expr.IllegalDomain if the operands' domain are different
+     * @throws expr.IllegalDomain if the operands' domain are different
      */       
       default  LogicalExpr andFactory(LogicalExpr ... args) {
           return andFactory(Arrays.asList(args));
@@ -175,7 +175,7 @@ public interface LogicalExpr extends ParametricExpr  {
      * @param disjoined a flag telling if the operands have to be assumed
      * pair-wise disjoint
      * @return an "OR" operator for the collection of operands
-     * @throws wncalculus.expr.IllegalDomain if the operands' domain are different
+     * @throws expr.IllegalDomain if the operands' domain are different
      */
     LogicalExpr orFactory(Collection<? extends LogicalExpr> args, boolean disjoined);
       
@@ -186,7 +186,7 @@ public interface LogicalExpr extends ParametricExpr  {
      * @param disjoined a flag telling if the operands have to be assumed
      * pair-wise disjoint
      * @return an "OR" operator for the list of operands
-     * @throws wncalculus.expr.IllegalDomain if the operands' domain are different
+     * @throws expr.IllegalDomain if the operands' domain are different
      */      
       default LogicalExpr orFactory(boolean disjoined, LogicalExpr ... args) {
           return orFactory(Arrays.asList(args), disjoined);

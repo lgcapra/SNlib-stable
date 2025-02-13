@@ -1,9 +1,9 @@
-package wncalculus.guard;
+package guard;
 
 import java.util.*;
-import wncalculus.logexpr.OrOp;
-import wncalculus.expr.Domain;
-import wncalculus.util.Util;
+import logexpr.OrOp;
+import expr.Domain;
+import util.Util;
 
 /**
  * this class implements the boolean OR operator

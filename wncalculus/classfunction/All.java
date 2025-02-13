@@ -1,8 +1,8 @@
-package wncalculus.classfunction;
+package classfunction;
 
 import java.util.*;
-import wncalculus.color.ColorClass;
-import wncalculus.expr.Interval;
+import color.ColorClass;
+import expr.Interval;
 
 /**
  * this class defines diffusion class-functions (denoted by S)

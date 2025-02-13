@@ -1,10 +1,10 @@
-package wncalculus.expr;
+package expr;
 
 import java.util.*;
-import static wncalculus.expr.Expressions.mergeResults;
-import static wncalculus.expr.Expressions.printResults;
-import wncalculus.util.Pair;
-import wncalculus.util.Util;
+import static expr.Expressions.mergeResults;
+import static expr.Expressions.printResults;
+import util.Pair;
+import util.Util;
 
 /**
  * this interface defines the ADT of expressions with (possibly) parameterized domains
