@@ -13,7 +13,7 @@ import util.Util;
 public interface ParametricExpr extends Expression {
 
     /**
-     * split <tt>this</tt> parametric expression into an equivalent set
+     * split <code>this</code> parametric expression into an equivalent set
      * with more specific constraints;
      * assumes that the split of single parametric color-classes are binary, i.e.,
      * the interval defining the constraint is divided into two sub-intervals
@@ -57,7 +57,7 @@ public interface ParametricExpr extends Expression {
     }
     
       /**
-     * builds a copy of <tt>this</tt> expression with a new arity matching the given map from old sorts to new sorts 
+     * builds a copy of <code>this</code> expression with a new arity matching the given map from old sorts to new sorts 
      * if a sort is not mapped then it is retained
      * the terms composing the expression are recursively cloned
      * the constraint of the new sort should be tighter than the original one when used to split a term
@@ -70,7 +70,7 @@ public interface ParametricExpr extends Expression {
       
       
      /**
-     * builds a copy of <tt>this</tt> expression with the given new domain, which is assumede compliant
+     * builds a copy of <code>this</code> expression with the given new domain, which is assumede compliant
      * with the current domain (the method's behaviour is undefined otherwise)
      * the terms composing the expression are recursively cloned
      * doesn't perform any consistency checks 
