@@ -36,7 +36,7 @@ public interface NotOp<E extends LogicalExpr> extends UnaryOp<E>, LogicalExpr {
     default E genSimplify () {
         E res =  UnaryOp.super.genSimplify(); // super-type method
         if (res instanceof NotOp) {
-            LogicalExpr arg = ((NotOp) res).getArg();
+            LogicalExpr arg = ((NotOp<?>) res).getArg();
             if (arg.isTrue()) 
                res =  getFalse().cast();
             else if (arg.isFalse()) 

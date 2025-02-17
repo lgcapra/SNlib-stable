@@ -354,8 +354,8 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
             Projection p1 = e.getArg1(),p2 = e.getArg2();
             Subcl s1  = inmap.get( p1), s2   = inmap.get(p2);
             if ( s1 != null && s2 != null && ! s1.equals(s2) || 
-                    notinmap.getOrDefault(p1, Collections.EMPTY_SET).contains(s2) ||
-                    notinmap.getOrDefault(p2, Collections.EMPTY_SET).contains(s1) ) {  // p1 and p2 refer to different subclasses
+                    notinmap.getOrDefault(p1, Collections.emptySet()).contains(s2) ||
+                    notinmap.getOrDefault(p2, Collections.emptySet()).contains(s1) ) {  // p1 and p2 refer to different subclasses
                 arglist.remove(e);
                 it.remove(); //optimization
                 reduced = true;

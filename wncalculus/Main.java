@@ -274,7 +274,7 @@ public class Main {
         System.out.println("semplifico\n" + ris);
         System.out.println(ris.simplify());
 
-        BagComp<FunctionTuple> bc = new BagComp(new BagTranspose<>(diff), b2);
+        final BagComp<FunctionTuple> bc = new BagComp(new BagTranspose<>(diff), b2);
         System.out.println("normalizzo\n" + bc);
         System.out.println(bc.normalize());
         Util.getChar();

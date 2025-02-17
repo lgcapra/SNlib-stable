@@ -215,7 +215,7 @@ public abstract class LogicalBag<E extends SetExpr> extends AbstractBag<E>  {
         ArrayList<OrOp<E>> orTerms = new ArrayList<>();
         for (E t : m.keySet()) // we first collect possible OR terms 
             if ( t instanceof OrOp ) {
-                OrOp op = (OrOp) t;
+                OrOp<E> op = (OrOp) t;
                 orTerms.add(op);
                 disjoint &= op.disjoined();
             }

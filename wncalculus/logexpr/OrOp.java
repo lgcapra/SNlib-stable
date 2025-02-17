@@ -78,7 +78,7 @@ public interface OrOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E>  {
         //System.out.println("thruth equivalence: term size "+(args) ); //profiling
         LogicalExpr t = args.get(0), compl_t = (LogicalExpr) t.getTrue().diff(t). normalize(); // we take the complement of one term
         
-        return compl_t instanceof OrOp ? contained( ((OrOp)compl_t).getArgs()  , args.subList(1, args.size()) )
+        return compl_t instanceof OrOp ? contained( ((OrOp<?>)compl_t).getArgs()  , args.subList(1, args.size()) )
                          : contained (compl_t, args.subList(1, args.size()));
       }
     

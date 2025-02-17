@@ -165,7 +165,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
      * which is assumed to be an extended complement; an empty set if (for any
      * reasons) @code {this} is not an extended complement
      */
-    public Set extendedComplSucc() {
+    public Set<Integer> extendedComplSucc() {
         if (0 != extendedCompl()) {
             HashSet<Integer> succset = new HashSet<>();
             congruent(false).forEach((var x) -> {
@@ -174,7 +174,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
             return succset;
         }
 
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     /**
@@ -195,8 +195,8 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
      *
      * @param right the right operand
      * @return the composition result between <code>this</code> (assumed a unary
-     * function) and <code>right</code> IMPORTANT NOTE the case S-X_1 \cap
-     * S_{1,k} is not considered given that, when separating a left-composed
+     * function) and <code>right</code> IMPORTANT NOTE the case S-X_1 \cap S_{1,k}
+     * is not considered given that, when separating a left-composed
      * tuple in an intersection of single-index tuples, constants factors are
      * separated too (otherwise also this case should be considered here...)
      */
@@ -298,7 +298,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
                     red_args = new HashSet<>(operands);
                     red_args.remove(x); // S - X_i  (pc) is erased from the copy of args of subc
                     SetFunction redf = Intersection.factory(red_args);
-                    if (sc != null || notinmap.getOrDefault(pr, Collections.EMPTY_SET).contains(subc)) // there is either X_i in sc, sc != subc, or X_i notin subc 
+                    if (sc != null || notinmap.getOrDefault(pr, Collections.emptySet()).contains(subc)) // there is either X_i in sc, sc != subc, or X_i notin subc 
                     {
                         res.add(new Pair<>(redf, True.getInstance(domain)));  // the pc's arg refers to a subclass other than subc ...
                     } else { // neither the pc's arg X_i belongs to any subclass != subc nor there is X_i notin subc
@@ -324,10 +324,10 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
                                 Projection p1 = pc1.getArg(), p2 = pc2.getArg();
                                 Equality eq = (Equality) Equality.builder(p1, p2, false, domain);
                                 if (!(ineqlist.contains(eq) || differentDom(p1, p2, inmap, notinmap))) { // in g there is¨no pc.arg != pc2.arg or pc in sc1,pc in sc2, or ... :
-                                    res.add(new Pair(this, eq)); // the equality pc.arg <> pc2.arg is added
+                                    res.add(new Pair<>(this, eq)); // the equality pc.arg <> pc2.arg is added
                                     red_args = new HashSet<>(operands); //optimization
                                     red_args.remove(pc2);
-                                    res.add(new Pair(Intersection.factory(red_args), eq.opposite()));// the corresponding equality is added
+                                    res.add(new Pair<>(Intersection.factory(red_args), eq.opposite()));// the corresponding equality is added
                                     break search; //exits all loops
                                 }
                             }
@@ -371,7 +371,7 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
             return sc1 != sc2;
         }
 
-        return notinmap.getOrDefault(p2, Collections.EMPTY_SET).contains(sc1) || notinmap.getOrDefault(p1, Collections.EMPTY_SET).contains(sc2);
+        return notinmap.getOrDefault(p2, Collections.emptySet()).contains(sc1) || notinmap.getOrDefault(p1, Collections.emptySet()).contains(sc2);
     }
 
     @Override

@@ -45,7 +45,7 @@ public abstract class AbstractBag<E extends ParametricExpr> implements Bag<E> {
         this.dom        = dom;
         this.codom      = codom;
         this.simplified = true;
-        this.map = Collections.EMPTY_MAP;
+        this.map = Collections.emptyMap();
     }
     
     
