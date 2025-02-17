@@ -141,7 +141,7 @@ package expr;
      *
      * @param delim the split delimiter, i.e., an offset from the interval lower bound
      * @return a size-two array of intervals resulting from split;
-     * a size-zero array, if no split is done (e.g., if lb &gt; delim)
+     * a size-zero array, if no split is done (e.g., if lb <code>&gt</code> delim)
      * @throws IllegalArgumentException is the argument is negative
      */
     public Interval[] split (final int delim) {

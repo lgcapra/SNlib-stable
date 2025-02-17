@@ -30,7 +30,7 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
         this.succ   = succ;
     }
        
-     private static final Map<ComplexKey, Projection> VALUES = new HashMap<>();
+    private static final Map<ComplexKey, Projection> VALUES = new HashMap<>();
      
     /**
      * creates a projection (successor) with an associated constraint
@@ -46,7 +46,6 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
             throw new IndexOutOfBoundsException("cannot create a projection with index < 1");
         if (succ != 0 && !cc.isOrdered()) 
             throw new IllegalDomain("cannot build a projection successor in case of unordered color class!");
-        
         if ( cc.hasFixedSize()  ) 
             succ = Util.valueModN(succ , cc.lb()) ;    
         ComplexKey k = new ComplexKey(cc, index, succ);
@@ -55,7 +54,6 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
             VALUES.put(k, p = new Projection (index, succ, cc)) ;
             //Util.checkBuilderOneStep(p, VALUES); //debug
         }
-   
         return p;
     }
     
@@ -85,8 +83,6 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
     public Interval card() {
         return CARD;
     }
-    
-    
     
     @Override
     public Pair<SetFunction,Integer> baseCompose(SetFunction right) {
@@ -173,10 +169,7 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
     * @return the split-delimiter, taking into account the successor and the color-class bounds
     */
     public static int succDelim (int s, ColorClass c) {
-       if (s != 0) { //optimization
-         s =  c.setDelim( Math.max(0, Math.abs(s)- c.lb() + 1) );
-       }
-       return s;
+       return c.setDelim( Math.max(0, Math.abs(s)- c.lb() + 1) );
    }
    
     /**
@@ -202,8 +195,7 @@ public final class Projection extends ElementaryFunction implements ProjectionBa
      */
      @Override
     public Set<Integer> indexSet() {
-  	   return Collections.singleton(this.index);
+        return Collections.singleton(this.index);
      }
-   
 
 }

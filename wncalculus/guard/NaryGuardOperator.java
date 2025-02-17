@@ -16,7 +16,6 @@ import util.Pair;
 public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard>  {
     
     private final Set<Guard> args;   // the operand's list
-    
     // caching
     private Map<ColorClass, Map<Boolean, SortedSet<Equality>> >   eq_map;
     private Map<ColorClass, Map<Boolean, Set<Membership>> >       memb_map;
@@ -37,9 +36,9 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     }
     
     /**
-     * calculates the map of equalities included in <tt>this</tt> guard, grouped
+     * calculates the map of equalities included in <code>this</code> guard, grouped
      * by color and sign
-     * @return the (possibly empty) map of equalities included in <tt>this</tt> guard, grouped
+     * @return the (possibly empty) map of equalities included in <code>this</code> guard, grouped
      * by color (first) and sign; if the guard is not a simple form then returns an empty map 
      */
     @Override
@@ -52,9 +51,9 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     }
     
    /**
-     * calculates the map of memberships included in <tt>this</tt> guard, grouped
+     * calculates the map of memberships included in <code>this</code> guard, grouped
      * by color and sign
-     * @return the (possibly empty) map of memberships included in <tt>this</tt> guard, grouped
+     * @return the (possibly empty) map of memberships included in <code>this</code> guard, grouped
      * by color (first) and sign; if the guard is not a simple form then returns an empty map
      */
     @Override
@@ -107,7 +106,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * calculates the set of equalities of a given color and sign (congruent w.r.t. the operator's
      * type)
      * @param cc a color class
-     * @param congr congruence flag (<tt>true</tt> if the operator is <tt>And</tt>, <tt>false</tt> otherwise)
+     * @param congr congruence flag (<code>true</code> if the operator is <code>And</code>, <code>false</code> otherwise)
      * @return the corresponding (possibly empty) set of "congruent" equalities (depends of the kind of logical operator)
      */
     public final SortedSet<Equality> congruentEq (ColorClass cc, boolean congr) {
@@ -118,7 +117,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     
   
     /**
-     * calculates the specified set of equalities included in <tt>this</tt> guard
+     * calculates the specified set of equalities included in <code>this</code> guard
      * @param cc a color class
      * @param sign the equal/not-equal flag
      * @return the (possibly empty) corresponding set of (in)equalities (depends of the sign)
@@ -136,7 +135,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @param congr congruence flag
      * @return the corresponding (possibly empty) set of "congruent" memeberships
      * (depends on the kind of logical operator:
-     * in is congruent for <tt>And</tt>, notin for <tt>Or</tt>);
+     * in is congruent for <code>And</code>, notin for <code>Or</code>);
      */
     public final Set<Membership> congruentMemb(ColorClass cc, boolean congr) {
         Map<Boolean, Set<Membership>> cmap;
@@ -246,7 +245,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * clone a collection of guards so that they have the given new domain
      * @param c a collection of guards
      * @param dom the new domain of guards
-     * @return a <tt>Set</tt> of copies of the guards associated with the new domain
+     * @return a <code>Set</code> of copies of the guards associated with the new domain
      */
     public final static Set<? extends Guard> cloneArgs ( Collection<? extends Guard> c , Domain dom)  {
         Set<Guard> new_args = new HashSet<>();
@@ -297,8 +296,8 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
                 Set<Map.Entry<Integer, Set<Membership>>> nc_i_set = Util.mapFeature( nc_memb,  m -> m.firstIndex() ).entrySet();
                 for (Map.Entry<Integer, Set<Membership>> sim_nc : nc_i_set) {
                     Set<Membership> ncs = sim_nc.getValue(), cs; 
-                    int m = ncs.size(), i ;
-                    if ( m == n || (cs = c_i_map.get(i = sim_nc.getKey())) != null && ncs.contains(cs.iterator().next().opposite()) ) //cs is either empty or a singleton ...
+                    int m = ncs.size();
+                    if ( m == n || (cs = c_i_map.get(sim_nc.getKey())) != null && ncs.contains(cs.iterator().next().opposite()) ) //cs is either empty or a singleton ...
                         return  (Guard) getZero();
                     // there are no complementary guards are and, for each projection, less than n "non-congruent" memberships
                     if ( cs != null ||  m > 1 && (m == n -1 || this instanceof /*Or*/And) ) { 
@@ -399,7 +398,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
 
     /**
      *
-     * @return <tt>true</tt> if <tt>this</tt> operator's operands are simple
+     * @return <code>true</code> if <code>this</code> operator's operands are simple
      * (@see {LogicalExprs.simple})
      */
     public final boolean simple() {
@@ -408,7 +407,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     
     /**
      * @return the guard's color-class, if the guard is single-sort, and all predicates
-     * are either (in)equalities or memberships; <tt>null</tt> in all the other cases
+     * are either (in)equalities or memberships; <code>null</code> in all the other cases
      */
     public final ColorClass getSort() {
         Map<ColorClass, Map<Boolean, SortedSet<Equality>>> c_e = equalityMap();

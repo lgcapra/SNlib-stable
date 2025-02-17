@@ -6,37 +6,38 @@ import expr.*;
 /**
  * This class defines descriptors for SN color classes of (possibly) parametric
  * cardinality.
- * 
+ *
  * @author lorenzo capra
  */
-
 public final class ColorClass extends Sort implements Color {
 
     private final boolean ordered;// default unordered, non split
     private final Interval[] constraints;// the constraints associated to the class, default [[2,>]]
-
     // cashing
     private Interval card; // the class cardinality
     private int paramSubcl = -1; // the parametric sub-interval index (if the class is split and if there is one,
-                                 // default -1 means no param subcl)
+    // -1 means no param subcl
 
     /**
      * base constructor: builds a non split color-class
-     * 
-     * @param name     the color class name
+     * @param name the color class name
      * @param interval the associated constraint
-     * @param ordered  the ordering flag
+     * @param ordered the ordering flag
+     * @throws IllegalArgumentException if the interval lower bound is 0
      */
     public ColorClass(String name, Interval interval, boolean ordered) {
         super(name);
-        this.constraints = new Interval[] { interval };
-        this.ordered = ordered;
+        if (interval.lb() > 0) {
+            this.constraints = new Interval[]{interval};
+            this.ordered = ordered;
+        } else {
+            throw new IllegalArgumentException("cannot create a color class: zero lower bound");
+        }
     }
 
     /**
      * creates an unordered, non-split color class
-     * 
-     * @param name     the color class name
+     * @param name the color class name
      * @param interval the associated constraint
      */
     public ColorClass(String name, Interval interval) {
@@ -45,10 +46,9 @@ public final class ColorClass extends Sort implements Color {
 
     /**
      * creates a non split class of name C_i
-     * 
-     * @param ide      the class index (subscript)
+     * @param ide the class index (subscript)
      * @param interval the associated constraint
-     * @param ordered  ordering flag
+     * @param ordered ordering flag
      */
     public ColorClass(int ide, Interval interval, boolean ordered) {
         this("C" + ide, interval, ordered);
@@ -56,8 +56,7 @@ public final class ColorClass extends Sort implements Color {
 
     /**
      * creates an unordered, non split class of name C_i
-     * 
-     * @param ide      the class index (subscript)
+     * @param ide the class index (subscript)
      * @param interval the associated constraint
      */
     public ColorClass(int ide, Interval interval) {
@@ -65,9 +64,8 @@ public final class ColorClass extends Sort implements Color {
     }
 
     /**
-     * builds a non split class with a default parametric constraint [2,&gt;]
-     * 
-     * @param name    the class name
+     * builds a non split class with a default parametric constraint <code>[2,&gt;]</code>
+     * @param name the class name
      * @param ordered ordering flag
      */
     public ColorClass(String name, boolean ordered) {
@@ -76,7 +74,6 @@ public final class ColorClass extends Sort implements Color {
 
     /**
      * builds an unordered, not split class with a default (parametric) constraint
-     * 
      * @param name the class name
      */
     public ColorClass(String name) {
@@ -84,10 +81,8 @@ public final class ColorClass extends Sort implements Color {
     }
 
     /**
-     * builds an ordered, not split class "C_i" with a default (parametric)
-     * constraint
-     * 
-     * @param ide     the class identifier (subscript)
+     * builds an ordered, not split class "C_i" with a default (parametric) constraint
+     * @param ide the class identifier (subscript)
      * @param ordered ordering flag
      */
     public ColorClass(int ide, boolean ordered) {
@@ -95,9 +90,7 @@ public final class ColorClass extends Sort implements Color {
     }
 
     /**
-     * builds an unordered, non split, class "C_i" with a default parametric
-     * constraint
-     * 
+     * builds an unordered, non split, class "C_i" with a default parametric constraint
      * @param ide the class identifier (subscript)
      */
     public ColorClass(int ide) {
@@ -106,36 +99,34 @@ public final class ColorClass extends Sort implements Color {
 
     /**
      * creates a partitioned color class, with at most one parametric subclass
-     * 
-     * @param name      the class name
+     * @param name the class name
      * @param intervals the intervals associated to ubclasses
      * @throws NullPointerException if @param intervals is <code>null</code>
      */
     public ColorClass(String name, Interval[] intervals) {
         super(name);
-        if (intervals.length < 2)
-            throw new IllegalArgumentException("cannot create a split color class: at least two subclasses required");
-
-        for (int j = 0; j < intervals.length; j++)
-            if (intervals[j].lb() < 1)
-                throw new IllegalArgumentException("cannot create a color class: subclass lower bound < 1");
-            else if (!intervals[j].singleton()) { // parametric interval (subclass)
-                if (this.paramSubcl >= 0)
-                    throw new IllegalArgumentException("cannot create a color class: two parametric subclasses");
-
-                this.paramSubcl = j; // we store the parametric interval index
+        if (intervals.length >= 2) {
+            for (int j = 0; j < intervals.length; j++) {
+                if (intervals[j].lb() < 1) {
+                    throw new IllegalArgumentException("cannot create a color class: subclass lower bound zero");
+                } else if (!intervals[j].singleton()) { // parametric interval (subclass)
+                    if (this.paramSubcl >= 0) {
+                        throw new IllegalArgumentException("cannot create a color class: two parametric subclasses");
+                    }
+                    this.paramSubcl = j; // we store the parametric interval index
+                }
             }
-
-        this.constraints = intervals;
-        this.ordered = false;
+            this.constraints = intervals;
+            this.ordered = false;
+        } else {
+            throw new IllegalArgumentException("cannot create a split color class: at least two subclasses required");
+        }
     }
 
-    // overloaded version of the above constructor
-
     /**
+     * overloaded version of the above constructor
      * creates a split class with name C_i
-     * 
-     * @param ide       the class index (subscript)
+     * @param ide the class index (subscript)
      * @param intervals the intervals associated with subclasses
      */
     public ColorClass(int ide, Interval[] intervals) {
@@ -143,46 +134,40 @@ public final class ColorClass extends Sort implements Color {
     }
 
     /**
-     *
-     * @return <code>true</code> if and only if <code>this</code> color-class is
-     *         ordered
+     * @return <code>true</code> if and only if <code>this</code> color-class is ordered
      */
     public boolean isOrdered() {
         return this.ordered;
     }
 
     /**
-     * 
-     * @return the number of static sublcasses of this color class; 1 if the class
-     *         is not split
+     * @return the number of static sublcasses of this color class; 1 if the
+     * class is not split
      */
     public int subclasses() {
         return this.constraints.length;
     }
 
     /**
-     *
      * @return <code>true</code> if and only if <code>this</code> color-class is
-     *         partitioned
+     * partitioned
      */
     public boolean isSplit() {
         return subclasses() > 1;
     }
 
     /**
-     * 
      * @return the set of color's subclass indices
      */
     public Set<Integer> subclIndexSet() {
         Set<Integer> idxset = new HashSet<>();
-        for (int i = 1; i <= subclasses(); i++)
+        for (int i = 1; i <= subclasses(); i++) {
             idxset.add(i);
-
+        }
         return idxset;
     }
 
     /**
-     *
      * @return the constraints array of this color class
      */
     public Interval[] getConstraints() {
@@ -192,14 +177,13 @@ public final class ColorClass extends Sort implements Color {
     @Override
     public boolean unbounded() {
         int x = 0;
-        if (this.paramSubcl > 0)
+        if (this.paramSubcl > 0) {
             x = this.paramSubcl;
-
+        }
         return this.constraints[x].unbounded(); // efficient implementation
     }
 
     /**
-     * 
      * @return <code>true</code> if and only if the class is parametric
      */
     public boolean parametric() {
@@ -209,39 +193,34 @@ public final class ColorClass extends Sort implements Color {
     /**
      * returns a copy of the (global) constraints associated to the color class:
      * in case of a split class, all static subclass constraints are considered
-     * 
-     * @return an interval expressing the (parametric) cardinality of the class
-     *         constraint
+     * @return an interval expressing the (parametric) cardinality of the class constraint
      */
     @Override
     public Interval card() {
         if (this.card == null) {
-            if (this.constraints.length == 1)
+            if (this.constraints.length == 1) {
                 this.card = this.constraints[0];
-            else { // partitioned
+            } else { // partitioned
                 int lb = 0, ub = 0;
                 for (Interval x : this.constraints) {
                     lb += x.lb();
                     ub += x.ub();
                 }
-                if (this.paramSubcl >= 0 && this.constraints[this.paramSubcl].unbounded())
+                if (this.paramSubcl >= 0 && this.constraints[this.paramSubcl].unbounded()) {
                     this.card = new Interval(lb);
-                else
+                } else {
                     this.card = new Interval(lb, ub);
+                }
             }
         }
-
         return this.card;
     }
 
     /**
-     * in case of a split class returns the constraints associated to a color
-     * subclass:
-     * 
+     * in case of a split class returns the constraints associated to a color subclass:
      * @param subcl a subclass index
      * @return an Interval (the subclass constraint)
-     * @throws IndexOutOfBoundsException if the subclass index is not in the correct
-     *                                   range
+     * @throws IndexOutOfBoundsException if the subclass index is not in the correct range
      */
     public Interval getConstraint(int subcl) {
         return this.constraints[subcl - 1];
@@ -249,35 +228,30 @@ public final class ColorClass extends Sort implements Color {
 
     /**
      * sets new constraints(s) for this (possibly split) color class
-     * 
      * @param newconstr the new constraints
      * @return a copy of this colour class with the new constraints; null if the
-     *         new constraints is not consistent with the old one in terms of
-     *         fixedSize
+     * new constraints is not consistent with the old one in terms of fixedSize
      */
     public ColorClass setConstraint(Interval[] newconstr) {
         int l = newconstr.length;
         ColorClass c = null;
-        if (l == this.constraints.length)
+        if (l == this.constraints.length) {
             c = l > 1 ? new ColorClass(name(), newconstr) : new ColorClass(name(), newconstr[0], this.ordered);
-
+        }
         return c;
     }
 
     /**
      * sets a new constraints for this color class
-     * 
      * @param newconstr the new constraints
-     * @return a copy of this color class with the new constraints; return null if
-     *         the
-     *         color class is split
+     * @return a copy of this color class with the new constraints; return null
+     * if the color class is split
      */
     public ColorClass setConstraint(Interval newconstr) {
-        return setConstraint(new Interval[] { newconstr });
+        return setConstraint(new Interval[]{newconstr});
     }
 
     /**
-     * 
      * @return a representation consistent with the parser
      */
     @Override
@@ -288,24 +262,23 @@ public final class ColorClass extends Sort implements Color {
             for (int i = 1; i < this.constraints.length; out += ", "
                     + this.constraints[i].toString(name() + '{' + ++i + '}')) {
             }
-        } else
+        } else {
             out = this.constraints[0].toString(name());
-
+        }
         return out;
     }
 
     /**
      * performs a comparison between color classes, considering their constraints
-     * 
      * @param o the other color class
-     * @return <code>true</code> if and only if <code>this</code> and <code>o</code>
-     *         are equal
+     * @return <code>true</code> if and only if <code>this</code> and
+     * <code>o</code> are equal
      */
     @Override
     public boolean equals(Object o) {
         ColorClass c;
-        return this == o || o instanceof ColorClass && (c = (ColorClass) o).name().equals(name()) &&
-                this.ordered == c.ordered && Arrays.equals(this.constraints, c.constraints);
+        return this == o || o instanceof ColorClass && (c = (ColorClass) o).name().equals(name())
+                && this.ordered == c.ordered && Arrays.equals(this.constraints, c.constraints);
     }
 
     @Override
@@ -314,7 +287,6 @@ public final class ColorClass extends Sort implements Color {
         hash = 11 * hash + (this.ordered ? 1 : 0);
         hash = 11 * hash + name().hashCode();
         hash = 11 * hash + Arrays.deepHashCode(this.constraints);
-
         return hash;
     }
 
@@ -322,11 +294,10 @@ public final class ColorClass extends Sort implements Color {
      * split this colour class given a delimiter for the associated constraint;
      * in case of a partitioned class, the only possible parametric subclass
      * constraint is split accordingly
-     * 
      * @param delim a given split-delimiter
      * @return a boolean map (false := 0, true := 1) to the two color-classes
-     * obtained from splitting the constraints <code>this</code> ;
-     * an empty map no split is performed
+     * obtained from splitting the constraints <code>this</code> ; an empty map
+     * no split is performed
      */
     @Override
     public Map<Boolean, Sort> split2(final int delim) {
@@ -348,7 +319,6 @@ public final class ColorClass extends Sort implements Color {
     /**
      * (possibly) adjusts a pre-calculated split delimiter so that it complies
      * with the color class bounds
-     * 
      * @param d a delimiter offset
      * @return a (possibly) ajusted value for d
      */
@@ -358,20 +328,19 @@ public final class ColorClass extends Sort implements Color {
 
     /**
      * @param nd a (new) split-delimiter
-     * @param d  a split-delimiter
+     * @param d a split-delimiter
      * @param lb a (sort) lower bound
      * @return <code>true</code> iff nd (new delim) is geq lb (sort lb) and
-     *         either d (current delim) is less than lb or nd is less than d
+     * either d (current delim) is less than lb or nd is less than d
      */
     public static boolean lessDelim(int nd, int d, int lb) {
         return nd >= lb && (d < lb || nd < d);
     }
 
     /**
-     * 
      * @param nd a split delimiter
-     * @param d  a split delimiter
-     * @param s  a sort
+     * @param d a split delimiter
+     * @param s a sort
      * @return either nd, or d. depending n whether @see lessDelim(nd,d,lb)
      */
     public static int minSplitDelimiter(int nd, int d, Sort s) {
@@ -389,27 +358,25 @@ public final class ColorClass extends Sort implements Color {
 
     /**
      * @param c a collection of parametric terms assumed of the same arity
-     * @return the split delimiters for the collection of terms; builds on @see
-     *         joinDelims
+     * @return the split delimiters for the collection of terms; builds on @see joinDelims
      * @throws NoSuchElementException if the collection is empty
      */
     public static Map<Sort, Integer> mergeSplitDelimiters(Collection<? extends ParametricExpr> c) {
         Iterator<? extends ParametricExpr> ite = c.iterator();
         Map<Sort, Integer> delims = ite.next().splitDelimiters();
-        while (ite.hasNext())
+        while (ite.hasNext()) {
             joinDelims(delims, ite.next().splitDelimiters());
+        }
         // System.out.println("merge delimiters outcome: " +delims); // debug
         return delims;
     }
 
     /**
-     * performs a kind of "join" between sort-delimiters, modifying the first one:
-     * if a given sort of the second map is not present in the first one then the
-     * corresponding
-     * entry is added; otherwise, the corresponding delimiter is set as the minimal
-     * (considering the
-     * sort constraint lower bound); it relies on <code>setDelim</code>
-     * 
+     * performs a kind of "join" between sort-delimiters, modifying the first
+     * one: if a given sort of the second map is not present in the first one
+     * then the corresponding entry is added; otherwise, the corresponding
+     * delimiter is set as the minimal (considering the sort constraint lower
+     * bound); it relies on <code>setDelim</code>
      * @param delims1 first support delimiter
      * @param delims2 second support delimiter
      */
@@ -420,21 +387,20 @@ public final class ColorClass extends Sort implements Color {
     }
 
     /**
-     * COOMENT TO UPDATE!
-     * set a split-delimiter value in the specified map of sorts if the delimiter
-     * value is geq the sort lb and:
-     * the sort is not yet mapped, or the new value is less than the current one or
-     * the latter is less than the sort lb
-     * 
+     * COOMENT TO UPDATE! set a split-delimiter value in the specified map of
+     * sorts if the delimiter value is geq the sort lb and: the sort is not yet
+     * mapped, or the new value is less than the current one or the latter is
+     * less than the sort lb
      * @param delims a pre-computed map of slit-delimiters
-     * @param s      a sort
+     * @param s a sort
      * @param newdel the ned delimiter for the sort
      */
     public static void setDelim(Map<Sort, Integer> delims, Sort s, int newdel) {
         if (newdel > 0) {
             Integer curdel = delims.get(s);
-            if (curdel == null || newdel < curdel)
+            if (curdel == null || newdel < curdel) {
                 delims.put(s, newdel);
+            }
         }
     }
 
@@ -446,11 +412,9 @@ public final class ColorClass extends Sort implements Color {
             if (m != null) {
                 Interval[] new_constr = Arrays.copyOf(this.constraints, this.constraints.length);
                 new_constr[i] = m;
-
                 return setConstraint(new_constr);
             }
         }
-
         return null;
     }
 
@@ -460,10 +424,9 @@ public final class ColorClass extends Sort implements Color {
     }
 
     /**
-     * 
      * @param offset an integral value
-     * @return <code>true</code> if and only if this constraint fits the specified
-     *         offset
+     * @return <code>true</code> if and only if this constraint fits the
+     * specified offset
      */
     public boolean fit(final int offset) {
         return card().fit(offset);
