@@ -140,19 +140,19 @@ package expr;
     /**
      *
      * @param delim the split delimiter, i.e., an offset from the interval lower bound
-     * @return a size-two array of intervals resulting from split; size-zero array,
-     * if no split is done (e.g., if lb &gt; delim)
+     * @return a size-two array of intervals resulting from split;
+     * a size-zero array, if no split is done (e.g., if lb &gt; delim)
      * @throws IllegalArgumentException is the argument is negative
      */
     public Interval[] split (final int delim) {
-        if (delim < 0)
-            throw new IllegalArgumentException("negative offset");
-
-        final int nb = delim+this.lb;
-        if (delim == 0 || this.lb == this.ub || this.ub > 0 && this.ub < nb  ) 
-            return new Interval[0];
-        // lb < nb <= ub
-        return new Interval[]{new Interval(this.lb, nb-1), unbounded() ? new Interval(nb) : new Interval(nb, this.ub)};
+        if (delim >= 0) {
+            final int nb = delim+this.lb;
+            if (delim == 0 || this.lb == this.ub || this.ub > 0 && this.ub < nb  ) 
+                return new Interval[0];
+            // lb < nb <= ub
+            return new Interval[]{new Interval(this.lb, nb-1), unbounded() ? new Interval(nb) : new Interval(nb, this.ub)};
+        }
+        throw new IllegalArgumentException("negative offset");
     }
         
     @Override

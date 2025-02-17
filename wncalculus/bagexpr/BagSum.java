@@ -36,7 +36,7 @@ public final class BagSum<E extends ParametricExpr> implements N_aryOp<BagExpr<E
      * @return the bag-expression resulting from a sum of bag-expressions
      */
     public static <E extends ParametricExpr> BagExpr<E> factory (Collection<? extends BagExpr<E>> c,  boolean check) {
-        return c.size() < 2 ?  c.iterator().next() : new BagSum(c, check);
+        return c.size() < 2 ?  c.iterator().next() : new BagSum<E>(c, check);
     }
             
     /**
@@ -162,7 +162,7 @@ public final class BagSum<E extends ParametricExpr> implements N_aryOp<BagExpr<E
     
     @Override
     public boolean equals(Object o) {
-        return this == o || o instanceof N_aryOp && N_aryOp.super.isEqual((N_aryOp)o);
+        return this == o || o instanceof N_aryOp && N_aryOp.super.isEqual((N_aryOp<?>)o);
     }
 
     @Override

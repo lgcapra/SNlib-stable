@@ -53,7 +53,7 @@ public interface ParametricExpr extends Expression {
                 return res;
             }
         }
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
     
       /**

@@ -35,15 +35,15 @@ public final class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E> {
                 res = arg.build();
                 break;
             default:
-                res = new ScalarProd(arg, coeff);
+                res = new ScalarProd<E>(arg, coeff);
         }
         return res;
     }
 
     
     @Override
-    public ScalarProd buildOp(BagExpr<E> arg) {
-        return new ScalarProd(arg, this.k);
+    public ScalarProd<E> buildOp(BagExpr<E> arg) {
+        return new ScalarProd<E>(arg, this.k);
     }
     
     /**
@@ -71,7 +71,7 @@ public final class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E> {
         BagExpr<E> arg = getArg();
         if (arg instanceof ScalarProd) {
             ScalarProd<E> sparg = (ScalarProd<E>) arg;
-            return new ScalarProd( sparg.getArg(), sparg.k * this.k);
+            return new ScalarProd<E>( sparg.getArg(), sparg.k * this.k);
         }
         
         if (arg instanceof Bag) {

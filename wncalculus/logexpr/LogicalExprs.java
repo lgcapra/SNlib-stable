@@ -18,7 +18,7 @@ public class LogicalExprs {
      * @return <code>true</code> if and only if the passed list contains complementary terms
      */
     public static boolean checkComplementary(Collection<? extends LogicalExpr> argset) {
-        return argset.stream().anyMatch(x -> ( x instanceof NotOp && argset.contains(((NotOp)x). getArg()) ));
+        return argset.stream().anyMatch(x -> ( x instanceof NotOp && argset.contains(((NotOp<?>)x). getArg()) ));
     }
    
           
