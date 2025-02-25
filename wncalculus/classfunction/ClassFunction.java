@@ -44,7 +44,6 @@ public interface ClassFunction extends SingleSortExpr {
                     }
                 }
             }
-
             delim = ColorClass.lessIf2ndNotZero(max_succ - min_succ + 1 - s.lb(), delim);// the offset between successors of projection-terms
         }
         return delim;
@@ -110,15 +109,14 @@ public interface ClassFunction extends SingleSortExpr {
      * creates a copy of given a collection of <code>ClassFunction</code>s with
      * a given new color; the type of returned collection (either a list or a
      * set) is the same as the passed one
-     * @param <E> the type of collection's elements (either set- or
-     * bag-functions)
+     * @param <E> the type of collection's elements (either set- or bag-functions)
      * @param arglist a collection of class-functions
      * @param newsort the new color of functions
      * @return a cloned collection of terms with a new color-class
      */
     static <E extends ClassFunction> Collection<E> copy(final Collection<? extends E> arglist, final ColorClass newsort) {
         final Collection<E> res = arglist instanceof Set ? new HashSet<>() : new ArrayList<>();
-        arglist.forEach(t -> {
+        arglist.forEach((var t) -> {
             res.add(t.copy(newsort));
         });
         return res;
@@ -147,7 +145,7 @@ public interface ClassFunction extends SingleSortExpr {
     public static <E extends ClassFunction> boolean replace(final List<E> lf, final Equality e) {
         var replaced = false;
         for (ListIterator<E> ite = lf.listIterator(); ite.hasNext();) {
-            E f = ite.next(), pf;
+            final E f = ite.next(), pf;
             if (f.getSort().equals(e.getSort()) && (pf = f.replace(e)) != f) {
                 replaced = true;
                 ite.set(pf);

@@ -24,15 +24,15 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
      * base constructor
      * @param functions the list of operands
      * @param check domain-check flag
-     * @throws IllegalDomain if the functions' color-classes are different
+     * @throws IllegalDomain if the functions' color-classes are different or less than two operands
      */
     protected N_aryClassOperator(final Set<? extends SetFunction> functions, final boolean check) {
-        if (check) {
-            Expressions.checkDomain(functions);
-        }
         this.args = Collections.unmodifiableSet(functions);
         if (this.args.size() < 2) {
-            System.err.println("built n-ary class op with less than two operands");
+            throw new IllegalArgumentException("built n-ary class op with less than two operands");
+        }
+        if (check) {
+            Expressions.checkDomain(functions);
         }
     }
 
@@ -109,8 +109,7 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
      * .. &rarr; !X_i 4. S-X_i * S-!X_i * S -!^nX_i.. &rarr; Empty (n: color
      * class cardinality) .. 5. if the union contains all static subclass
      * returns All 6. S-X_i U S-!X_i .. &rarr; All 7. if the union contains all
-     * possible projection succ. returns All (card dep.).
-     *
+     * possible projection succ. returns All (card dep.)
      * @return the simplified term; <code>this</code> if no reduction has been
      * cariied out;
      */
@@ -138,7 +137,6 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
      * one_missing operands (assumes that this check was done before) builds on
      * some assumptions: 1) operands have been previously simplified; 2) no
      * duplicates are present!
-     *
      * @param andop a flag denoting the kind of the operator
      * @param cc the operator's color class
      */
@@ -198,8 +196,8 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
     @Override
     public final SetFunction replace(Equality e) {
         final HashMap<SetFunction, SetFunction> replacements = new HashMap<>();
-        getArgs().forEach(f -> {
-            SetFunction pf;
+        getArgs().forEach((var f) -> {
+            final SetFunction pf;
             if (f.getSort().equals(e.getSort()) && (pf = f.replace(e)) != f) {
                 replacements.put(f, pf);
             }

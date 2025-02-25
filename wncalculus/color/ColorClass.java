@@ -389,10 +389,8 @@ public final class ColorClass extends Sort implements Color {
     }
 
     /**
-     * COOMENT TO UPDATE! set a split-delimiter value in the specified map of
-     * sorts if the delimiter value is geq the sort lb and: the sort is not yet
-     * mapped, or the new value is less than the current one or the latter is
-     * less than the sort lb
+     * set a split-delimiter value in the specified map of sorts if the delimiter value
+     * the sort is not yet mapped, or the new value is less than the current one
      * @param delims a pre-computed map of slit-delimiters
      * @param s a sort
      * @param newdel the ned delimiter for the sort

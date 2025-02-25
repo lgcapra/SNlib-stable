@@ -16,7 +16,7 @@ public interface SingleSortExpr extends ParametricExpr {
     Sort getSort() ;
      
      /**
-     * @return the term sort's split-delimiter
+     * @return the term's sort's split-delimiter
      */
     int splitDelim();
     

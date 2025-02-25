@@ -27,10 +27,11 @@ public final class SubclSet implements Color {
         if (check) 
             Expressions.checkDomain(set);
         this.cc = set.iterator().next().getSort();
-        if (set.size() == this.cc.subclasses())
+        if (set.size() != this.cc.subclasses()) {
+             this.subclasses = Collections.unmodifiableSet(set);
+        } else {
             throw new IllegalArgumentException("the subclass set corresponds to the whole class!");
-        
-        this.subclasses = Collections.unmodifiableSet(set);
+        }
     }
     
     /**
@@ -53,7 +54,7 @@ public final class SubclSet implements Color {
     @Override
     public Interval card() {
         if (this.card == null) {
-            Iterator<? extends Subcl> it = this.subclasses.iterator();
+            final Iterator<? extends Subcl> it = this.subclasses.iterator();
             this.card = it.next().card();
             while (it.hasNext())
                 this.card = this.card.sum(it.next().card());
