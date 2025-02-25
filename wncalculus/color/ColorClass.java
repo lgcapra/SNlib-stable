@@ -23,15 +23,17 @@ public final class ColorClass extends Sort implements Color {
      * @param name the color class name
      * @param interval the associated constraint
      * @param ordered the ordering flag
-     * @throws IllegalArgumentException if the interval lower bound is 0
+     * @throws IllegalArgumentException if the interval lb is zero
+     * or one and ub is is not one
      */
     public ColorClass(String name, Interval interval, boolean ordered) {
         super(name);
-        if (interval.lb() > 0) {
+        final var lb = interval.lb();
+        if (lb > 1 || lb == 1 && interval.ub() == 1) {
             this.constraints = new Interval[]{interval};
-            this.ordered = ordered;
+            this.ordered = lb != 1 && ordered;
         } else {
-            throw new IllegalArgumentException("cannot create a color class: zero lower bound");
+            throw new IllegalArgumentException("cannot create a color class: zero lb or one lb and ub not one");
         }
     }
 
@@ -160,7 +162,7 @@ public final class ColorClass extends Sort implements Color {
      * @return the set of color's subclass indices
      */
     public Set<Integer> subclIndexSet() {
-        Set<Integer> idxset = new HashSet<>();
+        final Set<Integer> idxset = new HashSet<>();
         for (int i = 1; i <= subclasses(); i++) {
             idxset.add(i);
         }
@@ -397,7 +399,7 @@ public final class ColorClass extends Sort implements Color {
      */
     public static void setDelim(Map<Sort, Integer> delims, Sort s, int newdel) {
         if (newdel > 0) {
-            Integer curdel = delims.get(s);
+            final Integer curdel = delims.get(s);
             if (curdel == null || newdel < curdel) {
                 delims.put(s, newdel);
             }
@@ -406,11 +408,11 @@ public final class ColorClass extends Sort implements Color {
 
     @Override
     public ColorClass merge(Sort s) {
-        ColorClass c = (ColorClass) s;
+        final ColorClass c = (ColorClass) s;
         for (int i = 0; i < this.constraints.length; i++) {
-            Interval m = this.constraints[i].merge(c.constraints[i]);
+            final var m = this.constraints[i].merge(c.constraints[i]);
             if (m != null) {
-                Interval[] new_constr = Arrays.copyOf(this.constraints, this.constraints.length);
+                final Interval[] new_constr = Arrays.copyOf(this.constraints, this.constraints.length);
                 new_constr[i] = m;
                 return setConstraint(new_constr);
             }
@@ -430,6 +432,10 @@ public final class ColorClass extends Sort implements Color {
      */
     public boolean fit(final int offset) {
         return card().fit(offset);
+    }
+    
+    public boolean neutral() {
+        return this.constraints.length == 1 && this.constraints[0].lb() == 1 && this.constraints[0].ub() == 1;
     }
 
 }

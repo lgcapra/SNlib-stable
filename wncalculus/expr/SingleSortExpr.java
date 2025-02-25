@@ -23,9 +23,8 @@ public interface SingleSortExpr extends ParametricExpr {
 
     @Override
     default Map<Sort,Integer> splitDelimiters () {
-        Map<Sort,Integer> map = new HashMap<>();
-        ColorClass.setDelim(map, getSort(), splitDelim());
-        
+        final Map<Sort,Integer> map = new HashMap<>();
+        ColorClass.setDelim(map, getSort(), splitDelim());        
         return map;
     }
     

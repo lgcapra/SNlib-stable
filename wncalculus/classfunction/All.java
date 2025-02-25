@@ -12,7 +12,7 @@ public final class All extends ConstantFunction  {
   
     private static final Map<ColorClass,All> VALUES = new HashMap<>();
     
-    private final static String Symbol ="S";
+    private final static String Symbol = "S";
      
     /**
      * creates a class diffusion function with an associated default color constraint
@@ -74,4 +74,5 @@ public final class All extends ConstantFunction  {
     public boolean elementary() {
         return false;
     }
+
 }

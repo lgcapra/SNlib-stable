@@ -11,13 +11,11 @@ import expr.Sort;
 public interface Color {
     
     /**
-     * 
      * @return the cardinality of this colour (sub)class 
      */
     Interval card ();
     
     /**
-     * 
      * @return corresponding sort 
      */
     Sort getSort();

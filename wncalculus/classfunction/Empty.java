@@ -74,5 +74,5 @@ public final class Empty extends ConstantFunction  {
     public boolean elementary() {
         return false;
     }
-    
+
 }

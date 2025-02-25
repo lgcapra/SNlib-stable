@@ -1,6 +1,5 @@
 package classfunction;
 
-
 import java.util.Map;
 import color.ColorClass;
 import expr.Sort;
@@ -11,7 +10,7 @@ import wnbag.LinearComb;
  * each elementary function is unmodifiable and simplified just after its creation
  * it is provided with a suitable builder method ensuring that 
  * elementary function instances are unique - there is no need to redefine
- * <tt>Object.equals</tt> and <tt>Object.hashCode</tt>
+ * <code>Object.equals</code> and <code>Object.hashCode</code>
  * @author lorenzo capra
  */
 public abstract class ElementaryFunction extends SetFunction  {  
@@ -22,7 +21,7 @@ public abstract class ElementaryFunction extends SetFunction  {
      * build an elementary class-function
      * @param cc the function's color-class
      */
-    protected ElementaryFunction (ColorClass cc) {
+    protected ElementaryFunction (final ColorClass cc) {
         super(true); //already simplified
         this.cc = cc;
     }
@@ -32,36 +31,24 @@ public abstract class ElementaryFunction extends SetFunction  {
         return this.cc;
     }
     
-    
-    /*
+    /**
+     * clones <code>this</code> elementary function by assigning a new color class
+     * @param split_map a map between old and new color classes
+     * @return a clone of <code>this</code> (<code>this</code> if the mapping is <code>null</code>)
+     */
     @Override
-    public final ElementaryFunction clone(Domain newdom, Domain newcd) {
-        if (newdom.mult(cc) == 0 && newcd.mult(cc) == 0) { // the color-class is not present in the new (co-)domain             
-            Sort ncc = newdom.getSort(cc.name());
-            if (ncc != null || (ncc = newcd.getSort(cc.name())) != null)
-                return copy((ColorClass) ncc);
-            }
-        
-        return this;
-    }
-   */
-    
-    @Override
-    public final ElementaryFunction clone (final Map<Sort, Sort> split_map) {
-        Sort n_cc = split_map.get(cc);
-        if (n_cc == null) {
-            return this;
-        }
-        return copy((ColorClass)n_cc);
+    public ElementaryFunction clone (final Map<Sort, Sort> split_map) {
+        final  ColorClass n_cc = (ColorClass) split_map.get(cc);
+        return n_cc == null? this : copy(n_cc);
     } 
     
     @Override
-    public void setSimplified(boolean simp) { }
+    public final void setSimplified(final boolean simp) { }
     
    
    @Override
-   public final  LinearComb asBag () {
-	   return new LinearComb(this, 1);
+   public final LinearComb asBag () {
+       return new LinearComb(this, 1);
    }
-    
+
 }

@@ -12,7 +12,6 @@ import util.Util;
 public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     
     private final static String OPSYMB = " + "/*" U "*/;//the union op. symbol
-    
     private boolean disjoined; // default is false
     
     private Union (Set<? extends  SetFunction> guards, boolean check, boolean disjoined) {
@@ -21,7 +20,7 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     }
    
     /**
-     * build a <tt>Union</tt> of class-functions mapping to sets from a collection;
+     * build a <code>Union</code> of class-functions mapping to sets from a collection;
      * if the collection is a singleton, its only element is returned
      * @param arglist a collection of functions
      * @param check the functions' color-class check flag
@@ -34,7 +33,7 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     }
     
   /**
-     * build a <tt>Union</tt> of class-functions mapping to sets from a collection,
+     * build a <code>Union</code> of class-functions mapping to sets from a collection,
      * checking the operands' color-classes
      * @param arglist a collection of functions
      * @param disjoined disjointness flag (if set, the operands are assumed pair-wise disjoint)
@@ -45,7 +44,7 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     }
     
     /**
-     * build a <tt>Union</tt> of class-functions mapping to sets from a list (varargs);
+     * build a <code>Union</code> of class-functions mapping to sets from a list (varargs);
      * if the list is a singleton, its only element is returned
      * @param args a list (varargs) of functions
      * @param check the functions' color-class check flag
@@ -57,7 +56,7 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     }
     
    /**
-     * build a <tt>Union</tt> of class-functions mapping to sets from a list (varargs),
+     * build a <code>Union</code> of class-functions mapping to sets from a list (varargs),
      * checking the operands' color-classes
      * @param args a list (varargs) of functions
      * @param disjoined disjointness flag (if set, the operands are assumed pair-wise disjoint)
@@ -94,8 +93,7 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
                  }
                  sum = sum.sum(card);
             }
-        }
-            
+        }  
         return sum;
     }
 
@@ -110,11 +108,10 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     @Override
     public SetFunction specSimplify() {
        //System.out.println(this+ " -> "); //debug
-        SetFunction red = super.specSimplify();
-        if ( red instanceof Union ) {  
-            Union un = (Union) red;
-            Set<? extends SetFunction> args = un.getArgs();
-            int nsubcl = getSort().subclasses();
+        final SetFunction red = super.specSimplify();
+        if ( red instanceof Union un ) {
+            final Set<? extends SetFunction> args = un.getArgs();
+            final int nsubcl = getSort().subclasses();
             if (nsubcl > 1 && countSubclasses(args) == nsubcl)
                return All.getInstance(getSort()); //just an optimization
             // non preserva disgiunzione
@@ -148,7 +145,7 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     /*
     computes the set of indices of subclasses in a given collection (assumed of the same colour) 
     */
-    private static int countSubclasses(Collection<? extends ClassFunction> c) {
+    private static int countSubclasses(final Collection<? extends ClassFunction> c) {
         int res = 0;
         res = c.stream().filter(f -> (f instanceof Subcl)).map((_item) -> 1).reduce(res, Integer::sum);
         return res;
@@ -173,5 +170,5 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     public final SetFunction setDefaultIndex( ) {
         return Union.factory(ClassFunction.setDefaultIndex( getArgs() ), this.disjoined); 
     }
-    
+
 }

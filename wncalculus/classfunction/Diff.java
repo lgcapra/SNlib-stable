@@ -82,5 +82,11 @@ public final class Diff extends SetFunction  {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    protected final void checkNeutral() {
+        if (getSort().neutral()) {
+            throw new IllegalArgumentException("Only All an Empty may have a neutral colour");
+        }
+    }
+
 
 }

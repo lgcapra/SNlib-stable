@@ -37,7 +37,7 @@ public final class Domain {
     }
     
     /**
-     * build a single-getSort domain
+     * build a single-sort domain
      * @param s the domain's getSort
      * @param k the getSort mult
      */

@@ -12,7 +12,7 @@ import expr.*;
 public final class SubclSet implements Color {
     private final Set<? extends Subcl> subclasses;
     private final ColorClass cc; // the corresponding color class
-    
+    //cache
     private Interval card;
     
     /**
@@ -38,7 +38,7 @@ public final class SubclSet implements Color {
      * without doing any check on their colors
      * @param set a set of static subclasses
      */
-    public SubclSet (Set<? extends Subcl> set) {
+    public SubclSet (final Set<? extends Subcl> set) {
         this(set, false);
     }
     
@@ -46,7 +46,7 @@ public final class SubclSet implements Color {
      * build a color type corresponding to a single static subclass
      * @param sc a static subclass
      */
-    public SubclSet (Subcl sc) {
+    public SubclSet (final Subcl sc) {
         this(Collections.singleton(sc));
     }
     
@@ -69,7 +69,7 @@ public final class SubclSet implements Color {
 
     @Override
     public int hashCode() {
-        int hash = 7;
+        var hash = 7;
         hash = 19 * hash + Objects.hashCode(this.subclasses);
         return hash;
     }

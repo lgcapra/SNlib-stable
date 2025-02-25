@@ -5,7 +5,7 @@ import expr.Interval;
 import util.Pair;
 
 /**
- *
+ * supertype of elementary constant functions
  * @author Lorenzo Capra
  */
 public abstract class ConstantFunction extends ElementaryFunction   {
@@ -14,7 +14,7 @@ public abstract class ConstantFunction extends ElementaryFunction   {
      * build a constant class-function
      * @param cc the function's color-class
      */
-    public ConstantFunction(ColorClass cc)  {
+    public ConstantFunction(final ColorClass cc)  {
         super(cc);
     }
     
@@ -24,12 +24,10 @@ public abstract class ConstantFunction extends ElementaryFunction   {
     }
     
     @Override
-    public Pair<SetFunction,Integer> baseCompose(SetFunction right) {
+    public Pair<SetFunction,Integer> baseCompose(final SetFunction right) {
         Interval card = right.card();
-        if (card != null && right.card().lb() > 0)
-            return new Pair<>(this,null);
-        
-        return super.baseCompose(right);     
+        return card != null && right.card().lb() > 0 ? new Pair<>(this,null) :
+                      super.baseCompose(right);     
     }
    
    @Override
@@ -42,5 +40,4 @@ public abstract class ConstantFunction extends ElementaryFunction   {
         return 0;
     }
     
-   
 }

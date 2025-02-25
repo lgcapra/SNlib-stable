@@ -6,10 +6,8 @@ import color.ColorClass;
 import logexpr.LogComposition;
 
 /**
- *
- * @author Lorenzo Capra
- *         this class defines basic compositions between ClassFunctions
- *         the left function must be assumed unary
+ * @author Lorenzo Capra this class defines basic compositions between
+ * ClassFunctions the left function is assumed unary
  */
 public final class ClassComposition extends SetFunction implements LogComposition<SetFunction> {
 
@@ -18,24 +16,24 @@ public final class ClassComposition extends SetFunction implements LogCompositio
     private Integer delim;
 
     /**
-     * creates a new basic-composition between class-functions after having possibly
-     * checked that the left one is unary
-     * 
-     * @param left  the left operand
+     * creates a new basic-composition between class-functions after having
+     * possibly checked that the left one is unary
+     *
+     * @param left the left operand
      * @param right the right operand
-     * @param check the operands "check" flag (same color-class and not multi-index
-     *              left)
+     * @param check the operands "check" flag (same color-class and not
+     * multi-index left)
      * @throws IllegalDomain IllegalArgumentException
      */
-    public ClassComposition(SetFunction left, SetFunction right, boolean check) {
+    public ClassComposition(final SetFunction left, final SetFunction right, final boolean check) {
         if (check) {
-            if (!left.getSort().equals(right.getSort()))
+            if (!left.getSort().equals(right.getSort())) {
                 throw new IllegalDomain(left + " (" + left.getSort() + ") " + right + " (" + right.getSort() + ")");
-
-            if (left.indexSet().size() > 1)
+            }
+            if (left.indexSet().size() > 1) {
                 throw new IllegalArgumentException("the left function must hold at most one index!");
+            }
         }
-
         this.left = left;
         this.right = right;
     }
@@ -43,16 +41,16 @@ public final class ClassComposition extends SetFunction implements LogCompositio
     /**
      * creates a new basic-composition between class-functions assuming that the
      * left one is unary
-     * 
-     * @param left  left-composed function
+     *
+     * @param left left-composed function
      * @param right right-composed function
      */
-    public ClassComposition(SetFunction left, SetFunction right) {
+    public ClassComposition(final SetFunction left, final SetFunction right) {
         this(left, right, false);
     }
 
     @Override
-    public ClassComposition buildOp(SetFunction left, SetFunction right) {
+    public ClassComposition buildOp(final SetFunction left, final SetFunction right) {
         return new ClassComposition(left, right);
     }
 
@@ -63,7 +61,6 @@ public final class ClassComposition extends SetFunction implements LogCompositio
 
     // the following two redefinitions are only needed because the methods are
     // doubly inherithed from two interfaces
-
     @Override
     public boolean equals(Object o) {
         return LogComposition.super.isEqual(o);
@@ -84,15 +81,17 @@ public final class ClassComposition extends SetFunction implements LogCompositio
 
     @Override
     public SetFunction specSimplify() {
-        if (this.right.zeroCard())
+        if (this.right.zeroCard()) {
             return Empty.getInstance(getSort()); // optimization(may be removed)
-        else {
-            var compres = this.left.baseCompose(this.right);
+        } else {
+            final var compres = this.left.baseCompose(this.right);
             if (compres != null) {
-                if (compres.getKey() != null)
+                if (compres.getKey() != null) {
                     return compres.getKey();
-                if (compres.getValue() != null)
+                }
+                if (compres.getValue() != null) {
                     this.delim = compres.getValue();
+                }
             }
             return this;
         }
@@ -109,7 +108,7 @@ public final class ClassComposition extends SetFunction implements LogCompositio
     }
 
     @Override
-    public boolean isLeftAssociative(Class<? extends SingleArg> optk) {
+    public boolean isLeftAssociative(final Class<? extends SingleArg> optk) {
         return optk.equals(Successor.class);
     }
 
@@ -119,20 +118,22 @@ public final class ClassComposition extends SetFunction implements LogCompositio
     }
 
     /**
-     * @return the split delimiter of <code>this</code> function
-     *         optimized version: it avoids unnecessary split when the composition
-     *         result may be inferred
+     * @return the split delimiter of <code>this</code> function optimized
+     * version: it avoids unnecessary split when the composition result may be
+     * inferred
      */
     @Override
     public final int splitDelim() {
         if (this.delim != null) {
             return this.delim;
+        } else {
+            var splitdel = this.right.splitDelim();
+            if (!this.left.isConstant()) {
+                splitdel = ColorClass.lessIf2ndNotZero(this.left.splitDelim(), splitdel); // no optimization..
+            }        
+            //System.out.println("splitdel: ("+this+") "+splitdel); //debug
+            return this.delim = splitdel;
         }
-        var splitdel = this.right.splitDelim();
-        if (!this.left.isConstant())
-            splitdel = ColorClass.lessIf2ndNotZero(this.left.splitDelim(), splitdel); // no optimization..
-        //System.out.println("splitdel: ("+this+") "+splitdel); //debug
-        return this.delim = splitdel;
 
     }
 
@@ -147,7 +148,7 @@ public final class ClassComposition extends SetFunction implements LogCompositio
     }
 
     @Override
-    public SetFunction copy(ColorClass newcc) {
+    public SetFunction copy(final ColorClass newcc) {
         return new ClassComposition(this.left.copy(newcc), this.right.copy(newcc));
     }
 
@@ -160,6 +161,12 @@ public final class ClassComposition extends SetFunction implements LogCompositio
     @Override
     public Map<Sort, Integer> splitDelimiters() {
         return super.splitDelimiters();
+    }
+
+    protected final void checkNeutral() {
+        if (getSort().neutral()) {
+            throw new IllegalArgumentException("Only All an Empty may have a neutral colour");
+        }
     }
 
 }

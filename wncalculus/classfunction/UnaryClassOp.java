@@ -59,5 +59,11 @@ public abstract class UnaryClassOp extends SetFunction implements UnaryOp<SetFun
     public final SetFunction copy(ColorClass newcc) {
         return buildOp(this.arg.copy(newcc));
     }
+
+    protected final void checkNeutral() {
+        if (getSort().neutral()) {
+            throw new IllegalArgumentException("Only All an Empty may have a neutral colour");
+        }
+    }
     
 }
