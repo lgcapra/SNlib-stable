@@ -56,16 +56,16 @@ public abstract class ProjectionBased extends ElementaryFunction  {
         
         return new Pair<>(min_succ, max_succ); 
     }
-    
-    @Override
-    public final ProjectionBased cast () {
-        return this;
-    }
 
     private void checkNeutral() {
         if (getSort().neutral()) {
             throw new IllegalArgumentException("Only constants may have a neutral colour");
         }
+    }
+
+    @Override
+    public final int succDelim() {
+        return getSucc();
     }
     
 }

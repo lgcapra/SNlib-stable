@@ -144,4 +144,9 @@ public final class ProjectionComp extends ProjectionBased {
         return this.pr.indexSet();
     }
 
+    @Override
+    public ProjectionComp cast () {
+        return this;
+    }
+
 }

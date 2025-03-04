@@ -200,4 +200,17 @@ public interface ClassFunction extends SingleSortExpr {
         return Collections.emptySet();
     }
 
+    /**
+     * 
+     * @return the color class split delimiter due to the successor
+     * @throws UnsupportedOperationException if the method is not overwritten
+     */
+    /*default*/ int succDelim() ;
+    /*  {
+        if (getSort().isOrdered()) {
+            throw new UnsupportedOperationException("succDelim should be redefined");
+        }
+        return 0;
+    }*/
+
 }

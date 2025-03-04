@@ -15,16 +15,18 @@ import util.Util;
  */
 public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<SetFunction> {
 
-    private final Set<SetFunction> args;//the (ordered) operand's list
+    private final Set<SetFunction> args;// the (ordered) operand's list
     // caching
-    private Map<Boolean, Set<ProjectionBased>> proj_map; //false -> non congruent; true -> congruent 
+    private Map<Boolean, Set<ProjectionBased>> proj_map; // false -> non congruent; true -> congruent
     private Set<Subcl> subcls;
 
     /**
      * base constructor
+     * 
      * @param functions the list of operands
-     * @param check domain-check flag
-     * @throws IllegalDomain if the functions' color-classes are different or less than two operands
+     * @param check     domain-check flag
+     * @throws IllegalDomain if the functions' color-classes are different or less
+     *                       than two operands
      */
     protected N_aryClassOperator(final Set<? extends SetFunction> functions, final boolean check) {
         this.args = Collections.unmodifiableSet(functions);
@@ -52,7 +54,7 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
      *
      * @param congr congruency flag
      * @return either the set of Projection's or the set of ProjectionComp's,
-     * depending on the flaf and the type of <code>this</code> operator
+     *         depending on the flaf and the type of <code>this</code> operator
      */
     public final Set<ProjectionBased> congruent(final boolean congr) {
         if (this.proj_map == null) {
@@ -72,13 +74,15 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
      */
     public final Set<Subcl> subclasses() {
         if (this.subcls == null) {
-            this.subcls = getSort().isSplit() ? Collections.unmodifiableSet(Util.getType(this.args, Subcl.class)) : Collections.EMPTY_SET;
+            this.subcls = getSort().isSplit() ? Collections.unmodifiableSet(Util.getType(this.args, Subcl.class))
+                    : Collections.EMPTY_SET;
         }
         return this.subcls;
     }
 
     Map<Integer, SortedSet<ProjectionBased>> similarCongrMap(boolean congr) {
-        return Util.mapFeature(congruent(congr), ProjectionBased::getIndex, (f1, f2) -> ((Integer) f1.getSucc()).compareTo(f2.getSucc()));
+        return Util.mapFeature(congruent(congr), ProjectionBased::getIndex,
+                (f1, f2) -> ((Integer) f1.getSucc()).compareTo(f2.getSucc()));
     }
 
     @Override
@@ -110,23 +114,26 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
      * class cardinality) .. 5. if the union contains all static subclass
      * returns All 6. S-X_i U S-!X_i .. &rarr; All 7. if the union contains all
      * possible projection succ. returns All (card dep.)
+     * 
      * @return the simplified term; <code>this</code> if no reduction has been
-     * cariied out;
+     *         cariied out;
      */
     @Override
     public SetFunction specSimplify() {
-        //System.out.println("specSimp:\n"+this);
+        // System.out.println("specSimp:\n"+this);
         final var n = subclasses().size();
         final var isAndOp = this instanceof AndOp;
         final var cc = getSort();
         if (n > 1 && (isAndOp || n == cc.subclasses())) {
             return (SetFunction) getZero();
-        } else { //we check for one_missing operands
+        } else { // we check for one_missing operands
             final Set<ProjectionBased> s1 = congruent(true), s2 = congruent(false);
-            if (s1.size() > s2.size() ? Util.checkAny(s2, t -> s1.contains(t.opposite())) : Util.checkAny(s1, t -> s2.contains(t.opposite()))) {
+            if (s1.size() > s2.size() ? Util.checkAny(s2, t -> s1.contains(t.opposite()))
+                    : Util.checkAny(s1, t -> s2.contains(t.opposite()))) {
                 return (SetFunction) getZero();
             }
-            return cc.isOrdered() ? reduceProjections(isAndOp, cc) : this; //it may return null: means the terms should be split
+            return cc.isOrdered() ? reduceProjections(isAndOp, cc) : this; // it may return null: means the terms should
+                                                                           // be split
         }
     }
 
@@ -137,12 +144,14 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
      * one_missing operands (assumes that this check was done before) builds on
      * some assumptions: 1) operands have been previously simplified; 2) no
      * duplicates are present!
+     * 
      * @param andop a flag denoting the kind of the operator
-     * @param cc the operator's color class
+     * @param cc    the operator's color class
      */
     private SetFunction reduceProjections(final boolean andop, final ColorClass cc) {
         final var lb = cc.lb();
-        // we first check for the presence of non-singleton, similar congruents lists, and (in case of singleton), that of one_missing non.congruent
+        // we first check for the presence of non-singleton, similar congruents lists,
+        // and (in case of singleton), that of one_missing non.congruent
         final Map<Integer, SortedSet<ProjectionBased>> cmap = similarCongrMap(true);
         var to_split = false;
         for (SortedSet<ProjectionBased> similar : cmap.values()) {
@@ -156,7 +165,8 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
         if (to_split) {
             return this;
         } else {
-            //similar congruents sets are singletons: we finally consider non congruent sets of similar terms
+            // similar congruents sets are singletons: we finally consider non congruent
+            // sets of similar terms
             final var fixed_size = cc.hasFixedSize();
             Set<SetFunction> argscopy = null;
             for (var sim_nc : similarCongrMap(false).entrySet()) {
@@ -169,11 +179,13 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
                     SortedSet<ProjectionBased> singlet; // the corresponding congruent singleton
                     final var one_missing = fixed_size && posize == lb - 1;
                     if (one_missing || (singlet = cmap.get(key)) != null
-                            && (max = poset.last().getSucc()) - (min = poset.first().getSucc()) < lb && Math.abs((exp = singlet.first().getSucc()) - min) < lb && Math.abs(exp - max) < lb) {
+                            && (max = poset.last().getSucc()) - (min = poset.first().getSucc()) < lb
+                            && Math.abs((exp = singlet.first().getSucc()) - min) < lb && Math.abs(exp - max) < lb) {
                         argscopy = Util.lightCopy(argscopy, this.args);
                         argscopy.removeAll(poset);
                         if (one_missing) {
-                            Projection p = Projection.builder(key, Util.missingNext(poset, ProjectionBased::getSucc, 0), cc);
+                            Projection p = Projection.builder(key, Util.missingNext(poset, ProjectionBased::getSucc, 0),
+                                    cc);
                             argscopy.add(andop ? p : ProjectionComp.factory(p).cast());
                         }
                     }
@@ -226,6 +238,26 @@ public abstract class N_aryClassOperator extends SetFunction implements N_aryOp<
         if (getSort().neutral()) {
             throw new IllegalArgumentException("Only All an Empty may have a neutral colour");
         }
+    }
+
+    public final int succDelim() {
+        if (getSort().isOrdered()) {
+            final var lb = getSort().card().lb();
+            final var ite = this.args.iterator();
+            int min = lb, max = min;
+            while (ite.hasNext()) {
+                final int s = ite.next().succDelim();
+                if (s < min) {
+                    min = s;
+                } else if (s > max) {
+                    max = s;
+                }
+            }
+            if (max - min >= lb) {
+                return max - min;
+            }
+        }
+        return 0;
     }
 
 }

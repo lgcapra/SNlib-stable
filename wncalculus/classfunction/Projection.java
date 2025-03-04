@@ -203,4 +203,9 @@ public final class Projection extends ProjectionBased {
         return Collections.singleton(this.index);
     }
 
+    @Override
+    public Projection cast () {
+        return this;
+    }
+
 }
