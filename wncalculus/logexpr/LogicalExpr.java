@@ -215,7 +215,7 @@ public interface LogicalExpr extends ParametricExpr  {
             }
             terms.add(tx);
         }    
-        Expressions.mergeResults(terms);
+        ParametricExprs.mergeResults(terms);
         
         if (verbose) {
             long endTime = System.currentTimeMillis();

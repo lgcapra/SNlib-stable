@@ -118,7 +118,7 @@ public final class BagComp<E extends ParametricExpr> implements BagExpr<E>, Comp
          
         return this;
     }
-    
+
     @Override
     public final Class<? extends BagExpr> type() {
         return BagExpr.class;
@@ -128,7 +128,12 @@ public final class BagComp<E extends ParametricExpr> implements BagExpr<E>, Comp
     public final Class<E> bagType() {
         return left().bagType();
     }
-    
+
+    @Override
+    public Map<Sort, Integer> splitDelimiters() {
+        return BagExpr.super.splitDelimiters();
+    }
+
     @Override
     public String toString() {
         return toStringOp();

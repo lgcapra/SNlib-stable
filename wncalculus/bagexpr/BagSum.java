@@ -173,10 +173,5 @@ public final class BagSum<E extends ParametricExpr> implements N_aryOp<BagExpr<E
         return hash;
     }
 
-    @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        return ColorClass.mergeSplitDelimiters(this.args);
-    }
-
     
 }

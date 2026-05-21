@@ -1,10 +1,8 @@
 package bagexpr;
 
 import java.util.*;
-import expr.Domain;
-import expr.Expressions;
-import expr.NonTerminal;
-import expr.ParametricExpr;
+
+import expr.*;
 
 /**
  * @author Lorenzo Capra
@@ -28,9 +26,13 @@ public abstract class AbstractBag<E extends ParametricExpr> implements Bag<E> {
      * @throws NoSuchElementException if the map is empty
     */
     public AbstractBag(Map<? extends E, Integer> m) {
-       E e = m.keySet().iterator().next(); // throws an exception if m is empty
+        for (E e : m.keySet()) {
+            if(e.isParametric())
+                throw new IllegalDomain("bag elements cannot be parametric expressions: "+e);
+        }
        m.values().removeAll(Collections.singleton(0));
        Expressions.checkArity(m.keySet());
+       E e = m.keySet().iterator().next();
        this.dom   = e.getDomain();
        this.codom = e.getCodomain();
        this.map = Collections.unmodifiableMap(m);
@@ -42,6 +44,8 @@ public abstract class AbstractBag<E extends ParametricExpr> implements Bag<E> {
      * @param codom the bag's codomain
      */
     public AbstractBag(Domain dom, Domain codom) {
+        if (dom.isParametric() || codom.isParametric())
+            throw new IllegalDomain("bags cannot be parametric expressions");
         this.dom        = dom;
         this.codom      = codom;
         this.simplified = true;

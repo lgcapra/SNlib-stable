@@ -517,10 +517,5 @@ public abstract class LogicalBag<E extends SetExpr> extends AbstractBag<E>  {
         return mm;
     }
 
-    @Override
-    public final Map<Sort, Integer> splitDelimiters() {
-        return ColorClass.mergeSplitDelimiters(support());
-    }
-
     
 }

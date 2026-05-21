@@ -193,5 +193,13 @@ public final class Domain {
         }
         return new Domain(sm);
     }
+
+    /**
+     *
+     * @return <code>true</code> if and only if the domain is not parametric
+     */
+    public boolean isParametric() {
+        return this.support().stream().anyMatch(s ->  ! s.hasFixedSize());
+    }
             
 }

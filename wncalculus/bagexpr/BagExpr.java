@@ -3,6 +3,8 @@ package bagexpr;
 
 import expr.*;
 
+import java.util.Map;
+
 /**
  * the super-type of expressions on bags (of expressions) defined over a given domain;
  * notice that a BagExpr may not be a Bag
@@ -16,6 +18,9 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
      * @return an empty bag of the same type as <code>this</code> with the same size
      */
     default Bag<E> build() {
+        if (isParametric()) {
+            throw new IllegalDomain("multiset are not parametric");
+        }
         return build(getDomain(),getCodomain());
     }
     
@@ -37,6 +42,11 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
     @Override
     default BagExpr<E> normalize() {
         return ParametricExpr.super.normalize().cast();
+    }
+
+    @Override
+    default Map<Sort,Integer> splitDelimiters (){
+        throw new IllegalDomain("multiset are not parametric");
     }
     
 }

@@ -28,11 +28,6 @@ public class TupleBagJuxtaposition implements BagExpr<FunctionTupleBag> , SNArcF
     }
 
     @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public Collection<FunctionTupleBag> getArgs() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

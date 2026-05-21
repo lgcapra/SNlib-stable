@@ -59,9 +59,4 @@ public class ProperBag<E extends ParametricExpr> extends UnaryBagOp<E> {
         return toStringOp();
     }
 
-    @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        return getArg().splitDelimiters();
-    }
-        
 }

@@ -29,11 +29,6 @@ public final class TupleBag extends AbstractBag<WNtuple> implements SNArcFunctio
     }
 
     @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public TupleBag build(Domain dom, Domain codom) {
         return new TupleBag(dom,codom);
     }

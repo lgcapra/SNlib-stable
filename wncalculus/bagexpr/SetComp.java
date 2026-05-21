@@ -5,6 +5,7 @@ import java.util.Objects;
 import expr.CompositionOp;
 import expr.Domain;
 import expr.SingleArg;
+import expr.Sort;
 import logexpr.SetExpr;
 
 /**
@@ -26,7 +27,12 @@ public abstract class SetComp<E extends SetExpr> implements BagExpr<E>, Composit
     public final Class<E> bagType() {
         return left.type();
     }
-    
+
+    @Override
+    public Map<Sort, Integer> splitDelimiters() {
+        return BagExpr.super.splitDelimiters();
+    }
+
     @Override
     public final Class<? extends BagExpr> type() {
         return BagExpr.class;

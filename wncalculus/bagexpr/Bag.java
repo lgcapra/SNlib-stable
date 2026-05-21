@@ -2,6 +2,7 @@ package bagexpr;
 
 import java.util.*;
 import expr.Domain;
+import expr.IllegalDomain;
 import expr.ParametricExpr;
 import expr.Sort;
 
@@ -81,7 +82,6 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>   {
     
     
     /**
-     * SI DOVREBBE ELIMINARE (SPOSTARE NELLA CLASSE OMONIMA)
      * does the scalar product between <code>this</code> bag and a given coefficient 
      * @param coeff an integer coefficient
      * @return a new bag obtained by multiplying <code>this</code>' coefficients by
@@ -114,23 +114,25 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>   {
     
     @Override
     default Bag<E> clone(Domain newdom) {
-         if (isEmpty())
-            return build(newdom, getCodomain()) ;
-         
-         HashMap<E,Integer> mapcopy = new HashMap<>();
-         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(newdom)), e.getValue()); });
-         
-         return build(mapcopy);
+//         if (isEmpty())
+//            return build(newdom, getCodomain()) ;
+//
+//         HashMap<E,Integer> mapcopy = new HashMap<>();
+//         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(newdom)), e.getValue()); });
+//
+//         return build(mapcopy);
+        throw new IllegalDomain();
     }
     
     @Override
      default Bag<E> clone (final Map<Sort, Sort> split_map) {
-        if (isEmpty())
-            return build(getDomain().setSupport(split_map), getCodomain().setSupport(split_map)) ;
-         
-         HashMap<E,Integer> mapcopy = new HashMap<>();
-         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(split_map)), e.getValue()); });   
-         return build(mapcopy);
+//        if (isEmpty())
+//            return build(getDomain().setSupport(split_map), getCodomain().setSupport(split_map)) ;
+//
+//         HashMap<E,Integer> mapcopy = new HashMap<>();
+//         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(split_map)), e.getValue()); });
+//         return build(mapcopy);
+            throw new IllegalDomain();
      }
     
 }

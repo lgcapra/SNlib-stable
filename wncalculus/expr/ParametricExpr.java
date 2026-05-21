@@ -1,7 +1,7 @@
 package expr;
 
 import java.util.*;
-import static expr.Expressions.mergeResults;
+import static expr.ParametricExprs.mergeResults;
 import static expr.Expressions.printResults;
 import util.Pair;
 import util.Util;
@@ -91,12 +91,7 @@ public interface ParametricExpr extends Expression {
       * @return <code>true</code> if and only if any getSort of expression's arity is parametric 
       */
      default boolean isParametric() {
-         Set<Sort> supp = getDomain().support();
-         var par = supp.stream().anyMatch(s ->  ! s.hasFixedSize()  );
-         if (!par)
-             par = getCodomain().support().stream().anyMatch(s ->  supp.contains(s) && ! s.hasFixedSize()  );
-         
-         return par; 
+         return getDomain().isParametric() || getCodomain().isParametric();
      }
                
     /**

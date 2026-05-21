@@ -89,9 +89,5 @@ public final class BagTranspose<E extends Transposable> extends UnaryBagOp<E> {
         return new BagTranspose<> (getArg().clone(newcd, newdom). cast());
     }*/
 
-    @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        return getArg().splitDelimiters();
-    }
     
 }

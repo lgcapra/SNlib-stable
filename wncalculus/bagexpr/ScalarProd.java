@@ -102,10 +102,5 @@ public final class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E> {
     public String toString() {
         return "" +this.k + "*("+getArg()+')';
     }
-
-    @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        return getArg().splitDelimiters();
-    }
     
 }
