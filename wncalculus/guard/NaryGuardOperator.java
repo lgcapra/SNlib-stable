@@ -4,6 +4,7 @@ import java.util.*;
 import classfunction.Projection;
 import static classfunction.Projection.*;
 import color.ColorClass;
+import color.Sort;
 import expr.*;
 import logexpr.LogicalExprs;
 import util.Util;
@@ -216,7 +217,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @return a (possibly empty) map from colours to split-delimiters 
      */
     @Override
-    public Map<Sort, Integer> splitDelimiters ( ) {    
+    public Map<Sort, Integer> splitDelimiters ( ) {
         Map<Sort, Integer> delimiters = new HashMap<>();
         if ( simple() ) // needed ?
             equalityMap().entrySet().forEach( (var e) -> {

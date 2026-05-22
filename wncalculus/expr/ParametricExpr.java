@@ -3,6 +3,8 @@ package expr;
 import java.util.*;
 import static expr.ParametricExprs.mergeResults;
 import static expr.Expressions.printResults;
+
+import color.Sort;
 import util.Pair;
 import util.Util;
 

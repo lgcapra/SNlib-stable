@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import bagexpr.AbstractBag;
 import expr.Domain;
-import expr.Sort;
 import guard.Guard;
 
 /**

@@ -7,20 +7,23 @@ package wnbag;
 
 import java.util.HashMap;
 import java.util.Map;
-import bagexpr.LogicalBag;
+
+import bagexpr.AbstractBag;
 import expr.Domain;
 import guard.Guard;
 import tuple.FilteredTuple;
 import tuple.FunctionTuple;
+import util.Util;
 
 /**
  * this class defines SN functions as bags of <tt>FunctionTuple</tt>s
  * @author lorenzo capra
  */
-public final class FunctionTupleBag extends LogicalBag<FunctionTuple> implements SNArcFunction  {
+public final class FunctionTupleBag extends AbstractBag<FunctionTuple> implements SNArcFunction  {
 
      public FunctionTupleBag(Map<FunctionTuple, Integer> m, boolean disjoint) {
-        super(m,disjoint);
+        super(m);
+        setDisjoined(disjoint);
     }
     
     public FunctionTupleBag(Map<FunctionTuple, Integer> m) {
@@ -42,7 +45,7 @@ public final class FunctionTupleBag extends LogicalBag<FunctionTuple> implements
     //costruttori secondari (si potrebbero togliere: sono già definiti metodi corrispondenti in BagBuilder)
 
     public FunctionTupleBag(FunctionTuple f , int k) {
-        super (f, k);
+        super(Util.singleMap(f, k));
     }
 
     
@@ -55,14 +58,31 @@ public final class FunctionTupleBag extends LogicalBag<FunctionTuple> implements
     }
 
     @Override
+    public Integer card() {
+        int card = 0;
+        for (Map.Entry<? extends FunctionTuple, Integer> x : asMap().entrySet()) {
+            Integer k = x.getKey().cardLb();
+            if (k == null)
+                return null;
+            card += k * x.getValue();
+        }
+        return card;
+    }
+
+    @Override
     public FunctionTupleBag build(Domain dom, Domain codom) {
         return new FunctionTupleBag(dom,codom);
     }
 
-    
-     @Override
     public FunctionTupleBag build(Map<FunctionTuple, Integer> smap, boolean disj) {
-        return new FunctionTupleBag(smap,disj);
+        FunctionTupleBag b = new FunctionTupleBag(smap);
+        b.setDisjoined(disj);
+        return b;
+    }
+
+    @Override
+    public FunctionTupleBag build(Map<FunctionTuple, Integer> m) {
+        return m == null || m.isEmpty() ? (FunctionTupleBag) build() : build(m, false);
     }
     
 }

@@ -3,6 +3,7 @@ package classfunction;
 import java.util.Map;
 import java.util.Set;
 import color.ColorClass;
+import color.Sort;
 import expr.*;
 
 /**

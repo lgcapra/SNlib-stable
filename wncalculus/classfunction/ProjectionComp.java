@@ -3,7 +3,7 @@ package classfunction;
 import java.util.*;
 import color.ColorClass;
 import expr.Interval;
-import expr.Sort;
+import color.Sort;
 import guard.Equality;
 import util.ComplexKey;
 import util.Pair;

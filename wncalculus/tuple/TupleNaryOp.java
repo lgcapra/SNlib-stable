@@ -1,6 +1,8 @@
 package tuple;
 
 import java.util.*;
+
+import color.Sort;
 import expr.*;
 import color.ColorClass;
 

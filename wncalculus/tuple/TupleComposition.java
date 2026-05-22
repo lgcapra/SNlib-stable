@@ -39,12 +39,12 @@ public final class TupleComposition implements FunctionTuple, LogComposition<Fun
     //needed because inherited twice
     @Override
     public FunctionTupleBag nullBag() {
-        return FunctionTuple.super.nullBag();
+        return new FunctionTupleBag(getDomain(), getCodomain());
     }
     
     @Override
     public FunctionTupleBag asBag() {
-        return FunctionTuple.super.asBag();
+        return new FunctionTupleBag(this, 1);
     }
     
     @Override

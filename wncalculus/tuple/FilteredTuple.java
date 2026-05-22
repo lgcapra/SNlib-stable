@@ -2,6 +2,7 @@ package tuple;
 
 import java.util.*;
 import color.ColorClass;
+import color.Sort;
 import expr.*;
 import guard.*;
 import logexpr.GuardedExpr;

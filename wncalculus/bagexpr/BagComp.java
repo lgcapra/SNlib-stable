@@ -1,6 +1,8 @@
 package bagexpr;
 
 import java.util.*;
+
+import color.Sort;
 import expr.*;
 import logexpr.SetExpr;
 

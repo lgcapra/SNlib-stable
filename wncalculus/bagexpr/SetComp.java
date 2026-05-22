@@ -5,7 +5,7 @@ import java.util.Objects;
 import expr.CompositionOp;
 import expr.Domain;
 import expr.SingleArg;
-import expr.Sort;
+import color.Sort;
 import logexpr.SetExpr;
 
 /**
@@ -49,29 +49,14 @@ public abstract class SetComp<E extends SetExpr> implements BagExpr<E>, Composit
     }
 
     @Override
-    public final LogicalBag<E> build(Domain dom, Domain codom) {
+    public final Bag<E> build(Domain dom, Domain codom) {
         return (left.asBag()).build(dom,codom).cast();
     }
 
     @Override
-    public final LogicalBag<E> build(Map<E, Integer> m) {
-        LogicalBag<E> b = left.asBag();
+    public final Bag<E> build(Map<E, Integer> m) {
+        Bag<E> b = left.asBag();
         return (b.build(m));
-    }
-
-    @Override
-    public BagExpr<E> genSimplify() {
-        BagExpr<E> res = CompositionOp.super.genSimplify();
-        if (res == this) {
-            if (left.isFalse() || right.isFalse())
-                return build(getDomain(), getCodomain());
-            //if the right operand has cardinality one it reduces to a set-composition
-            Integer k = right.cardLb();
-            if  (k != null && k == 1 )
-                res = left.buildSetComp(right).asBag();
-        }
-        
-        return res;
     }
 
     @Override

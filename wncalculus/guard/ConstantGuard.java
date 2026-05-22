@@ -2,7 +2,7 @@ package guard;
 
 import java.util.*;
 import expr.Domain;
-import expr.Sort;
+import color.Sort;
 
 /**
  * the super-class of constant guards; note that for their particular

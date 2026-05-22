@@ -2,6 +2,7 @@ package tuple;
 
 import java.util.*;
 import bagexpr.*;
+import color.Sort;
 import expr.*;
 import wnbag.FunctionTupleBag;
 

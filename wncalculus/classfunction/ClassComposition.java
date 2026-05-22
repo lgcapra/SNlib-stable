@@ -1,6 +1,8 @@
 package classfunction;
 
 import java.util.*;
+
+import color.Sort;
 import expr.*;
 import color.ColorClass;
 import logexpr.LogComposition;

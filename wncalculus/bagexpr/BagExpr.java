@@ -1,6 +1,7 @@
 
 package bagexpr;
 
+import color.Sort;
 import expr.*;
 
 import java.util.Map;

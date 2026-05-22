@@ -1,6 +1,8 @@
 package guard;
 
 import java.util.*;
+
+import color.Sort;
 import graph.InequalityGraph;
 import logexpr.AndOp;
 import expr.*;
@@ -88,7 +90,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     }
         
     @Override
-    public Map<Sort, Integer> splitDelimiters ( ) {    
+    public Map<Sort, Integer> splitDelimiters ( ) {
         Map<Sort, Integer> delimiters = super.splitDelimiters();
         //System.out.println("ecco delims: "+delimiters); //debug
         if (simple() ) 

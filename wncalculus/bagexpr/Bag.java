@@ -4,7 +4,7 @@ import java.util.*;
 import expr.Domain;
 import expr.IllegalDomain;
 import expr.ParametricExpr;
-import expr.Sort;
+import color.Sort;
 
 //Si potrebbe definire una super-interfaccia che rappresenta bag di qualsiasi tipo
 

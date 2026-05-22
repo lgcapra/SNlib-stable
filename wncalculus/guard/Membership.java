@@ -3,6 +3,7 @@ package guard;
 import java.util.*;
 import classfunction.*;
 import color.ColorClass;
+import color.Sort;
 import expr.*;
 import util.ComplexKey;
 import util.Util;

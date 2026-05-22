@@ -1,6 +1,6 @@
 package logexpr;
 
-import bagexpr.LogicalBag;
+import bagexpr.Bag;
 import bagexpr.SetComp;
 
 /**
@@ -25,7 +25,7 @@ public interface SetExpr extends LogicalExpr {
      * @return a singleton bag corresponding to <tt>this</tt> expression
      * @throws ClassCastException if the type of e is not compatible with <code>this</code> type
      */
-    abstract <E extends SetExpr> LogicalBag<E> asBag();
+    abstract <E extends SetExpr> Bag<E> asBag();
     
     /** 
      * provides the null bag corresponding to this kind of expression
@@ -33,7 +33,7 @@ public interface SetExpr extends LogicalExpr {
      * @return a null bag corresponding to <tt>this</tt> expression
      * @throws ClassCastException if the type of e is not compatible with <code>this</code> type
      */
-    abstract <E extends SetExpr> LogicalBag<E> nullBag();
+    abstract <E extends SetExpr> Bag<E> nullBag();
     
     /**
      * @return the lower-bound of <code>this</code> tuple's cardinality; <code>null</code> if, for any reason, the

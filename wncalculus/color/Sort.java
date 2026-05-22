@@ -1,4 +1,6 @@
-package expr;
+package color;
+
+import expr.Interval;
 
 import java.util.*;
 

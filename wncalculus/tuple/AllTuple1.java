@@ -5,7 +5,7 @@ import classfunction.All;
 import classfunction.SetFunction;
 import color.ColorClass;
 import expr.Domain;
-import expr.Sort;
+import color.Sort;
 import util.ComplexKey;
 
 /**

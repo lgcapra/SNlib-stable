@@ -146,7 +146,6 @@ public interface FunctionTuple extends SetExpr, Transposable /*, SNfunction*/ {
      * a map of pairs containing the (lower bounds of the) cardinalities and the expressions coming from
      * filters application; a <code>null</code> value means that the
      * cardinality of the corresponding expression (for any reasons) cannot be computed
-     * @see applyFilter
      * @param filters a set of filters
      * @return the cardinalities of the (possible) refinements of <code>this</code> function-tuple
      * due to the application of filters

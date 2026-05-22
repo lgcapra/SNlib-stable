@@ -3,7 +3,7 @@ package guard;
 import java.util.*;
 import logexpr.NotOp;
 import expr.Domain;
-import expr.Sort;
+import color.Sort;
 
 /**
  * this class represent the boolean negation operator

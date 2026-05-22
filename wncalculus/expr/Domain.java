@@ -3,6 +3,7 @@ package expr;
 import java.util.*;
 import java.util.Map.Entry;
 
+import color.Sort;
 import util.Util;
 
 //SI POTREBBE DEFINIRE COME GENERICA RISPETTO AL TIPO DI SORTE
@@ -16,7 +17,7 @@ import util.Util;
  */
 public final class Domain {
     
-    private final Map<Sort,Integer > domain; 
+    private final Map<Sort,Integer > domain;
     
     private String string; //cashing
       

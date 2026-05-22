@@ -1,7 +1,6 @@
 package color;
 
 import expr.Interval;
-import expr.Sort;
 
 /**
  * this interface defines a common super-type for color-classes

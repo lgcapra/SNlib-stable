@@ -7,7 +7,6 @@ import bagexpr.Bag;
 import bagexpr.BagExpr;
 import expr.Domain;
 import expr.MultiArgs;
-import expr.Sort;
 import guard.Guard;
 import tuple.FunctionTuple;
 

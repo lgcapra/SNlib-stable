@@ -13,7 +13,7 @@ import classfunction.SetFunction;
 import color.ColorClass;
 import expr.Domain;
 import expr.MultiArgs;
-import expr.Sort;
+import color.Sort;
 import expr.UnaryOp;
 import guard.And;
 import guard.Equality;

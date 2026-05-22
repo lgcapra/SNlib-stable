@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import classfunction.ElementaryFunction;
 import color.ColorClass;
+import color.Sort;
 import expr.*;
 import guard.And;
 import guard.Guard;

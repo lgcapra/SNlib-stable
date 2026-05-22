@@ -2,6 +2,7 @@ package expr;
 
 import java.util.*;
 import color.ColorClass;
+import color.Sort;
 
 /**
  * this interface is represents expressions syntactically composed of terms of the same sort

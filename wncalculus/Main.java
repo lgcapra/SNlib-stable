@@ -257,11 +257,11 @@ public class Main {
         BagExpr<FunctionTuple> s = BagSum.factory(b1, b2);
         System.out.println(s);
         System.out.println("normalizzo:");
-        LogicalBag<FunctionTuple> tbag = (LogicalBag<FunctionTuple>) s.normalize();
-        System.out.println(tbag);
-        Map<Guard, Integer> m = tbag.mapGuardsToMaxCoefficients();
+        Bag<FunctionTuple> tbag = (Bag<FunctionTuple>) s.normalize();
+        Map<guard.Guard, Integer> m = bagexpr.BagUtils.mapGuardsToMaxCoefficients(tbag);
+        System.out.println("prodotto Cartesiano m x m x m:\n" + bagexpr.BagUtils.product(m, m, m));
         System.out.println("map guardie-> coefficienti: " + m);
-        System.out.println("prodotto Cartesiano m x m x m:\n" + LogicalBag.product(m, m, m));
+        System.out.println("prodotto Cartesiano m x m x m:\n" + bagexpr.BagUtils.product(m, m, m));
         Util.getChar();
 
         System.out.println("trasposta\n:" + new BagTranspose(s).normalize());
@@ -280,9 +280,9 @@ public class Main {
         Util.getChar();
 
         System.out.println("transposing: " + new BagTranspose(s));
-        LogicalBag bt = (LogicalBag) new BagTranspose(s).normalize();
+        Bag<FunctionTuple> bt = (Bag<FunctionTuple>) new BagTranspose<>(s).normalize();
         System.out.println(bt);
-        System.out.println("map guardie-> max coeff: " + bt.mapGuardsToMaxCoefficients());
+        System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(bt));
         System.out.println("diff between: " + b1 + " and " + b2 + '\n' + BagDiff.build(b1, b2).normalize());
         Util.getChar();
 
@@ -296,20 +296,20 @@ public class Main {
 
         Tuple t4 = new Tuple(d2, f2, pc1), t5 = new Tuple(d2, f1, f2), t6;
         //System.out.println("T4: "+t4);
-        LogicalBag<FunctionTuple> b4 = (LogicalBag<FunctionTuple>) mset_c.build(t4, t4, t5);
+        Bag<FunctionTuple> b4 = mset_c.build(t4, t4, t5);
         System.out.println("b4: " + b4);
         System.out.println("b4 normalizzato: " + b4.normalize());
-        System.out.println("map guardie-> max coeff: " + b4.mapGuardsToMaxCoefficients());
+        System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b4));
         Equality e1 = (Equality) Equality.builder((Projection) f1, (Projection) f2, true, d2);
-        LogicalBag<FunctionTuple> b5 = (LogicalBag<FunctionTuple>) mset_c.build(FilteredTuple.factory(e1, t4), FilteredTuple.factory(e1, t4), FilteredTuple.factory(e1, t5));
+        Bag<FunctionTuple> b5 = mset_c.build(t4, t4, t5);
         System.out.println("b5: " + b5);
-        System.out.println("b5 normalizzato: " + (b5 = (LogicalBag<FunctionTuple>) b5.normalize()));
-        System.out.println("map guardie-> max coeff: " + b5.mapGuardsToMaxCoefficients());
+        System.out.println("b5 normalizzato: " + (b5 = (Bag<FunctionTuple>) b5.normalize()));
+        System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b5));
         t6 = new Tuple(d2, f2, f2);
-        LogicalBag<FunctionTuple> b6 = (LogicalBag<FunctionTuple>) mset_c.build(t4, t4, t6);
+        Bag<FunctionTuple> b6 = mset_c.build(t4, t4, t6);
         System.out.println("b6: " + b6);
         System.out.println("b6 normalizzato: " + b6.normalize());
-        System.out.println("map guardie-> max coeff: " + b6.mapGuardsToMaxCoefficients());
+        System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b6));
 
         System.out.println("transpose: " + new BagTranspose(mset_c).normalize());
         Util.getChar();
@@ -486,14 +486,14 @@ public class Main {
         System.out.println("bag spec-semplificato:" + wnbag);
         System.out.println("bag semplificato:" + wnbag.genSimplify());
         Util.getChar();
-        LogicalBag<FunctionTuple> lb = (LogicalBag<FunctionTuple>) wnbag.normalize();
+        Bag<FunctionTuple> lb = (Bag<FunctionTuple>) wnbag.normalize();
         System.out.println("bag normalizzato:" + lb);
-        System.out.println("map guardie -> coefficienti: " + lb.mapGuardsToMaxCoefficients());
+        System.out.println("map guardie -> coefficienti: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(lb));
 
         System.out.println("bag+bag: (normalizzato)");
-        lb = (LogicalBag<FunctionTuple>) BagSum.factory(wnbag, wnbag).normalize();
+        lb = (Bag<FunctionTuple>) BagSum.factory(wnbag, wnbag).normalize();
         System.out.println(lb);
-        System.out.println("map guardie -> coefficienti: " + lb.mapGuardsToMaxCoefficients());
+        System.out.println("map guardie -> coefficienti: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(lb));
         Util.getChar();
 
         //System.exit(0);
@@ -855,19 +855,19 @@ public class Main {
         t = new Tuple(And.factory(g1, g2), c_2, c_1);
         tc1 = new Tuple(g1_1, g1, c_1);
         tc2 = new Tuple(g1_1, g1, c_2);
-        LogicalBag<FunctionTuple> I, t_bag;
+        Bag<FunctionTuple> I, t_bag;
         FunctionTuple[] a = new FunctionTuple[]{tc1, tc1, tc2};
         I = new FunctionTupleBag(Util.asMap(Arrays.asList(a)));
         t_bag = new FunctionTupleBag(Util.singleMap(t, 1));
         BagComp<FunctionTuple> I_comp_t = new BagComp(I, t_bag);
         System.out.println("normalizzo:\n" + I_comp_t);
-        t_bag = (LogicalBag<FunctionTuple>) I_comp_t.normalize(); //possiamo usare sia normalize sia simplify
+        t_bag = (Bag<FunctionTuple>) I_comp_t.normalize(); //possiamo usare sia normalize sia simplify
         System.out.println(t_bag.toStringDetailed());
         System.out.println("disgiunto & normalizzato:\n");
         System.out.println(t_bag.normalize(/*true*/));
 
         System.out.println("map guardie -> coefficienti:");
-        System.out.println(t_bag.mapGuardsToMaxCoefficients());
+        System.out.println(bagexpr.BagUtils.mapGuardsToMaxCoefficients(t_bag));
         Util.getChar();
 
         tc1 = new Tuple(g1_2, g1, c_1);
@@ -889,10 +889,10 @@ public class Main {
         System.out.println("normalizzo:\n" + I_comp_t);
         System.out.println(I_comp_t.normalize());
         System.out.println("trasposta di :" + I_comp_t);
-        System.out.println(t_bag = (LogicalBag<FunctionTuple>) new BagTranspose<>(I_comp_t).normalize());
+        System.out.println(t_bag = (Bag<FunctionTuple>) new BagTranspose<>(I_comp_t).normalize());
         Util.getChar();
 
-        System.out.println("map guardie -> coefficienti: " + t_bag.mapGuardsToMaxCoefficients());
+        System.out.println("map guardie -> coefficienti: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(t_bag));
         System.out.println(t_bag);
         Util.getChar();
 
@@ -903,17 +903,17 @@ public class Main {
         System.out.println(l);
         l1 = new LinearComb(c_2, c_1, c_1, S_1, S_1, S_2, S_1);
         System.out.println(l1 + " -> " + l1.components());
-        BagExpr<ElementaryFunction> d = BagDiff.build(l, l1);
+        BagExpr<ElementaryFunction> d = BagDiff.build(l.asBag(), l1.asBag());
         System.out.println("diff:\n" + d);
         d = (BagExpr<ElementaryFunction>) d.normalize();
         System.out.println("diff semplificata:\n" + d);
-        d = ((LogicalBag) d).disjoin();
+        d = bagexpr.BagUtils.disjoin(d);
         System.out.println("disgiunta:\n" + d);
         l = new LinearComb(c_1, c_2, c_2, c_1, c_1, S_1, S_1, S_2);
         System.out.println(l + " -> " + l.components());
         l1 = new LinearComb(c_2, c_1, c_1, S_1, S_1, S_2, S_1);
         System.out.println(l1 + " -> " + l1.components());
-        d = BagDiff.build(l, l1);
+        d = BagDiff.build(l.asBag(), l1.asBag());
         System.out.println("semplifico:\n" + d);
         System.out.println(d.normalize());
         l = new LinearComb(c_1, c_1, c_1, S_1, S_1, S_2);

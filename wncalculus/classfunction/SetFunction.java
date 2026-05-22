@@ -1,6 +1,8 @@
 package classfunction;
 
 import java.util.*;
+
+import bagexpr.Bag;
 import expr.*;
 import guard.Equality;
 import guard.Guard;
@@ -8,7 +10,7 @@ import logexpr.LogicalExpr;
 import logexpr.SetExpr;
 import util.Pair;
 import util.Util;
-import wnbag.LinearComb;
+import wnbag.LinearCombBag;
 
 /**
  * this abstract class is the super-type of class-functions mapping to sets
@@ -44,18 +46,15 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     }
 
     @Override
-    public LinearComb nullBag() {
-        return new LinearComb(getSort());
+    @SuppressWarnings("unchecked")
+    public <E extends logexpr.SetExpr> Bag<E> nullBag() {
+        return (Bag<E>) new LinearCombBag(getDomain(), getCodomain());
     }
 
-    /**
-     * default implementation: to override
-     * @return an elementary linear-combination composed of <code>this</code>
-     * term DA TOGLIERE CON NUOVA IMPLEMENTAZIONE DEI BAG?
-     */
     @Override
-    public LinearComb asBag() {
-        throw new UnsupportedOperationException();
+    @SuppressWarnings("unchecked")
+    public <E extends logexpr.SetExpr> Bag<E> asBag() {
+        return nullBag();
     }
 
     @Override

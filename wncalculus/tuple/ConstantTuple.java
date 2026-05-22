@@ -2,7 +2,7 @@ package tuple;
 
 import java.util.*;
 import expr.Domain;
-import expr.Sort;
+import color.Sort;
 
 /**
  * the super-type of "boolean" tuple-constants

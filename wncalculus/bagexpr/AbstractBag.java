@@ -14,7 +14,7 @@ public abstract class AbstractBag<E extends ParametricExpr> implements Bag<E> {
         
     private final Map<? extends E,Integer> map ; // the bag is implemented as a map for the sake of efficiency
     private final Domain   dom, codom;
-    private boolean simplified;
+    private boolean simplified, disjoined;
 
     
     /**
@@ -36,6 +36,7 @@ public abstract class AbstractBag<E extends ParametricExpr> implements Bag<E> {
        this.dom   = e.getDomain();
        this.codom = e.getCodomain();
        this.map = Collections.unmodifiableMap(m);
+       this.disjoined = m.size() < 2;
     }
     
     /**
@@ -50,9 +51,16 @@ public abstract class AbstractBag<E extends ParametricExpr> implements Bag<E> {
         this.codom      = codom;
         this.simplified = true;
         this.map = Collections.emptyMap();
+        this.disjoined  = true;
     }
-    
-    
+
+    protected void setDisjoined(boolean disjoined) {
+        this.disjoined = disjoined;
+    }
+
+    public boolean disjoined() {
+        return this.disjoined;
+    }
         
     @Override
     public final Map<? extends E, Integer> asMap() {
