@@ -100,11 +100,11 @@ public final class BagComp<E extends ParametricExpr> implements BagExpr<E>, Comp
                         int k = lb.mult(lf); 
                         if (rb.size()== 1) { // the right one  is a singleton bag
                             E rf = rb.support().iterator().next();
-                            if (lf instanceof SetExpr) {
-                                BagExpr<E> b = ((SetExpr)lf).buildBagComp((SetExpr)rf).cast(); // we try to compose the linear function with the right-one ...
-                                if (b != null)
-                                    return ScalarProd.factory( b, k * rb.mult(rf)).cast(); 
-                            }
+//                            if (lf instanceof SetExpr) {
+//                                BagExpr<E> b = ((SetExpr)lf).buildBagComp((SetExpr)rf).cast(); // we try to compose the linear function with the right-one ...
+//                                if (b != null)
+//                                    return ScalarProd.factory( b, k * rb.mult(rf)).cast();
+//                            }
                         }
                         else   // the right operand is a bag with many terms
                             rb.asMap().entrySet().forEach(y -> { blist.add( new BagComp(lb, build(y.getValue(),y.getKey()))); });

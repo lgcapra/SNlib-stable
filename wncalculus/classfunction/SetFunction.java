@@ -40,10 +40,10 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
         return getDomain();
     }
 
-    @Override
-    public final ClassCompAsBag buildBagComp(SetExpr f) {
-        return new ClassCompAsBag(this, f.cast());
-    }
+//    @Override
+//    public final ClassCompAsBag buildBagComp(SetExpr f) {
+//        return new ClassCompAsBag(this, f.cast());
+//    }
 
     @Override
     @SuppressWarnings("unchecked")

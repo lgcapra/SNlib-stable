@@ -1,95 +1,95 @@
-package bagexpr;
-
-import java.util.Map;
-import java.util.Objects;
-import expr.CompositionOp;
-import expr.Domain;
-import expr.SingleArg;
-import color.Sort;
-import logexpr.SetExpr;
-
-/**
- * this class implements the bag-composition between set-expressions 
- * @author lorenzo capra
- * @param <E> the operand type
- */
-public abstract class SetComp<E extends SetExpr> implements BagExpr<E>, CompositionOp<E,BagExpr<E>> {
-
-    private final E left,right;
-    private boolean simplified;
-    
-    public SetComp(E left, E right) {
-        this.left = left;
-        this.right = right;
-    }
-    
-    @Override
-    public final Class<E> bagType() {
-        return left.type();
-    }
-
-    @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        return BagExpr.super.splitDelimiters();
-    }
-
-    @Override
-    public final Class<? extends BagExpr> type() {
-        return BagExpr.class;
-    }
-
-    @Override
-    public final boolean simplified() {
-        return simplified;
-    }
-
-    @Override
-    public final void setSimplified(boolean simplified) {
-        this.simplified = simplified;
-    }
-
-    @Override
-    public final Bag<E> build(Domain dom, Domain codom) {
-        return (left.asBag()).build(dom,codom).cast();
-    }
-
-    @Override
-    public final Bag<E> build(Map<E, Integer> m) {
-        Bag<E> b = left.asBag();
-        return (b.build(m));
-    }
-
-    @Override
-    public final boolean isLeftAssociative(Class<? extends SingleArg> optk) {
-        return false;
-    }
-
-    @Override
-    public final E left() {
-        return this.left;
-    }
-
-    @Override
-    public final E right() {
-        return this.right;
-    }
-    
-    @Override
-    public final String toString() {
-        return CompositionOp.super.toStringOp();
-    }
-    
-    @Override
-    public final boolean equals (Object o) {
-        return CompositionOp.super.isEqual(o);
-    }
-
-    @Override
-    public final int hashCode() {
-        int hash = 7;
-        hash = 31 * hash + Objects.hashCode(this.left);
-        hash = 31 * hash + Objects.hashCode(this.right);
-        return hash;
-    }
-
-}
+//package bagexpr;
+//
+//import java.util.Map;
+//import java.util.Objects;
+//import expr.CompositionOp;
+//import expr.Domain;
+//import expr.SingleArg;
+//import color.Sort;
+//import logexpr.SetExpr;
+//
+///**
+// * this class implements the bag-composition between set-expressions
+// * @author lorenzo capra
+// * @param <E> the operand type
+// */
+//public abstract class SetComp<E extends SetExpr> implements BagExpr<E>, CompositionOp<E,BagExpr<E>> {
+//
+//    private final E left,right;
+//    private boolean simplified;
+//
+//    public SetComp(E left, E right) {
+//        this.left = left;
+//        this.right = right;
+//    }
+//
+//    @Override
+//    public final Class<E> bagType() {
+//        return left.type();
+//    }
+//
+//    @Override
+//    public Map<Sort, Integer> splitDelimiters() {
+//        return BagExpr.super.splitDelimiters();
+//    }
+//
+//    @Override
+//    public final Class<? extends BagExpr> type() {
+//        return BagExpr.class;
+//    }
+//
+//    @Override
+//    public final boolean simplified() {
+//        return simplified;
+//    }
+//
+//    @Override
+//    public final void setSimplified(boolean simplified) {
+//        this.simplified = simplified;
+//    }
+//
+//    @Override
+//    public final Bag<E> build(Domain dom, Domain codom) {
+//        return (left.asBag()).build(dom,codom).cast();
+//    }
+//
+//    @Override
+//    public final Bag<E> build(Map<E, Integer> m) {
+//        Bag<E> b = left.asBag();
+//        return (b.build(m));
+//    }
+//
+//    @Override
+//    public final boolean isLeftAssociative(Class<? extends SingleArg> optk) {
+//        return false;
+//    }
+//
+//    @Override
+//    public final E left() {
+//        return this.left;
+//    }
+//
+//    @Override
+//    public final E right() {
+//        return this.right;
+//    }
+//
+//    @Override
+//    public final String toString() {
+//        return CompositionOp.super.toStringOp();
+//    }
+//
+//    @Override
+//    public final boolean equals (Object o) {
+//        return CompositionOp.super.isEqual(o);
+//    }
+//
+//    @Override
+//    public final int hashCode() {
+//        int hash = 7;
+//        hash = 31 * hash + Objects.hashCode(this.left);
+//        hash = 31 * hash + Objects.hashCode(this.right);
+//        return hash;
+//    }
+//
+//}

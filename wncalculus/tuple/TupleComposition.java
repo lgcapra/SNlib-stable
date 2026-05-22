@@ -134,8 +134,8 @@ public final class TupleComposition implements FunctionTuple, LogComposition<Fun
         return FunctionTuple.class;
     }
     
-    @Override
-    public TupleBagComp buildBagComp(SetExpr e) {
-        return FunctionTuple.super.buildBagComp(e);
-    }
+//    @Override
+//    public TupleBagComp buildBagComp(SetExpr e) {
+//        return FunctionTuple.super.buildBagComp(e);
+//    }
 }

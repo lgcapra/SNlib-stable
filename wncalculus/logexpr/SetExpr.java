@@ -1,7 +1,6 @@
 package logexpr;
 
 import bagexpr.Bag;
-import bagexpr.SetComp;
 
 /**
  * This interface represents expressions (function) representing parametric sets
@@ -9,13 +8,13 @@ import bagexpr.SetComp;
  */
 public interface SetExpr extends LogicalExpr {
     
-     /**
-     * @param e a set-expression
-     * @return the bag-composition operator between <code>this</code> and another expression,
-     * seen as bags; <code>null</code> if, for any reasons, the composition cannot be done
-     * @throws ClassCastException if the type of e is not compatible with <code>this</code> type
-     */
-    <E extends SetExpr> SetComp<E> buildBagComp(SetExpr e);
+//     /**
+//     * @param e a set-expression
+//     * @return the bag-composition operator between <code>this</code> and another expression,
+//     * seen as bags; <code>null</code> if, for any reasons, the composition cannot be done
+//     * @throws ClassCastException if the type of e is not compatible with <code>this</code> type
+//     */
+//    <E extends SetExpr> SetComp<E> buildBagComp(SetExpr e);
     
     <E extends SetExpr> LogComposition<E> buildSetComp(SetExpr r);
      

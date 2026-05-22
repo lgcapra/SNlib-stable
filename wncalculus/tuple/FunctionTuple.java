@@ -183,10 +183,10 @@ public interface FunctionTuple extends SetExpr, Transposable /*, SNfunction*/ {
         return new FunctionTupleBag(getDomain(), getCodomain());
     }
     
-    @Override
-    default TupleBagComp buildBagComp(SetExpr e) {
-        return new TupleBagComp(this, e.cast()); 
-    }
+//    @Override
+//    default TupleBagComp buildBagComp(SetExpr e) {
+//        return new TupleBagComp(this, e.cast());
+//    }
     
     /**
      * @return the <tt>Tuple</tt> view of <tt>this</tt> function; <tt>null</tt> if
