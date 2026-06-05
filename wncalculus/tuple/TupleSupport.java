@@ -1,10 +1,11 @@
 package tuple;
 
 import java.util.*;
-import bagexpr.*;
 import color.Sort;
 import expr.*;
-import wnbag.FunctionTupleBag;
+import wnbag.ArcFunction;
+import wnbag.TupleBag;
+import wnbag.WNtuple;
 
 
 /**
@@ -12,34 +13,34 @@ import wnbag.FunctionTupleBag;
  * @author Lorenzo Capra
  */
 
-public final class TupleSupport implements FunctionTuple, SingleArg<BagExpr<FunctionTuple>, FunctionTuple> {
+public final class TupleSupport implements FunctionTuple, SingleArg<ArcFunction, FunctionTuple> {
     
-    private final BagExpr<FunctionTuple> func;
+    private final ArcFunction func;
     private boolean simplified;
     
     /**
      * base constructor: creates the support of a bag-expression
      * @param b a bag-expression
      */
-    public TupleSupport(BagExpr<FunctionTuple> b) {
+    public TupleSupport(ArcFunction b) {
         this.func = b;
     }
 
 
     //new version: the support is a unary operator
+    // check!
     @Override
     public FunctionTuple specSimplify() {
-        if (this.func instanceof FunctionTupleBag) {
-            FunctionTupleBag bag = (FunctionTupleBag)this.func;
-            Set<? extends FunctionTuple> support = bag.properSupport();
+        if (this.func instanceof TupleBag) {
+            TupleBag bag = (TupleBag)this.func;
+            Set<? extends WNtuple> support = bag.properSupport();
             
-            return support.isEmpty() ? getFalse(): TupleSum.factory(support, bag.disjoined()); // holds null if the support cannot yet be computed
-        }
-        
-        if (this.func instanceof BagComp) { //may be generalized?
-            BagComp<FunctionTuple> comp = (BagComp<FunctionTuple>) this.func;
-            
-            return new TupleComposition(new TupleSupport(comp.left()),new TupleSupport(comp.right()));
+            if (support.isEmpty()) {
+                return getFalse();
+            } else {
+                Set<FunctionTuple> suppfunc = new HashSet<>();
+                return TupleSum.factory(suppfunc, bag.disjoined());
+            }
         }
         
         return this;
@@ -97,20 +98,19 @@ public final class TupleSupport implements FunctionTuple, SingleArg<BagExpr<Func
 
    
     @Override
-    public TupleSupport buildOp(BagExpr<FunctionTuple> arg) {
+    public TupleSupport buildOp(ArcFunction arg) {
        return new TupleSupport(arg);    
     }
 
     @Override
     public String symb() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return "{" + this.func + " }";
     }
 
     @Override
-    public BagExpr<FunctionTuple> getArg() {
+    public ArcFunction getArg() {
         return this.func;
     }
-
 
 }
 

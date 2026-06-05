@@ -7,7 +7,7 @@ import util.Util;
 
 /**
  * This interface represents any operator with more than one operands, of the same type.
- * The operator and operandd's type may be different (e.g, the operands sets and the operator bag)
+ * The operator and operand's types may be different (e.g, the operands sets and the operator bag)
  * @author lorenzo capra
  * @param <E> the type of operands
  * @param <F> the operator's type

@@ -2,8 +2,6 @@ package tuple;
 
 import expr.*;
 import logexpr.LogComposition;
-import logexpr.SetExpr;
-import wnbag.FunctionTupleBag;
 
 
 /**
@@ -36,16 +34,6 @@ public final class TupleComposition implements FunctionTuple, LogComposition<Fun
         this(left, right, false);
     }
     
-    //needed because inherited twice
-    @Override
-    public FunctionTupleBag nullBag() {
-        return new FunctionTupleBag(getDomain(), getCodomain());
-    }
-    
-    @Override
-    public FunctionTupleBag asBag() {
-        return new FunctionTupleBag(this, 1);
-    }
     
     @Override
     public TupleComposition buildOp(FunctionTuple left, FunctionTuple right) {
@@ -134,8 +122,4 @@ public final class TupleComposition implements FunctionTuple, LogComposition<Fun
         return FunctionTuple.class;
     }
     
-//    @Override
-//    public TupleBagComp buildBagComp(SetExpr e) {
-//        return FunctionTuple.super.buildBagComp(e);
-//    }
 }

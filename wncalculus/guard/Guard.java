@@ -267,5 +267,9 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
         
         return null;
     }
+     
+     public final Integer cardLb() {
+        return null;
+     }
     
 }

@@ -2,7 +2,6 @@ package classfunction;
 
 import java.util.*;
 
-import bagexpr.Bag;
 import expr.*;
 import guard.Equality;
 import guard.Guard;
@@ -10,7 +9,6 @@ import logexpr.LogicalExpr;
 import logexpr.SetExpr;
 import util.Pair;
 import util.Util;
-import wnbag.LinearCombBag;
 
 /**
  * this abstract class is the super-type of class-functions mapping to sets

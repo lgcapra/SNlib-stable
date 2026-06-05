@@ -1,12 +1,8 @@
 package classfunction;
 
-import java.util.Collections;
 import java.util.Map;
-
-import bagexpr.Bag;
 import color.ColorClass;
 import color.Sort;
-import wnbag.LinearCombBag;
 
 /**
  * this abstract class is the super type of elementary SN functions (including the empty function);
@@ -47,13 +43,5 @@ public abstract class ElementaryFunction extends SetFunction  {
     
     @Override
     public final void setSimplified(final boolean simp) { }
-
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public final <E extends logexpr.SetExpr> Bag<E> asBag() {
-        Map<ElementaryFunction, Integer> m = Collections.singletonMap(this, 1);
-        return (Bag<E>) new LinearCombBag(m);
-    }
 
 }

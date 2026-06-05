@@ -4,14 +4,13 @@ import java.util.*;
 
 import color.Sort;
 import expr.*;
-import logexpr.SetExpr;
 
 /**
  * the super-type of the composition of bags of (linear) functions
  * @author lorenzo capra
  * @param <E> the bag's domain
  */
-public final class BagComp<E extends ParametricExpr> implements BagExpr<E>, CompositionOp<BagExpr<E>,BagExpr<E>> {
+public class BagComp<E extends ParametricExpr> implements BagExpr<E>, CompositionOp<BagExpr<E>,BagExpr<E>> {
 
      private final BagExpr<E> left, right;
      private boolean simplified;
@@ -89,7 +88,7 @@ public final class BagComp<E extends ParametricExpr> implements BagExpr<E>, Comp
                     return build();
                 
                 if ( lb.isConstant() ) { // composition between a constant and a constant-size bag
-                    Integer c = rb.card();        
+                    Integer c = rb.cardLb();        
                     if (c != null)
                         return ScalarProd.factory((BagExpr<E>) lb.clone(rb.getDomain()), c);
                 }
@@ -154,6 +153,11 @@ public final class BagComp<E extends ParametricExpr> implements BagExpr<E>, Comp
     @Override
     public Bag<E> build(Map<E, Integer> m) {
         return this.left.build(m);
+    }
+
+    @Override
+    public Integer cardLb() {
+        return null;
     }
     
 }

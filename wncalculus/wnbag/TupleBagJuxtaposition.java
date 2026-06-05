@@ -6,33 +6,32 @@ import java.util.Map;
 import bagexpr.Bag;
 import bagexpr.BagExpr;
 import expr.Domain;
-import expr.MultiArgs;
-import guard.Guard;
+import expr.N_aryOp;
 import tuple.FunctionTuple;
 
 /**
  *
  * @author lorenzo capra
  */
-public class TupleBagJuxtaposition implements BagExpr<FunctionTupleBag> , SNArcFunction, MultiArgs<FunctionTupleBag,BagExpr<FunctionTupleBag>> {
+public class TupleBagJuxtaposition implements  N_aryOp<ArcFunction>, BagExpr<WNtuple> {
 
     
-    public static FunctionTupleBag factory(List<BagExpr<FunctionTuple>> compositions) {
+    public static ArcFunction factory(List<BagExpr<FunctionTuple>> compositions) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Class<FunctionTupleBag> bagType() {
+    public Class<WNtuple> bagType() {
+        return WNtuple.class;
+    }
+
+    @Override
+    public Collection<ArcFunction> getArgs() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Collection<FunctionTupleBag> getArgs() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public BagExpr<FunctionTupleBag> buildOp(Collection<? extends FunctionTupleBag> args) {
+    public ArcFunction buildOp(Collection<? extends ArcFunction> args) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -47,19 +46,15 @@ public class TupleBagJuxtaposition implements BagExpr<FunctionTupleBag> , SNArcF
     }
 
     @Override
-    public Bag<FunctionTupleBag> build(Domain dom, Domain codom) {
+    public Bag<WNtuple> build(Domain dom, Domain codom) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Bag<FunctionTupleBag> build(Map<FunctionTupleBag, Integer> m) {
+    public Bag<WNtuple> build(Map<WNtuple, Integer> m) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
-    public <E extends SNArcFunction> E applyFilter(Guard f) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
     @Override
     public String symb() {
@@ -69,5 +64,15 @@ public class TupleBagJuxtaposition implements BagExpr<FunctionTupleBag> , SNArcF
     @Override
     public Class<? extends BagExpr> type() {
         return BagExpr.super.type();
+    }
+
+    @Override
+    public Integer cardLb() {
+       return null; 
+    }
+
+    @Override
+    public ArcFunction getIde() {
+        throw new UnsupportedOperationException("Unimplemented method 'getIde'");
     }
 }

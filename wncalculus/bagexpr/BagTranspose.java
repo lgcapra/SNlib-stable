@@ -50,8 +50,8 @@ public final class BagTranspose<E extends Transposable> extends UnaryBagOp<E> {
     }
     
     @Override
-    public BagTranspose buildOp(BagExpr<E> arg) {
-        return new BagTranspose (arg);
+    public BagTranspose<E> buildOp(BagExpr<E> arg) {
+        return new BagTranspose<> (arg);
     }
 
     @Override
@@ -73,21 +73,10 @@ public final class BagTranspose<E extends Transposable> extends UnaryBagOp<E> {
     public boolean isDistributive (Class<? extends  MultiArgs> optk) {
         return BagSum.class.equals(optk);
     }
-    
-     /**
-     * clone <tt>this</tt> transpose; the method is overridden because the
-     * arity of the operand and that of the operator are "inverted"
-     * of the operator are the same (to be overridden otherwise)
-     * @param newdom the new domain
-     * @param newcd the new codomain
-     * @param smap the map between old and new split sorts
-     * @return a clone of <tt>this</tt> with the specified co-domain
-     */
-    /*
-    @Override
-    public BagTranspose<E> clone (final Domain newdom, final Domain newcd) {
-        return new BagTranspose<> (getArg().clone(newcd, newdom). cast());
-    }*/
 
+    @Override
+    public Integer cardLb() {
+       return getArg().cardLb(); // check if this is right
+    }
     
 }

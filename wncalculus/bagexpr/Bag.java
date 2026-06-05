@@ -1,10 +1,7 @@
 package bagexpr;
 
 import java.util.*;
-import expr.Domain;
-import expr.IllegalDomain;
 import expr.ParametricExpr;
-import color.Sort;
 
 //Si potrebbe definire una super-interfaccia che rappresenta bag di qualsiasi tipo
 
@@ -102,13 +99,5 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>   {
         return BagExpr.super.type();
     }
     
-    /**
-     * 
-     * @return the bag's cardinality, meant as the cardinality of the application of the
-     * corresponding bag-function to any argument resulting in a non-empty bag;
-     * <code>null</code> if the cardinality cannot be computed (i.e., the bag-function is not 
-     * constant-size)
-     */
-    Integer card();
     
 }

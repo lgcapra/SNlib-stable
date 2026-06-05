@@ -1,6 +1,5 @@
 package bagexpr;
 
-import java.util.Map;
 import expr.*;
 
 /**
@@ -56,7 +55,7 @@ public final class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E> {
 
     @Override
     public String symb() {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return this.k + "." + getArg();
     }
 
     @Override
@@ -101,6 +100,12 @@ public final class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E> {
     @Override
     public String toString() {
         return "" +this.k + "*("+getArg()+')';
+    }
+
+    @Override
+    public Integer cardLb() {
+       Integer card = getArg().cardLb();
+       return card != null ? card * this.k : null;
     }
     
 }

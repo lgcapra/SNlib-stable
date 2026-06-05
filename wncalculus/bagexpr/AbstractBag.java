@@ -2,7 +2,6 @@ package bagexpr;
 
 import java.util.*;
 
-import classfunction.ElementaryFunction;
 import expr.*;
 
 /**
@@ -130,7 +129,7 @@ public abstract class AbstractBag<E extends ParametricExpr> implements Bag<E> {
     }
 
     @Override
-    public final Integer card() {
+    public final Integer cardLb() {
         int card = 0;
         for (Map.Entry<? extends E, Integer> x : asMap().entrySet()) {
             Integer k = x.getKey().cardLb();

@@ -3,7 +3,6 @@ package wnbag;
 import java.util.*;
 import java.util.Map.Entry;
 import classfunction.ElementaryFunction;
-import classfunction.SetFunction;
 import color.ColorClass;
 import color.Sort;
 import expr.*;

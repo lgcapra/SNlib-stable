@@ -2,7 +2,6 @@ package bagexpr;
 
 import util.Util;
 import java.util.*;
-import color.ColorClass;
 import expr.*;
 
 
@@ -171,6 +170,20 @@ public final class BagSum<E extends ParametricExpr> implements N_aryOp<BagExpr<E
         hash = 59 * hash + Objects.hashCode(this.args);
         
         return hash;
+    }
+
+
+    @Override
+    // could be moved in N_aryOp
+    public Integer cardLb() {
+        int card = 0;
+        for (BagExpr<E> b : this.args) {
+            Integer c = b.cardLb();
+            if (c == null)
+                return c;
+            card += c;
+        }      
+        return card;     
     }
 
     

@@ -88,7 +88,7 @@ import java.util.*;
         }
 
         @Override
-        public wnbag.LinearComb setDefaultIndex() {
+        public LinearComb setDefaultIndex() {
             Set<Integer> s = indexSet();
             if (s.isEmpty() || s.size() == 1 && s.iterator().next() == 1)
                 return this;
@@ -132,7 +132,7 @@ import java.util.*;
         }
 
         @Override
-        public wnbag.LinearComb replace(Equality eq) {
+        public LinearComb replace(Equality eq) {
             HashMap<ElementaryFunction, Integer> copy = new HashMap<>();
             asMap().forEach((key1, value) -> {
                 ElementaryFunction k = key1.replace(eq);
@@ -143,7 +143,7 @@ import java.util.*;
         }
 
         @Override
-        public wnbag.LinearComb copy(ColorClass newcc) {
+        public LinearComb copy(ColorClass newcc) {
             HashMap<ElementaryFunction, Integer> newmap = new HashMap<>();
             asMap().forEach((key, value) -> newmap.put(key.copy(newcc), value));
 
