@@ -18,21 +18,21 @@ public interface SetExpr extends LogicalExpr {
     
     <E extends SetExpr> LogComposition<E> buildSetComp(SetExpr r);
      
-    /** 
-     * provides a bag-view of this expression
-     * @param <E> the expression's type
-     * @return a singleton bag corresponding to <tt>this</tt> expression
-     * @throws ClassCastException if the type of e is not compatible with <code>this</code> type
-     */
-    abstract <E extends SetExpr> Bag<E> asBag();
+//    /**
+//     * provides a bag-view of this expression
+//     * @param <E> the expression's type
+//     * @return a singleton bag corresponding to <tt>this</tt> expression
+//     * @throws ClassCastException if the type of e is not compatible with <code>this</code> type
+//     */
+//    abstract <E extends SetExpr> Bag<E> asBag();
     
-    /** 
-     * provides the null bag corresponding to this kind of expression
-     * @param <E> the expression's type
-     * @return a null bag corresponding to <tt>this</tt> expression
-     * @throws ClassCastException if the type of e is not compatible with <code>this</code> type
-     */
-    abstract <E extends SetExpr> Bag<E> nullBag();
+//    /**
+//     * provides the null bag corresponding to this kind of expression
+//     * @param <E> the expression's type
+//     * @return a null bag corresponding to <tt>this</tt> expression
+//     * @throws ClassCastException if the type of e is not compatible with <code>this</code> type
+//     */
+//    abstract <E extends SetExpr> Bag<E> nullBag();
     
     /**
      * @return the lower-bound of <code>this</code> tuple's cardinality; <code>null</code> if, for any reason, the

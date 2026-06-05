@@ -44,18 +44,18 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
 //    public final ClassCompAsBag buildBagComp(SetExpr f) {
 //        return new ClassCompAsBag(this, f.cast());
 //    }
+//
+//    @Override
+//    @SuppressWarnings("unchecked")
+//    public <E extends logexpr.SetExpr> Bag<E> nullBag() {
+//        return (Bag<E>) new LinearCombBag(getDomain(), getCodomain());
+//    }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <E extends logexpr.SetExpr> Bag<E> nullBag() {
-        return (Bag<E>) new LinearCombBag(getDomain(), getCodomain());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <E extends logexpr.SetExpr> Bag<E> asBag() {
-        return nullBag();
-    }
+//    @Override
+//    @SuppressWarnings("unchecked")
+//    public <E extends logexpr.SetExpr> Bag<E> asBag() {
+//        return nullBag();
+//    }
 
     @Override
     public final All getTrue() {

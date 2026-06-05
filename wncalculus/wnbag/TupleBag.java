@@ -3,7 +3,9 @@ package wnbag;
 import java.util.HashMap;
 import java.util.Map;
 import bagexpr.AbstractBag;
+import color.Sort;
 import expr.Domain;
+import expr.ParametricExpr;
 import guard.Guard;
 
 /**
@@ -20,12 +22,7 @@ public final class TupleBag extends AbstractBag<WNtuple> implements SNArcFunctio
     public TupleBag(Domain dom, Domain codom) {
         super(dom,codom);
     }
-    
-   
-    @Override
-    public Integer card() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+
 
     @Override
     public TupleBag build(Domain dom, Domain codom) {
@@ -45,5 +42,26 @@ public final class TupleBag extends AbstractBag<WNtuple> implements SNArcFunctio
         return new TupleBag(mx);
     }
 
-   
+
+    @Override
+    public ParametricExpr clone(Map<Sort, Sort> split_map) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public ParametricExpr clone(Domain newdom) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Integer cardLb() {
+        Integer card = 0;
+        for (WNtuple o : asMap().keySet()) {
+            Integer lb = o.cardLb();
+            if (lb != null)
+                return lb;
+            card += lb;
+        }
+        return card;
+    }
 }

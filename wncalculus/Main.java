@@ -10,8 +10,7 @@ import graph.InequalityGraph;
 import guard.*;
 import tuple.*;
 import util.Util;
-import wnbag.FunctionTupleBag;
-import wnbag.LinearComb;
+import wnbag.TupleBag;
 import wnbag.WNtuple;
 
 /**
@@ -238,10 +237,10 @@ public class Main {
         f7 = Union.factory(false, f6,/*pc1*/ f1);
 
         System.out.println("normalizzo\n" + f7 + "\n" + Expressions.toStringDetailed(f7.simplify()));
-        Tuple t1, t2, t3;
+        WNtuple t1, t2, t3;
         Domain d2 = new Domain(c2, c2);
-        t1 = new Tuple(d2, f6);
-        t2 = new Tuple(d2, f7);
+        t1 = new WNtuple(d2, f6);
+        t2 = new WNtuple(d2, f7);
         TupleSum ts = (TupleSum) TupleSum.factory(false, t1, t2);
         System.out.println("semplifico\n" + ts + "\n" + Expressions.toStringDetailed(ts.simplify()));
         t1 = new Tuple(d2, f1);
@@ -251,7 +250,7 @@ public class Main {
         System.out.println("semplifico\n" + ts.toStringDetailed() + "\n" + Expressions.toStringDetailed(ts.simplify()));
         System.out.println("trasposta di " + ts + "\n" + Expressions.toStringDetailed(new TupleTranspose(ts).simplify()));
         //WNtupleBag b1 = new WNtupleBag(t1, 2);
-        BagExpr<FunctionTuple> b1 = new FunctionTupleBag(Util.singleMap(t1, 2));
+        BagExpr<FunctionTuple> b1 = new TupleBag(Util.singleMap(t1, 2));
         //WNtupleBag b2 = new WNtupleBag(t2, 1), b3;
         BagExpr<FunctionTuple> b2 = new FunctionTupleBag(Util.singleMap(t2, 2)), b3;
         BagExpr<FunctionTuple> s = BagSum.factory(b1, b2);

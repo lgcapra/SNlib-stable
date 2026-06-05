@@ -144,5 +144,7 @@ public interface ParametricExpr extends Expression {
     default Set<? extends ParametricExpr> simplify ( ) {
         return simplify(true);
     }
+
+    Integer cardLb ();
   
 }

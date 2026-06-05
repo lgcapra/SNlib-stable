@@ -8,7 +8,6 @@ import logexpr.LogicalExpr;
 import logexpr.SetExpr;
 import util.Pair;
 import util.Util;
-import wnbag.FunctionTupleBag;
 
 /**
  * @author Lorenzo Capra
@@ -167,21 +166,7 @@ public interface FunctionTuple extends SetExpr, Transposable /*, SNfunction*/ {
     default  String toStringAbstract () {
         throw new UnsupportedOperationException("not implemented for "+ getClass());
     }
-    
-    //to be overwritten if necessary
-    /**
-     * @return a singleton bag corresponding to <tt>this</tt> function-tuple 
-     */
-    @Override
-     default FunctionTupleBag asBag() {
-         return new FunctionTupleBag(this, 1);
-     }
-    
-    
-    @Override
-    default FunctionTupleBag nullBag() {
-        return new FunctionTupleBag(getDomain(), getCodomain());
-    }
+
     
 //    @Override
 //    default TupleBagComp buildBagComp(SetExpr e) {

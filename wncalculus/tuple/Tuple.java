@@ -18,7 +18,7 @@ import util.Util;
  *
  * @author Lorenzo Capra
  */
-public final class Tuple extends AbstractTuple<SetFunction> implements FunctionTuple, Cloneable {
+public final class Tuple extends AbstractTuple<SetFunction> implements FunctionTuple {
 
     private boolean reduce_guard; // signals whether the g has to "absorbed" into the tuple (default: false)
 
@@ -113,8 +113,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * class-function lists; it doesn'tuple perform any check and true copy, it
      * builds an unmodifiable view of the passed map
      *
-     * @param filter the tuple's f (<code>null</code> means TRUE)
-     * @param codomain the tuple's codomain (necessary only if f set
+     * @param f the tuple's filter
      * <code>null</code>)
      * @param m the specified map
      */
@@ -1195,7 +1194,6 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * normal-and-form, and not containing the "empty" class-function
      *
      * @return the transpose of <code>this</code> tuple
-     * @see isNormalAndForm
      */
     public Tuple transpose() {
         if (LogicalExprs.isNormalAndForm(getComponents())) {

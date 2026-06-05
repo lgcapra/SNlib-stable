@@ -200,4 +200,9 @@ public interface ClassFunction extends SingleSortExpr {
         return Collections.emptySet();
     }
 
+    //da sistemare
+    default Integer cardLb() {
+        return 1;
+    }
+
 }

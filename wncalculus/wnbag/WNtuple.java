@@ -3,6 +3,7 @@ package wnbag;
 import java.util.*;
 import java.util.Map.Entry;
 import classfunction.ElementaryFunction;
+import classfunction.SetFunction;
 import color.ColorClass;
 import color.Sort;
 import expr.*;
@@ -66,6 +67,14 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
         super(m, g, false);
     }
 
+    public WNtuple(final List<? extends LinearComb> args, final Domain d) {
+        super(args, d, true);
+    }
+
+    public WNtuple(Domain dom, LinearComb ... comps) {
+        this(Arrays.asList(comps), dom);
+    }
+
     @Override
     public WNtuple build(Guard filter, Guard guard) {
         return new WNtuple(filter, getHomSubTuples(), guard);
@@ -97,8 +106,19 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
     public Map<Sort, Integer> splitDelimiters() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
-    
+
+    @Override
+    public Integer cardLb() {
+        Integer card = 0;
+        for (LinearComb o : getComponents()) {
+                Integer lb = ((LinearComb) o).cardLb();
+                if (lb != null)
+                    return lb;
+                card += lb;
+            }
+        return card;
+    }
+
     /**
      * 
      * @return the tuple's expansion as a set of list of entries matching tuple's
@@ -162,7 +182,7 @@ public final class WNtuple extends AbstractTuple<LinearComb>  {
 			Set<Integer> indexSet = l.indexSet();
 			LinkedHashMap<Integer, LinearComb> m = imap.get( indexSet ); //optimization
 			if (m == null)
-				for (Entry<Set<Integer>, LinkedHashMap<Integer, LinearComb>> entry :  imap.entrySet() ) 
+				for (Entry<Set<Integer>, LinkedHashMap<Integer, LinearComb>> entry :  imap.entrySet() )
 					if (entry.getKey().containsAll( indexSet ) ) { // indexset should be a singleton or empty
                                             m = entry.getValue();
                                             break;

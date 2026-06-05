@@ -2,6 +2,7 @@ package bagexpr;
 
 import java.util.*;
 
+import classfunction.ElementaryFunction;
 import expr.*;
 
 /**
@@ -126,6 +127,18 @@ public abstract class AbstractBag<E extends ParametricExpr> implements Bag<E> {
         int hash = 7;
         hash = 37 * hash + Objects.hashCode(this.map);
         return hash;
+    }
+
+    @Override
+    public final Integer card() {
+        int card = 0;
+        for (Map.Entry<? extends E, Integer> x : asMap().entrySet()) {
+            Integer k = x.getKey().cardLb();
+            if (k == null)
+                return null;
+            card += k * x.getValue();
+        }
+        return card;
     }
     
 }

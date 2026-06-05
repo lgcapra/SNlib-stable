@@ -110,29 +110,5 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>   {
      * constant-size)
      */
     Integer card();
-   
-    
-    @Override
-    default Bag<E> clone(Domain newdom) {
-//         if (isEmpty())
-//            return build(newdom, getCodomain()) ;
-//
-//         HashMap<E,Integer> mapcopy = new HashMap<>();
-//         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(newdom)), e.getValue()); });
-//
-//         return build(mapcopy);
-        throw new IllegalDomain();
-    }
-    
-    @Override
-     default Bag<E> clone (final Map<Sort, Sort> split_map) {
-//        if (isEmpty())
-//            return build(getDomain().setSupport(split_map), getCodomain().setSupport(split_map)) ;
-//
-//         HashMap<E,Integer> mapcopy = new HashMap<>();
-//         asMap().entrySet().forEach(e -> { mapcopy.put(bagType().cast(e.getKey().clone(split_map)), e.getValue()); });
-//         return build(mapcopy);
-            throw new IllegalDomain();
-     }
     
 }
