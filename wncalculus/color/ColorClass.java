@@ -135,6 +135,48 @@ public final class ColorClass extends Sort implements Color {
         this("C_" + ide, intervals);
     }
 
+    //constructors for non-split classes
+    /**
+     * overloaded version of the above constructor
+     * creates a non split class with name C_iof fixed size (cardinality) 
+     * @param ide the class index (subscript)
+     * @param ordered ordering flag
+     * @param size the class fixed size (trivial constraint)
+     */
+    public ColorClass(int ide, boolean ordered, int size) {
+        this("C_" + ide, new Interval(size,size), ordered);
+    }
+    /**
+     * overloaded version of the above constructor
+     * creates a non split class with name C_i of fixed size (cardinality)
+     * @param ide the class index (subscript)
+     * @param size the class fixed size (trivial constraint)
+     */ 
+    public ColorClass(int ide, int size) {
+        this(ide, false, size);
+    }
+    
+    /**
+     * overloaded version of the above constructor
+     * creates a non split class with a given name fixed size (cardinality) 
+     * @param name the class name
+     * @param ordered ordering flag
+     * @param size the class fixed size (trivial constraint)
+     */
+    public ColorClass(String name, boolean ordered, int size) {
+        this(name, new Interval(size,size), ordered);
+    } 
+
+    /**
+     * overloaded version of the above constructor
+     * creates a non split class with a given name of fixed size (cardinality)
+     * @param name the class name
+     * @param size the class fixed size (trivial constraint)
+     */    
+    public ColorClass(String name, int size) {
+        this(name, false, size);
+    }               
+
     /**
      * @return <code>true</code> if and only if <code>this</code> color-class is ordered
      */
