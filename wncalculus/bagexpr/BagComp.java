@@ -10,7 +10,7 @@ import expr.*;
  * @author lorenzo capra
  * @param <E> the bag's domain
  */
-public class BagComp<E extends ParametricExpr> implements BagExpr<E>, CompositionOp<BagExpr<E>,BagExpr<E>> {
+public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, CompositionOp<BagExpr<E>,BagExpr<E>> {
 
      private final BagExpr<E> left, right;
      private boolean simplified;
@@ -72,14 +72,14 @@ public class BagComp<E extends ParametricExpr> implements BagExpr<E>, Compositio
     @Override
     public BagExpr<E> specSimplify () {
         BagExpr<E> lx = left(), rx = right();
-        if (rx instanceof ScalarProd) { // si potrebbe mettere nella parte generica
+        if (rx instanceof ScalarProd) { 
             ScalarProd<E> sp = (ScalarProd<E>) rx;
-            return ScalarProd.factory(new BagComp<>(lx, sp.getArg()), sp.k());
+            return buildScProd(buildOp(lx, sp.getArg()), sp.k()); // to do: to check whether the composition of a bag with a scalar product can be simplified by "pushing" the scalar product down the composition tree, i.e. by applying distributivity
         }
         
         if (lx instanceof Bag ) {
             Bag<E> lb = (Bag<E>) lx;
-            if (lb .isEmpty() ) 
+            if (lb.isEmpty() ) 
                 return build();
             
             if (rx instanceof Bag) {
@@ -90,7 +90,7 @@ public class BagComp<E extends ParametricExpr> implements BagExpr<E>, Compositio
                 if ( lb.isConstant() ) { // composition between a constant and a constant-size bag
                     Integer c = rb.cardLb();        
                     if (c != null)
-                        return ScalarProd.factory((BagExpr<E>) lb.clone(rb.getDomain()), c);
+                        return ((Bag<E>)lb.clone(rb.getDomain())).scalarProd(c);
                 }
                 else { //both lb and rb are (non empty) bags, with lb other than constant
                     ArrayList<BagExpr<E>> blist = new ArrayList<>();
@@ -99,30 +99,24 @@ public class BagComp<E extends ParametricExpr> implements BagExpr<E>, Compositio
                         int k = lb.mult(lf); 
                         if (rb.size()== 1) { // the right one  is a singleton bag
                             E rf = rb.support().iterator().next();
-//                            if (lf instanceof SetExpr) {
-//                                BagExpr<E> b = ((SetExpr)lf).buildBagComp((SetExpr)rf).cast(); // we try to compose the linear function with the right-one ...
-//                                if (b != null)
-//                                    return ScalarProd.factory( b, k * rb.mult(rf)).cast();
-//                            }
+//                            // to do
                         }
                         else   // the right operand is a bag with many terms
-                            rb.asMap().entrySet().forEach(y -> { blist.add( new BagComp(lb, build(y.getValue(),y.getKey()))); });
+                            rb.asMap().entrySet().forEach(y -> { blist.add( buildOp(lb, rb.build(y.getValue(),y.getKey()))); });
                     } 
                     else  // the left operand is a bag with many terms  
-                        lb.asMap().entrySet().forEach(x -> { blist.add(new BagComp(lb.build(x.getValue(), x.getKey()), rb )); });
+                        lb.asMap().entrySet().forEach(x -> { blist.add(buildOp(lb.build(x.getValue(), x.getKey()), rb )); });
 
                     if (! blist.isEmpty() )
-                        return BagSum.factory(blist, false);
+                        return buildBagSum(blist);
                 }
             }
+        } else if (lx instanceof ScalarProd) {
+            ScalarProd<E> sp = (ScalarProd<E>) lx;
+            return buildScProd(buildOp(sp.getArg(), rx), sp.k()); // to do: to check whether the composition of a bag with a scalar product can be simplified by "pushing" the scalar product down the composition tree, i.e. by applying distributivity
         }
          
         return this;
-    }
-
-    @Override
-    public final Class<? extends BagExpr> type() {
-        return BagExpr.class;
     }
     
     @Override
@@ -130,34 +124,27 @@ public class BagComp<E extends ParametricExpr> implements BagExpr<E>, Compositio
         return left().bagType();
     }
 
-    @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        return BagExpr.super.splitDelimiters();
-    }
 
     @Override
     public String toString() {
         return toStringOp();
     }
 
-    @Override
-    public BagComp<E> buildOp(BagExpr<E> left, BagExpr<E> right) {
-        return new BagComp(left, right);
-    }
-
-    @Override
-    public Bag<E> build(Domain dom, Domain codom) {
-        return this.left.build(dom, codom);
-    }
-
-    @Override
-    public Bag<E> build(Map<E, Integer> m) {
-        return this.left.build(m);
-    }
 
     @Override
     public Integer cardLb() {
         return null;
+    }
+
+
+    @Override
+    public BagComp<E> clone(Map<Sort, Sort> split_map) {
+        return (BagComp<E>) BagExpr.super.clone(split_map);
+    }
+
+    @Override
+    public Map<Sort, Integer> splitDelimiters() {
+        return BagExpr.super.splitDelimiters();
     }
     
 }

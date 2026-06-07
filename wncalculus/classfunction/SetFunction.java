@@ -160,7 +160,7 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     }
 
     @Override
-    public final Class<? extends SetFunction> type() {
+    public final Class<SetFunction> type() {
         return SetFunction.class;
     }
 
@@ -180,7 +180,7 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
      * <code>Pair</code>s (if any); otherwise, an empty-set
      */
     public Set<? extends Pair<? extends SetFunction, ? extends Guard>> toSimpleFunctions(Set<? extends Equality> ineqlist, Map<Projection, Subcl> inmap, Map<Projection, Set<Subcl>> notinmap, Domain domain) {
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     @Override

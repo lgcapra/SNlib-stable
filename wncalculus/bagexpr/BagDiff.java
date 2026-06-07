@@ -5,6 +5,7 @@ import expr.ParametricExpr;
 /**
  * @author lorenzo capra
  * this class template just maps the difference to a sum
+ * Redundant, it should be redefined as difference between proper bags
  */
 public class BagDiff {
     
@@ -16,7 +17,7 @@ public class BagDiff {
      * @return sum b1 + (-1)*b2
      */
     public static <E extends ParametricExpr> BagExpr<E> build(BagExpr<E> b1, BagExpr<E> b2) {
-        return BagSum.factory(b1, ScalarProd.factory(b2, -1));
+        return b1.buildBagSum(java.util.Arrays.asList(b1, b2.buildScProd(b2, -1)));
     }
     
 }

@@ -1,14 +1,12 @@
-package wnbag;
+package wncolorfunction;
 
 import bagexpr.AbstractBag;
-import bagexpr.Bag;
 import classfunction.ClassFunction;
 import classfunction.ElementaryFunction;
 import classfunction.Projection;
 import color.ColorClass;
 import color.Sort;
 import expr.Domain;
-import expr.ParametricExpr;
 import guard.Equality;
 import util.Util;
 
@@ -18,7 +16,7 @@ import java.util.*;
      * this class defines linear combination of basic class-funtions
      * @author lorenzo capra
      */
-    public final class LinearComb extends AbstractBag<ElementaryFunction> implements ClassFunction {
+    public final class LinearComb extends AbstractBag<ElementaryFunction> implements ColorFunction {
 
         private final ColorClass cc;
         private HashMap<Integer, Map<ElementaryFunction, Integer>> components; // cache
@@ -27,19 +25,20 @@ import java.util.*;
          * base constructor: creates a linear-combination of (elementary) class-functions
          * @param m a map corresponding to the linear combination
          */
-        public LinearComb(Map<ElementaryFunction, Integer> m) {
+        public LinearComb(Map<? extends ElementaryFunction, Integer> m) {
             super(m);
             if (m.isEmpty()) {
-                throw new NoSuchElementException("LinearComb map cannot be empty");
+                throw new IllegalArgumentException("Empty linear combination");
             }
             ElementaryFunction first = m.keySet().iterator().next();
             this.cc = first.getSort();
             for (ElementaryFunction elementaryFunction : m.keySet()) {
                 if (!elementaryFunction.getSort().equals(this.cc)) {
-                    throw new IllegalArgumentException("All elementary functions must have the same color class");
+                    throw new IllegalArgumentException("Elementary functions with different color classes");
                 }
             }
         }
+
 
         /**
          * creates a linear-combination from a map with disjointness flag (ignored for compatibility)
@@ -47,7 +46,7 @@ import java.util.*;
          * @param disjoint ignored (kept for API compatibility)
          */
         public LinearComb(Map<ElementaryFunction, Integer> m, boolean disjoint) {
-            this(m);  // ignoriamo il flag disjoint
+            this(m);  // ignoriamo per ora il flag disjoint
         }
 
         /**
@@ -57,6 +56,7 @@ import java.util.*;
         public LinearComb(Collection<? extends ElementaryFunction> c) {
             this(Util.asMap(c));
         }
+
 
         /**
          * creates a linear-combination from a varargs list of functions
@@ -74,6 +74,22 @@ import java.util.*;
         public LinearComb(ElementaryFunction f, int k) {
             this(Util.singleMap(f, k));
         }
+        /**
+         * creates an elementary (i.e., single-element) linear-combination with multiplicity 1
+         * @param f the only function
+         */
+        public LinearComb(ElementaryFunction f) {
+            this(f, 1);
+        }
+        
+        /**
+         * creates an empty linear-combination, corresponding to the given color class 
+         * @param cc
+         */
+        public LinearComb (ColorClass cc) {
+            super(new Domain(cc), new Domain(cc));
+            this.cc = cc;
+        }
 
         // ========== ClassFunction interface implementation ==========
 
@@ -83,20 +99,16 @@ import java.util.*;
         }
 
         @Override
-        public int splitDelim() {
-            throw new UnsupportedOperationException("splitDelim is not supported for LinearComb2");
-        }
-
-        @Override
-        public LinearComb setDefaultIndex() {
+        @SuppressWarnings("unchecked")
+        public <E extends ClassFunction> E setDefaultIndex() {
             Set<Integer> s = indexSet();
             if (s.isEmpty() || s.size() == 1 && s.iterator().next() == 1)
-                return this;
+                return (E) this;
 
             Map<ElementaryFunction, Integer> m = new HashMap<>();
             support().forEach(x -> { m.put(x.setDefaultIndex(), mult(x)); });
 
-            return new wnbag.LinearComb(m);
+            return (E) new wncolorfunction.LinearComb(m);
         }
 
         /**
@@ -132,45 +144,44 @@ import java.util.*;
         }
 
         @Override
-        public LinearComb replace(Equality eq) {
+        @SuppressWarnings("unchecked")
+        public <E extends ClassFunction> E replace(Equality eq) {
             HashMap<ElementaryFunction, Integer> copy = new HashMap<>();
             asMap().forEach((key1, value) -> {
                 ElementaryFunction k = key1.replace(eq);
                 copy.compute(k, (key, m) -> value + (m == null ? 0 : m));
             });
 
-            return new wnbag.LinearComb(copy);
+            return (E) new wncolorfunction.LinearComb(copy);
         }
 
         @Override
-        public LinearComb copy(ColorClass newcc) {
+        @SuppressWarnings("unchecked")
+        public <E extends ClassFunction> E copy(ColorClass newcc) {
             HashMap<ElementaryFunction, Integer> newmap = new HashMap<>();
             asMap().forEach((key, value) -> newmap.put(key.copy(newcc), value));
 
-            return new wnbag.LinearComb(newmap);
+            return (E) new wncolorfunction.LinearComb(newmap);
         }
 
-        public wnbag.LinearComb build(Map<ElementaryFunction, Integer> smap, boolean disj) {
-            return new wnbag.LinearComb(smap);
+        public wncolorfunction.LinearComb build(Map<ElementaryFunction, Integer> smap, boolean disj) {
+            return new wncolorfunction.LinearComb(smap);
+        }
+
+
+        @Override
+        public  LinearComb buildEmpty(Domain dom, Domain codom) {
+            return new LinearComb(asMap());
         }
 
         @Override
-        public ParametricExpr clone(Map<Sort, Sort> split_map) {
-            throw new UnsupportedOperationException("clone with split_map is not supported for LinearComb2");
+        public  LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
+            return new LinearComb (m);
         }
 
         @Override
         public Map<Sort, Integer> splitDelimiters() {
-            throw new UnsupportedOperationException("splitDelimiters is not supported for LinearComb2");
+            return super.splitDelimiters();
         }
 
-        @Override
-        public Bag<ElementaryFunction> build(Domain dom, Domain codom) {
-            return null;
-        }
-
-        @Override
-        public Bag<ElementaryFunction> build(Map<ElementaryFunction, Integer> m) {
-            return null;
-        }
     }

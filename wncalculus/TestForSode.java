@@ -10,7 +10,6 @@ import expr.Interval;
 import tuple.*;
 import classfunction.*;
 import guard.*;
-import wnbag.FunctionTupleBag;
 
 
 /**
@@ -72,12 +71,12 @@ public class TestForSode {
          FunctionTuple ft4 = FilteredTuple.factory(g,t5); // ft3: [x1 in C{1}, x2 notin C{1}](<S{C1}, x2>)
         // arc-functions (bags)
         FunctionTupleBag builder = new FunctionTupleBag(t1,1);
-        AbstractBag<FunctionTuple> in1 = (AbstractBag<FunctionTuple>) builder.build(t1, t1, t2), // in1: 2<x2, S-x1> + 1<x1, x2>
-                                  in2 = (AbstractBag<FunctionTuple>) builder.build(ft1, ft1, ft2), // in2: 2[x1 = x2](<x2, S-x1>) + 1[x1 = x2](<x1, x2>)
-                                  in3 = (AbstractBag<FunctionTuple>) builder.build(t1, t1, t3), // in3: 2<x2, S-x1> + 1<x2, x2>
-                                  in4 = (AbstractBag<FunctionTuple>) builder.build(t4, t5), // in4: 1<S{C1}, x2> + 1<x1, x3>
-                                  in5 = (AbstractBag<FunctionTuple>) builder.build(ft3, ft4), // in5: 1[x1 in C{1}, x2 notin C{1}](<S{C1}, x2>) + 1[x1 in C{1}, x2 notin C{1}](<x1, x3>)
-                                  in6 = (AbstractBag<FunctionTuple>) builder.build(t6, t6, t5, t5); // 2[x1 in X{1},x2 in X{2}]<S-x1,S-x1>[x_1 != x_2]+2<x_1,x_3>
+        AbstractBag<FunctionTuple> in1 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t1, t1, t2), // in1: 2<x2, S-x1> + 1<x1, x2>
+                                  in2 = (AbstractBag<FunctionTuple>) builder.buildEmpty(ft1, ft1, ft2), // in2: 2[x1 = x2](<x2, S-x1>) + 1[x1 = x2](<x1, x2>)
+                                  in3 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t1, t1, t3), // in3: 2<x2, S-x1> + 1<x2, x2>
+                                  in4 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t4, t5), // in4: 1<S{C1}, x2> + 1<x1, x3>
+                                  in5 = (AbstractBag<FunctionTuple>) builder.buildEmpty(ft3, ft4), // in5: 1[x1 in C{1}, x2 notin C{1}](<S{C1}, x2>) + 1[x1 in C{1}, x2 notin C{1}](<x1, x3>)
+                                  in6 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t6, t6, t5, t5); // 2[x1 in X{1},x2 in X{2}]<S-x1,S-x1>[x_1 != x_2]+2<x_1,x_3>
         
         AbstractBag<?>[] input_array = {in1, in2, in3, in4, in5, in6}; // creiamo una lista di funzioni di input
         List<AbstractBag<FunctionTuple>> input_list = new ArrayList<>();

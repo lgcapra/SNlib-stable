@@ -1,20 +1,30 @@
 package wnbag;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import bagexpr.AbstractBag;
-import color.Sort;
 import expr.Domain;
-import expr.ParametricExpr;
+import util.Util;
 
 /**
  *
- * this interface defines the super-type of SN arc functions
+ * this class defines the super-type of SN arc functions
  * @author lorenzo capra
  */
 public final class TupleBag extends AbstractBag<WNtuple> implements ArcFunction {
     
     public TupleBag(Map<? extends WNtuple, Integer> m) {
         super(m);
+    }
+
+    public TupleBag(boolean simplified, Collection<? extends WNtuple> tuples) {
+        this(Util.asMap(tuples));
+    }
+
+    public TupleBag(boolean simplified, WNtuple... tuples) {
+        this(Util.asMap(Arrays.asList(tuples)));
     }
     
     public TupleBag(Domain dom, Domain codom) {
@@ -23,12 +33,12 @@ public final class TupleBag extends AbstractBag<WNtuple> implements ArcFunction 
 
 
     @Override
-    public TupleBag build(Domain dom, Domain codom) {
+    public TupleBag buildEmpty(Domain dom, Domain codom) {
         return new TupleBag(dom,codom);
     }
 
     @Override
-    public TupleBag build(Map<WNtuple, Integer> m) {
+    public TupleBag build(Map<? extends WNtuple, Integer> m) {
         return new TupleBag(m);
     }
 
@@ -42,13 +52,13 @@ public final class TupleBag extends AbstractBag<WNtuple> implements ArcFunction 
 
 
     @Override
-    public ParametricExpr clone(Map<Sort, Sort> split_map) {
+    public TupleBag clone(Domain newdom) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public ParametricExpr clone(Domain newdom) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public TupleBag clone() {
+        return new TupleBag(new HashMap<>(asMap()));
     }
 
 

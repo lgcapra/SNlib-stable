@@ -2,7 +2,7 @@ package bagexpr;
 
 import java.util.Map;
 import java.util.Objects;
-import expr.Domain;
+import color.Sort;
 import expr.ParametricExpr;
 import expr.UnaryOp;
 
@@ -40,11 +40,6 @@ public abstract class UnaryBagOp<E extends ParametricExpr> implements UnaryOp<Ba
     }
 
     @Override
-    public final Class<? extends BagExpr> type() {
-        return BagExpr.class;
-    }
-
-    @Override
     public final Class<E> bagType() {
         return this.bexpr.bagType();
     }
@@ -67,14 +62,10 @@ public abstract class UnaryBagOp<E extends ParametricExpr> implements UnaryOp<Ba
         return Objects.equals(this.bexpr, ((UnaryBagOp<?>) obj).bexpr);
     }
     
-    @Override
-    public final Bag<E> build(Domain dom, Domain codom) {
-        return this.bexpr.build(dom, codom);
-    }
     
     @Override
-    public final Bag<E> build(Map<E, Integer> m) {
-        return getArg().build(m);
+    public final UnaryBagOp<E> clone(Map<Sort, Sort> split_map) {
+       return (UnaryBagOp<E>) BagExpr.super.clone(split_map); // default implementation is fine
     }
 
 }

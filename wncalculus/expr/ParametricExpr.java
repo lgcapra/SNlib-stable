@@ -146,5 +146,7 @@ public interface ParametricExpr extends Expression {
     }
 
     Integer cardLb ();
+
+    ParametricExpr buildTransp() ;
   
 }

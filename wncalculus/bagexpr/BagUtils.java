@@ -9,9 +9,11 @@ import guard.*;
 import logexpr.GuardedExpr;
 import tuple.FunctionTuple;
 import tuple.Tuple;
+import tuple.AbstractTuple;
 import tuple.AllTuple;
 import util.Pair;
 import util.Util;
+import wnbag.WNtuple;
 import logexpr.LogicalExprs;
 
 /**
@@ -107,77 +109,80 @@ public final class BagUtils {
         return mm;
     }
 
-    // mapGuardsToCoefficients: given a Bag of FunctionTuple-like elements, extract map guard->coefficient using f
-    public static <E extends FunctionTuple> Map<Guard, Integer> mapGuardsToCoefficients(Bag<E> bag, BiFunction<Integer,Integer,Integer> f) {
+    // mapGuardsToCoefficients: given a Bag of Tuple-like elements, extract map guard->coefficient using f
+    // SERVE?
+    public static Map<Guard, Integer> mapGuardsToCoefficients(Bag<WNtuple> bag, BiFunction<Integer,Integer,Integer> f) {
         Map<Guard, Integer> m = new HashMap<>();
         if (bag == null) return m;
 
-        Bag<E> b = (Bag<E>) ((BagExpr<?>) bag).normalize(); // normalized
+        Bag<WNtuple> b =(Bag<WNtuple>) bag.normalize(); // normalized
         if (b.isEmpty()) {
             m.put(True.getInstance(b.getDomain()), 0);
             return m;
         }
 
-        Set<? extends E> keys = b.support();
-        if (keys.size() == 1) { // elementary bag
-            E k = keys.iterator().next();
-            Guard g;
-            if (k instanceof AllTuple) {
-                g = True.getInstance(b.getDomain());
-            } else if (k instanceof GuardedExpr) {
-                g = (Guard) ((GuardedExpr) k).guard();
-            } else if (k instanceof Tuple) {
-                g = ((Tuple) k).guard();
-            } else {
-                throw new ClassCastException("Unsupported FunctionTuple type in BagUtils.mapGuardsToCoefficients: " + k.getClass());
-            }
-            m.put(g, b.mult(k));
-        }
-        else {
-            keys.forEach(x -> {
-                Guard g;
-                if (x instanceof AllTuple) {
-                    g = True.getInstance(b.getDomain());
-                } else if (x instanceof GuardedExpr) {
-                    g = (Guard) ((GuardedExpr) x).guard();
-                } else if (x instanceof Tuple) {
-                    g = ((Tuple) x).guard();
-                } else {
-                    throw new ClassCastException("Unsupported FunctionTuple type in BagUtils.mapGuardsToCoefficients: " + x.getClass());
-                }
-                setVal(m, g, b.mult(x), f);
-            });
+        //Set<? extends WNtuple> keys = b.support();
+        //if (keys.size() == 1) { // elementary bag
+        //    WNtuple k = keys.iterator().next();
+        //    Guard g;
+        //    if (k instanceof AllTuple) {
+        //        g = True.getInstance(b.getDomain());
+        //    } else 
+        //    if (k instanceof GuardedExpr) {
+            //    g = (Guard) ((GuardedExpr) k).guard();
+            //} else if (k instanceof Tuple) {
+            //    g = ((Tuple) k).guard();
+            //} else {
+            //    throw new ClassCastException("Unsupported FunctionTuple type in BagUtils.mapGuardsToCoefficients: " + k.getClass());
+            //}
+            //m.put(g, b.mult(k));
+        //}
+        //else {
+        //    keys.forEach(x -> {
+        //        Guard g;
+        //        //if (x instanceof AllTuple) {
+        //        //    g = True.getInstance(b.getDomain());
+        //        //} else 
+        //        if (x instanceof GuardedExpr) {
+        //            g = (Guard) ((GuardedExpr) x).guard();
+        //        } else if (x instanceof Tuple) {
+        //            g = ((Tuple) x).guard();
+        //        } else {
+        //            throw new ClassCastException("Unsupported FunctionTuple type in BagUtils.mapGuardsToCoefficients: " + x.getClass());
+        //        }
+        //        setVal(m, g, b.mult(x), f);
+      //      });
 
-            if (m.size() > 1) // optimization
-                disjoinMapOfGuards(m, f);
-        }
+      //      if (m.size() > 1) // optimization
+      //          disjoinMapOfGuards(m, f);
+      //  }
 
-        if (!LogicalExprs.disjoined(m.keySet())) {
-            System.out.println("le guardie dovrebbero essere disgiunte: " + m.keySet());
-            throw new Error();
-        }
+      //  if (!LogicalExprs.disjoined(m.keySet())) {
+      //      System.out.println("le guardie dovrebbero essere disgiunte: " + m.keySet());
+      //      throw new Error();
+      //  }
 
-        Integer truecoeff = m.get(null);
-        if (truecoeff != null) {
-            m.remove(null);
-            m.put(True.getInstance(b.getDomain()), truecoeff);
-        }
+      //  Integer truecoeff = m.get(null);
+      //  if (truecoeff != null) {
+      //        m.remove(null);
+      //        m.put(True.getInstance(b.getDomain()), truecoeff);
+      //    }
 
-        Guard implicit = Neg.factory(Or.factory(m.keySet(), true));
-        implicit = (Guard) implicit.normalize(true);
+      //  Guard implicit = Neg.factory(Or.factory(m.keySet(), true));
+      //  implicit = (Guard) implicit.normalize(true);
 
-        if (!implicit.isFalse()) {
-            m.put(implicit, 0);
-        }
+      //  if (!implicit.isFalse()) {
+      //      m.put(implicit, 0);
+      //  }
 
-        return m;
+      return m;
     }
 
-    public static <E extends FunctionTuple> Map<Guard, Integer> mapGuardsToMaxCoefficients(Bag<E> bag) {
+    public static Map<Guard, Integer> mapGuardsToMaxCoefficients(Bag<WNtuple> bag) {
         return mapGuardsToCoefficients(bag, (Integer x, Integer y) -> Math.max(x, y));
     }
 
-    public static <E extends FunctionTuple> Map<Guard, Integer> mapGuardsToSumCoefficients(Bag<E> bag) {
+    public static Map<Guard, Integer> mapGuardsToSumCoefficients(Bag<WNtuple> bag) {
         return mapGuardsToCoefficients(bag, (Integer x, Integer y) -> x + y);
     }
 

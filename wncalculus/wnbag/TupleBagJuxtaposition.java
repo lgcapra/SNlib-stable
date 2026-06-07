@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import bagexpr.Bag;
 import bagexpr.BagExpr;
+import color.Sort;
 import expr.Domain;
 import expr.N_aryOp;
 import tuple.FunctionTuple;
@@ -13,7 +14,7 @@ import tuple.FunctionTuple;
  *
  * @author lorenzo capra
  */
-public class TupleBagJuxtaposition implements  N_aryOp<ArcFunction>, BagExpr<WNtuple> {
+public final class TupleBagJuxtaposition implements  N_aryOp<ArcFunction>, ArcFunction {
 
     
     public static ArcFunction factory(List<BagExpr<FunctionTuple>> compositions) {
@@ -46,12 +47,12 @@ public class TupleBagJuxtaposition implements  N_aryOp<ArcFunction>, BagExpr<WNt
     }
 
     @Override
-    public Bag<WNtuple> build(Domain dom, Domain codom) {
+    public Bag<WNtuple> buildEmpty(Domain dom, Domain codom) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public Bag<WNtuple> build(Map<WNtuple, Integer> m) {
+    public Bag<WNtuple> build(Map<? extends WNtuple, Integer> m) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -62,11 +63,6 @@ public class TupleBagJuxtaposition implements  N_aryOp<ArcFunction>, BagExpr<WNt
     }
     
     @Override
-    public Class<? extends BagExpr> type() {
-        return BagExpr.super.type();
-    }
-
-    @Override
     public Integer cardLb() {
        return null; 
     }
@@ -74,5 +70,11 @@ public class TupleBagJuxtaposition implements  N_aryOp<ArcFunction>, BagExpr<WNt
     @Override
     public ArcFunction getIde() {
         throw new UnsupportedOperationException("Unimplemented method 'getIde'");
+    }
+
+    @Override
+    public ArcFunction clone(Map<Sort, Sort> split_map) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'clone'");
     }
 }

@@ -9,7 +9,7 @@ import expr.*;
  * @author Lorenzo Capra
  * @param <E> the bag-expression's type
  */
-public final class BagTranspose<E extends Transposable> extends UnaryBagOp<E> {
+public abstract class BagTranspose<E extends ParametricExpr> extends UnaryBagOp<E> {
 
     /**
      * build the transpose of a bag-expression
@@ -49,10 +49,6 @@ public final class BagTranspose<E extends Transposable> extends UnaryBagOp<E> {
         return super.getDomain();
     }
     
-    @Override
-    public BagTranspose<E> buildOp(BagExpr<E> arg) {
-        return new BagTranspose<> (arg);
-    }
 
     @Override
     public String symb() {
@@ -78,5 +74,6 @@ public final class BagTranspose<E extends Transposable> extends UnaryBagOp<E> {
     public Integer cardLb() {
        return getArg().cardLb(); // check if this is right
     }
+
     
 }

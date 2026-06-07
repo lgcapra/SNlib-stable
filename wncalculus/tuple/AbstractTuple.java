@@ -1,7 +1,6 @@
 package tuple;
 
 import color.Sort;
-import expr.Expression;
 import java.util.*;
 import classfunction.ClassFunction;
 import color.ColorClass;
@@ -15,7 +14,7 @@ import util.Util;
  * @author lorenzo capra
  * @param <E> the tuple's elements' type (either BoolFunction or BagFunction)
  */
-public abstract class AbstractTuple<E extends ClassFunction> implements Expression, Transposable  {
+public abstract class AbstractTuple<E extends ClassFunction> implements ParametricExpr, Cloneable {
     //we assume that tuple's components color-classes are consistent: c1.equals(c2) <-> c1.compareTo(c2) (i.e. different colors must have different names)
     private  final    SortedMap<ColorClass , List<? extends E>> hom_parts ; // the map between colors and homogenous sub-tuples composing this tuple 
     private  final    Guard   filter, guard; 

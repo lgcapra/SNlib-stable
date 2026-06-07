@@ -3,7 +3,6 @@ package bagexpr;
 import java.util.*;
 import expr.ParametricExpr;
 
-//Si potrebbe definire una super-interfaccia che rappresenta bag di qualsiasi tipo
 
 /**
  * @author Lorenzo Capra
@@ -11,11 +10,8 @@ import expr.ParametricExpr;
  * (signed) integer multiplicity
  * @param <E> the domain of the elements of the bag 
  */
-public interface Bag<E extends ParametricExpr> extends BagExpr<E>   {
-    
-    /**
-     *
-     */
+public interface Bag<E extends ParametricExpr> extends BagExpr<E>  {
+     
     static final String EMPTY = "<null>";
     /** 
      * @return a map-view of this bag
@@ -82,10 +78,10 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>   {
      * does the scalar product between <code>this</code> bag and a given coefficient 
      * @param coeff an integer coefficient
      * @return a new bag obtained by multiplying <code>this</code>' coefficients by
-     * by <code>coeff</code> ; <code>this</code> if <code>coeff == 1</code>
+     * by <code>coeff</code> ; <code>this</code> if the bag is empty ot <code>coeff == 1</code>
      */
     default Bag<E> scalarProd(int coeff) {
-        if ( isEmpty() ) 
+        if ( isEmpty() || coeff == 1 ) 
             return this;
           
         HashMap<E,Integer> m = new HashMap<>();
@@ -93,11 +89,28 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>   {
         
         return build(m);
     }
-    
-    @Override
-    default Class<? extends BagExpr> type() {
-        return BagExpr.super.type();
+
+    /** 
+     * does the sum between <code>this</code> bag and a given bag
+     * @param b a bag to be summed with <code>this</code>
+     * @return a new bag obtained by summing <code>this</code> and <code>b</code>; 
+     * <code>this</code> if <code>b</code> is empty
+     */
+    default Bag<E> sum(Bag<E> b) {
+        if (isEmpty())
+            return b;
+        if (b.isEmpty())
+            return this;
+        
+        HashMap<E,Integer> m = new HashMap<>(asMap());
+        b.asMap().entrySet().forEach(e -> { m.merge(e.getKey(), e.getValue(), Integer::sum); });
+        
+        return build(m);
     }
+   
     
+    default Bag<E> clone() throws CloneNotSupportedException {
+         return build(asMap());
+    }
     
 }

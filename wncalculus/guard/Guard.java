@@ -5,6 +5,7 @@ import java.util.*;
 import classfunction.SetFunction;
 import color.ColorClass;
 import expr.Domain;
+import expr.ParametricExpr;
 import util.Util;
 
 /**
@@ -271,5 +272,10 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
      public final Integer cardLb() {
         return null;
      }
+
+     @Override
+    public Guard buildTransp() {
+        throw new UnsupportedOperationException("Unimplemented method 'buildTransp' for Guard");
+    }    
     
 }

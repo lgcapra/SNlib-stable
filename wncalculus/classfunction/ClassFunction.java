@@ -200,9 +200,16 @@ public interface ClassFunction extends SingleSortExpr {
         return Collections.emptySet();
     }
 
-    //da sistemare
-    default Integer cardLb() {
-        return 1;
+    /*
+      default implementation of cardLb, to be overridden by classes for which a lower bound on cardinality can be computed
+        * @return a lower bound on the cardinality of the function, or <code>null</code> if it cannot be computed                   
+      */
+      default Integer cardLb() {
+        return null;
     }
 
+    @Override
+    default ParametricExpr buildTransp() {
+        throw new UnsupportedOperationException("Unimplemented method 'buildTransp' for ClassFunction");
+    }
 }

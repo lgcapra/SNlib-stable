@@ -1,6 +1,8 @@
 package util;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.function.*;
 import java.util.*;
 
@@ -617,12 +619,12 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
                 if ( ! check.apply(first, next = ite.next()) ) 
                     if (ex != null) {
                         try {
-                            System.err.println(first + " and " + next + " don't match the same property:\n" + textprop.apply(first)+ "\nvs\n" + textprop.apply(next)); //error message
-                            throw ex.newInstance();
+                            Constructor<? extends RuntimeException> constr = ex.getConstructor(String.class);
+                            throw constr.newInstance(first + " and " + next + " don't match the property:\n" + textprop.apply(first)+ "\nvs\n" + textprop.apply(next));
                         } 
-                        catch (InstantiationException | IllegalAccessException ex1) {
+                        catch (InstantiationException | IllegalAccessException | NoSuchMethodException |  InvocationTargetException ex1) {
                             throw new Error(ex1);
-                        }
+                        } 
                     } 
                     else 
                         return false;

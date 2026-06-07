@@ -28,7 +28,7 @@ public final class TupleSupport implements FunctionTuple, SingleArg<ArcFunction,
 
 
     //new version: the support is a unary operator
-    // check!
+    // ok (uncomment) once the asSetFunction has been implemented
     @Override
     public FunctionTuple specSimplify() {
         if (this.func instanceof TupleBag) {
@@ -37,11 +37,14 @@ public final class TupleSupport implements FunctionTuple, SingleArg<ArcFunction,
             
             if (support.isEmpty()) {
                 return getFalse();
-            } else {
-                Set<FunctionTuple> suppfunc = new HashSet<>();
-                return TupleSum.factory(suppfunc, bag.disjoined());
+            } 
+            //else {
+            //    Set<FunctionTuple> suppfunc = new HashSet<>();
+            //    for     (WNtuple t : support) {
+            //        suppfunc.add(t.asSetFunction() );
+            //    }
+            //    return TupleSum.factory(suppfunc, bag.disjoined());
             }
-        }
         
         return this;
     }

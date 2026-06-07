@@ -7,44 +7,16 @@ import expr.*;
  * @author lorenzo capra
  * @param <E> the bag's domain
  */
-public final class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E> {
+public abstract class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E> {
 
-    private final int k; 
+    protected final int k; 
     
-    private ScalarProd(BagExpr<E> arg, int coeff) {
+    protected ScalarProd(BagExpr<E> arg, int coeff) {
         super(arg);
         this.k = coeff;
     }
-    
-    /**
-     * factory method
-     * @param <E> the bag's domain
-     * @param arg a bag-expression
-     * @param coeff an integer coefficient
-     * @return the bag-expression, an build bag, or a ScalarProd object, depending
-     * on the coefficient's value (1, 0, other)
-     */
-    public static <E extends ParametricExpr> BagExpr<E> factory(BagExpr<E> arg, int coeff) {
-        BagExpr<E> res;
-        switch (coeff) {
-            case 1:
-                res = arg;
-                break;
-            case 0:
-                res = arg.build();
-                break;
-            default:
-                res = new ScalarProd<E>(arg, coeff);
-        }
-        return res;
-    }
 
-    
-    @Override
-    public ScalarProd<E> buildOp(BagExpr<E> arg) {
-        return new ScalarProd<E>(arg, this.k);
-    }
-    
+
     /**
      * 
      * @return the scalar value 
@@ -67,10 +39,18 @@ public final class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E> {
     //manca la trasposta
     @Override
     public BagExpr<E> specSimplify() {
+        if (this.k == 0) {
+            return build();
+        }
+
         BagExpr<E> arg = getArg();
+        if (this.k == 1) {
+            return arg;
+        }
+
         if (arg instanceof ScalarProd) {
-            ScalarProd<E> sparg = (ScalarProd<E>) arg;
-            return new ScalarProd<E>( sparg.getArg(), sparg.k * this.k);
+            ScalarProd<E> sprod = (ScalarProd<E>) arg;
+            return buildScProd(sprod.getArg(), sprod.k * this.k);
         }
         
         if (arg instanceof Bag) {

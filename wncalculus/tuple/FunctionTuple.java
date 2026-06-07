@@ -13,7 +13,7 @@ import util.Util;
  * @author Lorenzo Capra
  this class defines the super-type for any WN function-tuple mapping to sets
  */
-public interface FunctionTuple extends SetExpr, Transposable /*, SNfunction*/ {
+public interface FunctionTuple extends SetExpr /*, SNfunction*/ {
     
     /** 
      * just invokes a factory method (maybe redundant)

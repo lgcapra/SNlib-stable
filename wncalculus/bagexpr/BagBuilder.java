@@ -10,15 +10,7 @@ import util.Util;
  * @param <E> the bag's domain
  */
 public interface BagBuilder<E extends ParametricExpr> {
-    
-    /**
-     * builds an empty bag of the same type as <code>this</code>, with a given arity
-     * @param dom the bag's domain
-     * @param codom the bag's codomain
-     * @return an empty bag of the specified arity
-     */
-    Bag<E> build(Domain dom, Domain codom);
-    
+        
     /**
      * safely builds a bag of the same type as <tt>this</tt> from a given
      * (possibly empty) map
@@ -26,10 +18,24 @@ public interface BagBuilder<E extends ParametricExpr> {
      * @return the corresponding bag
      * @throws NoSuchElementException if the map is empty
      */
-    Bag<E> build (Map<E, Integer> m) ;
+
+    Bag<E> build (Map<? extends E, Integer> m) ;
+    /**
+     * safely builds a bag of the same type as <tt>this</tt> from a given
+     * domain and codomain
+     * @param dom the bag's domain
+     * @param codom the bag's codomain
+     * @return the corresponding bag
+     */
+    Bag<E> buildEmpty (Domain dom, Domain codom) ;
+
     
-    //derived methods
+    /**
+     * @return an empty bag of the same arity as <tt>this</tt>
+     */
+    Bag<E> build () ;
     
+
     /**
      * builds a singleton-bag
      * @param e the bag's element
