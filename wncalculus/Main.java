@@ -247,12 +247,13 @@ public class Main {
         f7 = Union.factory(false, f6,/*pc1*/ f1);
         
         // parte sui nultiset -- modificata dopo ultimi cambiamenti di bag expressions
+        System.out.println("--- multiset ---");
         System.out.println("normalizzo\n" + f7 + "\n" + Expressions.toStringDetailed(f7.simplify()));
-        WNtuple wnt1, wnt2, t3;
+        WNtuple wnt1, wnt2;
         Domain npd2 = new Domain(fc2, fc2);
         
-        wnt2 = new WNtuple(npd2 , new LinearComb(pr2));
-        wnt1 = new WNtuple(npd2, new LinearComb(pr1));
+        wnt2 = new WNtuple(npd2 , new LinearComb(pr2, pr1), new LinearComb(pr1));
+        wnt1 = new WNtuple(npd2, new LinearComb(pr1), new LinearComb(pr2, pr2));
         TupleBag tb = new TupleBag(false, wnt1, wnt2);
         System.out.println("semplifico\n" + tb + "\n" + Expressions.toStringDetailed(tb.simplify()));
         TupleBag b1 = new TupleBag(true,wnt1, wnt1);
@@ -264,7 +265,6 @@ public class Main {
         BagExpr<WNtuple> tbag = (Bag<WNtuple>) s.normalize();
         if (tbag instanceof Bag) {
             System.out.println(tbag);
-            Map<Guard, Integer> tx = bagexpr.BagUtils.mapGuardsToMaxCoefficients((TupleBag) tbag);
             System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients((Bag<WNtuple>) tbag));
         }
         //System.out.println("prodotto Cartesiano m x m x m:\n" + bagexpr.BagUtils.product(m, m, m));

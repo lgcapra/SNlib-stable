@@ -95,12 +95,11 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
     /**
      * 
-     * @return the tuple's expansion as a set of list of entries matching tuple's
-     * components containing variables of the same index
+     * @return a set (that is a sum) of list of entries matching tuple's components containing variables of the same index
      * it builds on <tt>Util.cartesianProd</tt>
      * should be invoked on single-color tuples
      */
-    private Set<Collection<Entry<Integer, Map<ElementaryFunction, Integer>>>> expand( ) {
+    private Set<Collection<Entry<Integer, Map<ElementaryFunction, Integer>>>> separate( ) {
     	List<Set<Entry<Integer, Map<ElementaryFunction, Integer>>>> l = new ArrayList<>();
         getComponents().stream().map(cx -> ((ColorFunction) cx).components().entrySet()).forEachOrdered(l::add);
     	
@@ -118,14 +117,12 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * should be invoked on single-color tuples, otherwise, it raises an exception
      * it build on <tt>expand()</tt>
      */
-    // a cosa serve?
     public Set<? extends WNtuple> singleIndexComponentsTuples() {
-    	HashSet<WNtuple> tset = new HashSet<>();
-    	Set<Collection<Entry<Integer, Map<ElementaryFunction, Integer>>>> expansion = expand();
+    	Set<Collection<Entry<Integer, Map<ElementaryFunction, Integer>>>> expansion = separate();
     	if (expansion.size() == 1)
             return Collections.singleton(this); //optimization
-        
         //System.out.println("expansion:\n"+expansion);
+        HashSet<WNtuple> tset = new HashSet<>();
         ColorClass cc = getSort(); // the tuple is assumed-single color
     	for (Collection<Entry<Integer, Map<ElementaryFunction, Integer>>> lx : expansion) {
             List<ColorFunction> lc = new ArrayList<>();
@@ -215,7 +212,14 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     	Guard g = guard();
     	return independentComponentsV2(!g.isTrivial() ? ((And) g).igraph().get( getSort()).connectedIndices(): Collections.emptySet());
     }
-
     
+    /**
+     * if <code>this</code> tuple contains non trivial linear combinations, expand the tuple into a corresponding TupleBag
+     * @return the bag corresponding to the expansion of inner linear combinations
+     */
+    public ArcFunction expand() {
+        // to do
+        return this;
+    }
     
 }
