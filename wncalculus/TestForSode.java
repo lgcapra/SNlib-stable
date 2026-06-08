@@ -10,6 +10,8 @@ import expr.Interval;
 import tuple.*;
 import classfunction.*;
 import guard.*;
+import wnbag.WNtuple;
+import wncolorfunction.LinearComb;
 
 
 /**
@@ -54,12 +56,12 @@ public class TestForSode {
         List<SetFunction> flist = new ArrayList<>(Arrays.asList(farr)); //lista di funzionis
         
 // tuple di funzioni, tutte con dominio d2
-        Tuple t1 = new Tuple(d2, x2, px1), // t1: <x2, S-x1>
-              t2 = new Tuple(d2, x1, x2),  // t2: <x1, x2>
-              t3 = new Tuple(d2, x2, x2),  // t3: <x2, x2>
-              t4 = new Tuple(d2, sc1, x2), // t4: <S{C1}, x2>
-              t5 = new Tuple(d2, x1, x3), // t5: <x1, x3>
-              t6 = new Tuple(g, flist, e3); // t6: [x_1 in X{1},x_2 in X{2}]<S-x1,S-x1>[x_1 != x_2]
+        Tuple t1 = new Tuple(d2,x2, px1), // t1: <x2, S-x1>
+                t2 = new Tuple(d2, x1, x2),  // t2: <x1, x2>
+                t3 = new Tuple(d2, x2, x2),  // t3: <x2, x2>
+                t4 = new Tuple(d2, sc1, x2), // t4: <S{C1}, x2>
+                t5 = new Tuple(d2, x1, x3), // t5: <x1, x3>
+                t6 = new Tuple(g, flist, e3); // t6: [x_1 in X{1},x_2 in X{2}]<S-x1,S-x1>[x_1 != x_2]
         FunctionTuple ft1 = FilteredTuple.factory(e1, t1); // ft1: [x1 = x2] (<x2, S-x1>)
         FunctionTuple ft2 = FilteredTuple.factory(e1,t2); // ft1: [x1 = x2] (<x2, S-x1>)
         
@@ -70,43 +72,43 @@ public class TestForSode {
         
          FunctionTuple ft4 = FilteredTuple.factory(g,t5); // ft3: [x1 in C{1}, x2 notin C{1}](<S{C1}, x2>)
         // arc-functions (bags)
-        FunctionTupleBag builder = new FunctionTupleBag(t1,1);
-        AbstractBag<FunctionTuple> in1 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t1, t1, t2), // in1: 2<x2, S-x1> + 1<x1, x2>
-                                  in2 = (AbstractBag<FunctionTuple>) builder.buildEmpty(ft1, ft1, ft2), // in2: 2[x1 = x2](<x2, S-x1>) + 1[x1 = x2](<x1, x2>)
-                                  in3 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t1, t1, t3), // in3: 2<x2, S-x1> + 1<x2, x2>
-                                  in4 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t4, t5), // in4: 1<S{C1}, x2> + 1<x1, x3>
-                                  in5 = (AbstractBag<FunctionTuple>) builder.buildEmpty(ft3, ft4), // in5: 1[x1 in C{1}, x2 notin C{1}](<S{C1}, x2>) + 1[x1 in C{1}, x2 notin C{1}](<x1, x3>)
-                                  in6 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t6, t6, t5, t5); // 2[x1 in X{1},x2 in X{2}]<S-x1,S-x1>[x_1 != x_2]+2<x_1,x_3>
-        
-        AbstractBag<?>[] input_array = {in1, in2, in3, in4, in5, in6}; // creiamo una lista di funzioni di input
-        List<AbstractBag<FunctionTuple>> input_list = new ArrayList<>();
-        for (AbstractBag<?> b : input_array)
-            input_list.add((AbstractBag<FunctionTuple>) b);
-        
-        List < Map<Guard, Integer> > mapList = new ArrayList<>();
-    
-        // normalizziamo le funzioni e calcoliamo le mappe guardie -> coefficienti per ciascuna
-        for (AbstractBag<FunctionTuple> f : input_list) {
-            System.out.println("-----*****-----\ninput arc function: "+ f);
-            f = (AbstractBag<FunctionTuple>) f.normalize();
-            System.out.println("normalized form: "+ f);
-            AbstractBag<FunctionTuple> fn = (AbstractBag<FunctionTuple>) f.normalize(/*true*/);
-            System.out.println("normalized disjoint form: "+ fn);
-            for (FunctionTuple tx : fn.support())
-                if (tx instanceof Tuple)
-                    System.out.println("cardinality of "+tx+": "+((Tuple)tx).cardLb());
-            Map<Guard, Integer> map = BagUtils.mapGuardsToMaxCoefficients(f);
-            System.out.println("corresponding map guards -> (max) coefficients: "+ map);
-            mapList.add(map);
-        }
-        
-        // calcoliamo il prodotto cartesiano delle mappe (i domini sono coerenti)
-        Map<Guard, List<Integer>> prod = BagUtils.product(mapList);
-        System.out.println("-----*****-----\nCartesian product of maps:\n"+prod);
-        FunctionTuple trt4 = (FunctionTuple) new TupleTranspose(t4).normalize(true); // trasposta di t4 (normalizzata)
-        System.out.println("-----*****-----\nthe transpose of "+t4+" is: "+trt4);
-        System.out.println("we apply the guards of the product to ttr4:");
-        System.out.println(trt4.applyFilters(prod.keySet()));
+//        FunctionTupleBag builder = new FunctionTupleBag(t1,1);
+//        AbstractBag<FunctionTuple> in1 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t1, t1, t2), // in1: 2<x2, S-x1> + 1<x1, x2>
+//                                  in2 = (AbstractBag<FunctionTuple>) builder.buildEmpty(ft1, ft1, ft2), // in2: 2[x1 = x2](<x2, S-x1>) + 1[x1 = x2](<x1, x2>)
+//                                  in3 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t1, t1, t3), // in3: 2<x2, S-x1> + 1<x2, x2>
+//                                  in4 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t4, t5), // in4: 1<S{C1}, x2> + 1<x1, x3>
+//                                  in5 = (AbstractBag<FunctionTuple>) builder.buildEmpty(ft3, ft4), // in5: 1[x1 in C{1}, x2 notin C{1}](<S{C1}, x2>) + 1[x1 in C{1}, x2 notin C{1}](<x1, x3>)
+//                                  in6 = (AbstractBag<FunctionTuple>) builder.buildEmpty(t6, t6, t5, t5); // 2[x1 in X{1},x2 in X{2}]<S-x1,S-x1>[x_1 != x_2]+2<x_1,x_3>
+//
+//        AbstractBag<?>[] input_array = {in1, in2, in3, in4, in5, in6}; // creiamo una lista di funzioni di input
+//        List<AbstractBag<FunctionTuple>> input_list = new ArrayList<>();
+//        for (AbstractBag<?> b : input_array)
+//            input_list.add((AbstractBag<FunctionTuple>) b);
+//
+//        List < Map<Guard, Integer> > mapList = new ArrayList<>();
+//
+//        // normalizziamo le funzioni e calcoliamo le mappe guardie -> coefficienti per ciascuna
+//        for (AbstractBag<FunctionTuple> f : input_list) {
+//            System.out.println("-----*****-----\ninput arc function: "+ f);
+//            f = (AbstractBag<FunctionTuple>) f.normalize();
+//            System.out.println("normalized form: "+ f);
+//            AbstractBag<FunctionTuple> fn = (AbstractBag<FunctionTuple>) f.normalize(/*true*/);
+//            System.out.println("normalized disjoint form: "+ fn);
+//            for (FunctionTuple tx : fn.support())
+//                if (tx instanceof Tuple)
+//                    System.out.println("cardinality of "+tx+": "+((Tuple)tx).cardLb());
+//            Map<Guard, Integer> map = BagUtils.mapGuardsToMaxCoefficients(f);
+//            System.out.println("corresponding map guards -> (max) coefficients: "+ map);
+//            mapList.add(map);
+//        }
+//
+//        // calcoliamo il prodotto cartesiano delle mappe (i domini sono coerenti)
+//        Map<Guard, List<Integer>> prod = BagUtils.product(mapList);
+//        System.out.println("-----*****-----\nCartesian product of maps:\n"+prod);
+//        FunctionTuple trt4 = (FunctionTuple) new TupleTranspose(t4).normalize(true); // trasposta di t4 (normalizzata)
+//        System.out.println("-----*****-----\nthe transpose of "+t4+" is: "+trt4);
+//        System.out.println("we apply the guards of the product to ttr4:");
+//        System.out.println(trt4.applyFilters(prod.keySet()));
     }
       
 }

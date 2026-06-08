@@ -45,10 +45,8 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * efficiently creates a <tt>WNtuple</tt> from a map of colors to class-functions;
      * no check is done
      * @param f the tuple's filter
-     * @param codom the tuple's codomain
      * @param m a (sorted) map of colors to corresponding lists of functions
      * @param g the tuple's guard
-     * @param dom  the tuple's domain
      */
     public WNtuple(Guard f, SortedMap<ColorClass, List <? extends ColorFunction>> m, Guard g) {
         super(f, m, g, false);
@@ -57,11 +55,8 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     /**
      * creates an ordinary <tt>WNtuple</tt> from a map of colors to class-functions;
      * no check is done
-     * @param f the tuple's filter
-     * @param codom the tuple's codomain
      * @param m a (sorted) map of colors to corresponding lists of functions
      * @param g the tuple's guard
-     * @param dom  the tuple's domain
      */
     public WNtuple(SortedMap<ColorClass, List <? extends ColorFunction>> m, Guard g) {
         super(m, g, false);
@@ -218,8 +213,53 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return the bag corresponding to the expansion of inner linear combinations
      */
     public ArcFunction expand() {
-        // to do
-        return this;
+        ColorClass cc = getSort();
+        if (cc == null) {
+            return this;
+        }
+
+        List<? extends ColorFunction> comps = getComponents();
+        List<Set<Map.Entry<ColorFunction, Integer>>> choices = new ArrayList<>();
+        boolean expandable = false;
+
+        for (ColorFunction cf : comps) {
+            Set<Map.Entry<ColorFunction, Integer>> c = expandChoices(cf);
+            if (c.size() > 1) {
+                expandable = true;
+            }
+            choices.add(c);
+        }
+
+        if (!expandable) {
+            return this;
+        }
+
+        HashMap<WNtuple, Integer> result = new HashMap<>();
+
+        for (Collection<Map.Entry<ColorFunction, Integer>> prod : Util.cartesianProd(choices)) {
+            List<ColorFunction> newComps = new ArrayList<>(comps.size());
+            int mult = 1;
+
+            for (Map.Entry<ColorFunction, Integer> choice : prod) {
+                newComps.add(choice.getKey());
+                mult *= choice.getValue();
+            }
+
+            WNtuple t = new WNtuple(Util.singleSortedMap(cc, newComps), guard());
+            result.merge(t, mult, Integer::sum);
+        }
+
+        return new TupleBag(result);
     }
-    
+
+    private Set<Map.Entry<ColorFunction, Integer>> expandChoices(ColorFunction cf) {
+        if (cf instanceof LinearComb lc && lc.size() > 1) {
+            Set<Map.Entry<ColorFunction, Integer>> s = new HashSet<>();
+            lc.asMap().forEach((f, k) -> s.add(new AbstractMap.SimpleEntry<>(new LinearComb(f), k)));
+            return s;
+        }
+
+        return Collections.singleton(new AbstractMap.SimpleEntry<>(cf, 1));
+    }
+
 }
