@@ -7,7 +7,6 @@ import java.util.Map;
 import bagexpr.Bag;
 import bagexpr.BagExpr;
 import expr.Domain;
-import expr.ParametricExpr;
 import tuple.FunctionTuple;
 
 /**
@@ -55,6 +54,11 @@ public interface ArcFunction extends BagExpr<WNtuple> {
      default ArcFunScalar buildScProd(BagExpr<WNtuple> arg, int coeff) {
         return new ArcFunScalar((ArcFunction) arg, coeff);
      }
+
+    @Override
+    default ArcFunIntersection buildIntersection(BagExpr<WNtuple> left, BagExpr<WNtuple> right) {
+        return new ArcFunIntersection((ArcFunction) left, (ArcFunction) right);
+    }
 
      @Override
     public default TupleBag build() {

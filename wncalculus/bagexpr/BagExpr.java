@@ -41,6 +41,11 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
     default ScalarProd<E> buildScProd(BagExpr<E> arg, int coeff) {
         throw new UnsupportedOperationException("scalar-product construction is not supported by this bag expression");
     }
+
+    default BagIntersection<E> buildIntersection(BagExpr<E> left, BagExpr<E> right) {
+        throw new UnsupportedOperationException("bag-intersection construction is not supported by this bag expression");
+    }
+
         
     /**
      * invokes the normalization algorithn just performing a cast
