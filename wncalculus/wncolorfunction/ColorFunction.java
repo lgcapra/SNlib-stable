@@ -31,9 +31,9 @@ public interface ColorFunction extends ClassFunction, BagExpr<ElementaryFunction
             return new LinearComb(getSort());
     }
 
-     public default Class<ColorFunction> type() {
-        return ColorFunction.class;
-     }
+     //public default Class<ColorFunction> type() {
+     //   return ColorFunction.class;
+     //}
     
 
 }

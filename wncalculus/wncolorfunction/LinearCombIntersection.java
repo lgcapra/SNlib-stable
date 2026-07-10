@@ -1,12 +1,16 @@
 package wncolorfunction;
 
-import bagexpr.BagExpr;
-import bagexpr.BagIntersection;
+import bagexpr.*;
 import classfunction.ClassFunction;
 import classfunction.ElementaryFunction;
 import color.ColorClass;
 import expr.Domain;
+import expr.Expression;
+import wnbag.ArcFunIntersection;
+import wnbag.ArcFunction;
+import wnbag.WNtuple;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -14,28 +18,13 @@ import java.util.Map;
  */
 public final class LinearCombIntersection extends BagIntersection<ElementaryFunction> implements ColorFunction {
 
-    public LinearCombIntersection(ColorFunction left, ColorFunction right) {
-        super(left, right);
+    public LinearCombIntersection(Collection <? extends ArcFunction> c, boolean check) {
+        super((Collection<? extends BagExpr<ElementaryFunction>>) c, check);
     }
 
     @Override
-    public LinearCombIntersection buildOp(BagExpr<ElementaryFunction> left, BagExpr<ElementaryFunction> right) {
-        return new LinearCombIntersection((ColorFunction) left, (ColorFunction) right);
-    }
-
-    @Override
-    public LinearCombIntersection buildIntersection(BagExpr<ElementaryFunction> left, BagExpr<ElementaryFunction> right) {
-        return new LinearCombIntersection((ColorFunction) left, (ColorFunction) right);
-    }
-
-    @Override
-    public LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-        return new LinearComb(m);
-    }
-
-    @Override
-    public LinearComb buildEmpty(Domain dom, Domain codom) {
-        return new LinearComb((ColorClass) dom.support().iterator().next());
+    public LinearCombIntersection buildOp(Collection<? extends BagExpr<ElementaryFunction>> args) {
+        return new LinearCombIntersection((Collection<? extends ArcFunction>) args, true);
     }
 
     @Override
@@ -53,11 +42,19 @@ public final class LinearCombIntersection extends BagIntersection<ElementaryFunc
         throw new UnsupportedOperationException("Unimplemented method 'setDefaultIndex'");
     }
 
+
     @Override
-    public LinearCombIntersection clone(Domain newdom) {
-        BagExpr<ElementaryFunction> l = left().clone(newdom).cast();
-        BagExpr<ElementaryFunction> r = right().clone(newdom).cast();
-        return new LinearCombIntersection((ColorFunction) l, (ColorFunction) r);
+    public Bag<ElementaryFunction> build(Map<? extends ElementaryFunction, Integer> m) {
+        return null;
     }
 
+    @Override
+    public Bag<ElementaryFunction> buildEmpty(Domain dom, Domain codom) {
+        return null;
+    }
+
+    @Override
+    public <E extends Expression> Class<E> type() {
+        return (Class<E>) ColorFunction.class;
+    }
 }

@@ -85,7 +85,7 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>  {
             return this;
           
         HashMap<E,Integer> m = new HashMap<>();
-        asMap().entrySet().forEach(e -> { m.put(e.getKey(), coeff * e.getValue()); });
+        asMap().forEach((key, value) -> m.put(key, coeff * value));
         
         return build(m);
     }
@@ -103,7 +103,7 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>  {
             return this;
         
         HashMap<E,Integer> m = new HashMap<>(asMap());
-        b.asMap().entrySet().forEach(e -> { m.merge(e.getKey(), e.getValue(), Integer::sum); });
+        b.asMap().forEach((key, value) -> m.merge(key, value, Integer::sum));
         
         return build(m);
     }
@@ -112,5 +112,16 @@ public interface Bag<E extends ParametricExpr> extends BagExpr<E>  {
     default Bag<E> clone() throws CloneNotSupportedException {
          return build(asMap());
     }
-    
+
+    default Bag<E> intersection(Bag<E> b){
+        if (isEmpty())
+            return this;
+        if (b.isEmpty())
+            return b;
+
+        HashMap<E,Integer> m = new HashMap<>(asMap());
+        b.asMap().forEach((key, value) -> m.merge(key, value, Integer::min));
+
+        return build(m);
+    }
 }
