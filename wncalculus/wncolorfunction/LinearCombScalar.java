@@ -7,6 +7,7 @@ import classfunction.ElementaryFunction;
 import color.ColorClass;
 import color.Sort;
 import expr.Domain;
+import expr.Expression;
 
 import java.util.Map;
 
@@ -62,5 +63,4 @@ public final class LinearCombScalar extends ScalarProd<ElementaryFunction> imple
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'clone'");
     }
-    
 }

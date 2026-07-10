@@ -8,6 +8,7 @@ import classfunction.ClassFunction;
 import classfunction.ElementaryFunction;
 import color.ColorClass;
 import expr.Domain;
+import expr.Expression;
 
 public final class LinearCombSum extends BagSum<ElementaryFunction> implements ColorFunction  {
 

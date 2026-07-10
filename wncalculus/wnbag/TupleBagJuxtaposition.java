@@ -3,6 +3,7 @@ package wnbag;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
 import bagexpr.Bag;
 import bagexpr.BagExpr;
 import color.Sort;

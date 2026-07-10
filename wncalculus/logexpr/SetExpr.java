@@ -1,7 +1,5 @@
 package logexpr;
 
-import bagexpr.Bag;
-
 /**
  * This interface represents expressions (function) representing parametric sets
  * @author lorenzo capra

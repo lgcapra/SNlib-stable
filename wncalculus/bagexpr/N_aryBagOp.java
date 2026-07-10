@@ -87,7 +87,7 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
     
     @Override
     public final boolean equals(Object o) {
-        return this == o || o.getClass() == getClass() && N_aryOp.super.isEqual((N_aryOp<?>)o);
+        return this == o || o!= null && o.getClass() == getClass() && N_aryOp.super.isEqual((N_aryOp<?>)o);
     }
 
     @Override

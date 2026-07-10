@@ -2,16 +2,12 @@
 
 import java.util.*;
 
-import bagexpr.AbstractBag;
-import bagexpr.BagUtils;
 import color.ColorClass;
 import expr.Domain;
 import expr.Interval;
 import tuple.*;
 import classfunction.*;
 import guard.*;
-import wnbag.WNtuple;
-import wncolorfunction.LinearComb;
 
 
 /**

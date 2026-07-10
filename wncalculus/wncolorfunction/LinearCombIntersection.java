@@ -18,18 +18,29 @@ import java.util.Map;
  */
 public final class LinearCombIntersection extends BagIntersection<ElementaryFunction> implements ColorFunction {
 
-    public LinearCombIntersection(Collection <? extends ArcFunction> c, boolean check) {
-        super((Collection<? extends BagExpr<ElementaryFunction>>) c, check);
+    public LinearCombIntersection(Collection<? extends LinearComb> terms) {
+        super(terms, true);
     }
 
     @Override
+    public LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
+        return new LinearComb(m);
+    }
+
+    @Override
+    public LinearComb buildEmpty(Domain dom, Domain codom) {
+        return new LinearComb((ColorClass) dom.support().iterator().next());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public LinearCombIntersection buildOp(Collection<? extends BagExpr<ElementaryFunction>> args) {
-        return new LinearCombIntersection((Collection<? extends ArcFunction>) args, true);
+        return new LinearCombIntersection((Collection<? extends LinearComb>) args);
     }
 
     @Override
     public ColorClass getSort() {
-        return ((ColorFunction) left()).getSort();
+        return ((ColorFunction) getArgs().iterator().next()).getSort();
     }
 
     @Override
@@ -42,19 +53,8 @@ public final class LinearCombIntersection extends BagIntersection<ElementaryFunc
         throw new UnsupportedOperationException("Unimplemented method 'setDefaultIndex'");
     }
 
-
     @Override
-    public Bag<ElementaryFunction> build(Map<? extends ElementaryFunction, Integer> m) {
-        return null;
-    }
-
-    @Override
-    public Bag<ElementaryFunction> buildEmpty(Domain dom, Domain codom) {
-        return null;
-    }
-
-    @Override
-    public <E extends Expression> Class<E> type() {
-        return (Class<E>) ColorFunction.class;
+    public LinearComb clone(Domain newdom) {
+        throw new UnsupportedOperationException("Unimplemented method 'clone'");
     }
 }

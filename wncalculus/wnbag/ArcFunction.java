@@ -55,11 +55,6 @@ public interface ArcFunction extends BagExpr<WNtuple> {
         return new ArcFunScalar((ArcFunction) arg, coeff);
      }
 
-    @Override
-    default ArcFunIntersection buildIntersection(BagExpr<WNtuple> left, BagExpr<WNtuple> right) {
-        return new ArcFunIntersection((ArcFunction) left, (ArcFunction) right);
-    }
-
      @Override
     public default TupleBag build() {
             return new TupleBag(getDomain(), getCodomain());

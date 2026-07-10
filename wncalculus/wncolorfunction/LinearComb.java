@@ -1,6 +1,6 @@
 package wncolorfunction;
 
-import bagexpr.AbstractBag;
+import bagexpr.Bag;
 import classfunction.ClassFunction;
 import classfunction.ElementaryFunction;
 import classfunction.Projection;
@@ -16,7 +16,7 @@ import java.util.*;
      * this class defines linear combination of basic class-funtions
      * @author lorenzo capra
      */
-    public final class LinearComb extends AbstractBag<ElementaryFunction> implements ColorFunction {
+    public final class LinearComb extends Bag<ElementaryFunction> implements ColorFunction {
 
         private final ColorClass cc;
         private HashMap<Integer, Map<ElementaryFunction, Integer>> components; // cache
@@ -183,5 +183,4 @@ import java.util.*;
         public Map<Sort, Integer> splitDelimiters() {
             return super.splitDelimiters();
         }
-
     }

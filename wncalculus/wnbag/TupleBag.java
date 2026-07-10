@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import bagexpr.AbstractBag;
+import bagexpr.Bag;
 import expr.Domain;
 import util.Util;
 
@@ -13,7 +13,7 @@ import util.Util;
  * this class defines the super-type of SN arc functions
  * @author lorenzo capra
  */
-public final class TupleBag extends AbstractBag<WNtuple> implements ArcFunction {
+public final class TupleBag extends Bag<WNtuple> implements ArcFunction {
     
     public TupleBag(Map<? extends WNtuple, Integer> m) {
         super(m);
