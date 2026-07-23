@@ -10,6 +10,7 @@ import graph.InequalityGraph;
 import guard.*;
 import tuple.*;
 import util.Util;
+import wnbag.ArcFunSum;
 import wnbag.ArcFunction;
 import wnbag.TupleBag;
 import wnbag.WNtuple;
@@ -50,13 +51,13 @@ public class Main {
 
     }
 
-    // ---- color classes, of fixed-size --- some of them are ordered, some others are not 
+    // ---- color classes, of fixed-size --- some of them are ordered, some others are not
     static final ColorClass fc1 = new ColorClass(1, 3, true),
             fc2 = new ColorClass(2, 3)  ,
             fc3 = new ColorClass(3, 4)  ;
 
 
-    
+
     /**
      * run some tests for the library's types and methods (especially, normalization ones)
      *
@@ -85,7 +86,7 @@ public class Main {
         //test of new, possibly ordered, split classes
         /*Integer[] iset = {1};
         Subcl ordsc = (Subcl) Subcl.factory(new HashSet<>(Arrays.asList(iset)),  c0ord, new Interval(1,2));
-    
+
         System.out.println(ordsc);
         Util.getChar();*/
 
@@ -97,255 +98,54 @@ public class Main {
         testGraph();
         Util.getChar();
         Projection f1;
-        SetFunction f2,
-                    f3,
-                    f4,
-                    f5,
-                    f6,
-                    f7,
-                    f8,
-                    f9,
-                    f10,
-                    f11,
-                    f12,
-                    f13,
-                    f14,
-                    f15,
-                    f16,
-                    f17,
-                    f18,
-                    f1c;
-
-        Collection<? extends ParametricExpr> cf1;
+        SetFunction f3, f4, f5;
 
         //testGuard();
         //testInequalitygraph();
         testBasicComposition();
         //System.exit(0);
+
         //test of neutral class
-        SetFunction xn /*= Projection.builder(2, c_neutral)*/; //raises an exception
-        //System.out.println("normalizzo "+xn+':'+xn.normalize());
-        xn = All.getInstance(c_neutral);
-        System.out.println("normalizzo " + xn + ':' + xn.normalize());
-        xn = Complement.factory(xn);
-        System.out.println("normalizzo " + xn + ':' + xn.normalize());
-        Util.getChar();
+        testNeutralClass();
 
         f1 = Projection.builder(1, c1);
-        f1c = Complement.factory(f1);
-        System.out.println("ecco il complemento di " + f1);
-        /*System.out.println(Util.toStringDetailed(*/
-        cf1 = f1c.simplify()/*))*/;
-        f2 = (SetFunction) cf1.iterator().next();
-        f18 = (SetFunction) f1.orFactory(false, f1, f1c);
-        System.out.println("SEMPLIFICO " + f18 + ':');
-        System.out.println(Expressions.toStringDetailed(f18.simplify()));
-        System.out.println("ecco il complemento di " + f2 + '\n' + Expressions.toStringDetailed((f2 = Complement.factory(f2)).simplify()));
-        System.out.println("ecco il complemento di " + f2 + '\n' + Expressions.toStringDetailed(Complement.factory(f2).simplify()));
-        f2 = f1;
-        f15 = Successor.factory(1, (Projection) f2);
-        System.out.println("SEMPLIFICO " + (f15 = Successor.factory(-4, f15)) + '\n' + Expressions.toStringDetailed(f15.simplify()));
+
+        testComplementSimplify(f1);
+
+        testSuccessorSimplify(f1);
+
         f3 = All.getInstance(c1);
         f4 = Empty.getInstance(c1);
         //f4 = ProjectionComp.factory(2,cc1);
         List<SetFunction> f_list = new ArrayList<>();
-        f_list.add(ProjectionComp.factory(Projection.builder(1, 2, c1)).cast());
-        f_list.add(f1);
-        f_list.add(f1);
-        f_list.add(Successor.factory(3, f1));
-        f_list.add(f3);
-        f_list.add(Projection.builder(2, c1));
-        //f_list.add(f18);
-        f5 = Successor.factory(1, Intersection.factory(f_list));
-        System.out.println("semplifico *** " + f5.toStringDetailed());
-        System.out.println(Expressions.toStringDetailed(f5.simplify()));
+
+        testIntersectionSimplify(f_list, f1, f3);
 
         f_list.add(f4);
         f5 = Intersection.factory(f_list);
         System.out.println("semplifico " + f5.toStringDetailed());
         System.out.println(Expressions.toStringDetailed(f5.simplify()));
 
-        f6 = Projection.builder(1, -4, c1);
-        System.out.println("semplifico " + f6.toStringDetailed());
-        System.out.println(Expressions.toStringDetailed(f6.simplify()));
-        System.out.println("semplifico " + (f7 = ProjectionComp.factory((Projection) f6).cast()));
-        System.out.println(Expressions.toStringDetailed(f7.simplify()));
+        testProjectionComplementSuccessor();
 
-        System.out.println(f8 = Successor.factory(2, f7));
-        System.out.println(Expressions.toStringDetailed(f8.simplify()));
-        System.out.println(f9 = Complement.factory(f8));
-        System.out.println(Expressions.toStringDetailed(f9.simplify()));
-        System.out.println((f10 = Complement.factory(f9)));
-        System.out.println(Expressions.toStringDetailed(f10.simplify()));
-
-        System.out.println(f11 = Successor.factory(-1, f10));
-        System.out.println(Expressions.toStringDetailed(f11.simplify()));
-        System.out.println(f12 = Successor.factory(1, f11));
-        System.out.println(Expressions.toStringDetailed(f12.simplify()));
-        System.out.println(f13 = Complement.factory(f12));
-        System.out.println(Expressions.toStringDetailed(f13.simplify()));
-
-        f14 = Complement.factory(Union.factory(false, f12, f13));
-        System.out.println(f14);
-        System.out.println(Expressions.toStringDetailed(f14.simplify()));
-
-        SetFunction e;
-        System.out.println((e = Complement.factory(All.getInstance(c1))) + "\ntermine da semplificare");
-        System.out.println(Expressions.toStringDetailed(e.simplify()));
-        Subcl s2 = Subcl.factory(2, c2), s1 = Subcl.factory(1, c2), s3 = Subcl.factory(3, c2);
-        System.out.println((f18 = Complement.factory(s2)) + "\n" + Expressions.toStringDetailed(f18.simplify()));
-        System.out.println((f1.orFactory(false, f18, s1)) + "\n" + Expressions.toStringDetailed(f1.orFactory(false, f18, s1).simplify()));
-        System.out.println((Union.factory(false, Projection.builder(2, c2), s1, s2, s3)) + "\n" + Expressions.toStringDetailed(Union.factory(false, Projection.builder(2, c2), s1, s2, s3).simplify()));
-        System.out.println((f1.andFactory(s1, f18)) + "\n" + Expressions.toStringDetailed(f1.andFactory(s1, f18).simplify()));
-        System.out.println((Intersection.factory(true, Projection.builder(2, c2), s1, s2)) + "\n" + Expressions.toStringDetailed(Intersection.factory(true, Projection.builder(2, c2), s1, s2).simplify()));
+        testSubclasses(f1);
 
         //System.out.println(f1+" intersez "+ f2 + " implies " + f1 + " :" + LogicalExprs.implies(f1.andFactory(f1, f2), f1));
         //System.out.println(f2 + " implies " + f1+" intersez "+ f2 + " :" + LogicalExprs.implies(f2,f1.andFactory(f1, f2)));
-        f_list.remove(f4);
-        f5 = f1.andFactory(f_list);
-        System.out.println("splitdelim di " + f5 + ':' + f5.splitDelim());
-        System.out.println("semplifico " + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-        //System.out.println("f5 dopo sostituzione !X_2 -> X_1 : " + f5.facotory(Projection.factory(2,1,c1), Projection.factory(1,c1)));
-        //nuovo
-        f5 = Union.factory(false, f5, Complement.factory(Projection.builder(1, c1)), Complement.factory(Projection.builder(2, c1)));
-        System.out.println(f5.getSort());
-        //System.out.println("splitdelim di " + f5+ ':'+f5.splitDelim());
-        System.out.println("semplifico " + f5);
-        System.out.println(Expressions.toStringDetailed(f5.simplify()));
-        System.out.println("\nsemplifico " + Complement.factory(f5));
-        System.out.println(Complement.factory(f5).simplify());
-        System.out.println("semplifico " + f1.andFactory(Complement.factory(f5), All.getInstance(f5.getSort())));
-        System.out.println(Expressions.toStringDetailed(f1.andFactory(Complement.factory(f5), All.getInstance(f5.getSort())).simplify()));
-        //System.out.println("f5 equiv a S : "+Util.equivalent(f5, new All (f5.getSort())));
+        testIntersection(f_list, f1, f4);
 
-        f14 = Projection.builder(1, 1, c1);
-        f_list.add(f14);
-        f5 = f1.andFactory(f_list);
-        //System.out.println("*** card di "+f5+" : "+f5.card());
-        System.out.println("semplifico " + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-
-        f_list.removeAll(Collections.singleton(f1));
-        f_list.add(ProjectionComp.factory(Projection.builder(2, -1, c1)).cast());
-        f_list.add(ProjectionComp.factory(Projection.builder(1, c1)).cast());
-        f5 = (SetFunction) f1.orFactory(false, Projection.builder(1, c1), Projection.builder(1, 1, c1));
-        System.out.println("*** card di " + f5 + " : " + f5.card());
-        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-
-        f5 = f1.andFactory(f_list);
-        //System.out.println("somma dei max succ exp in " + f5+ ':'+((Intersection)f5).splitDelim());
-        System.out.println("semplifico " + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-        f_list.add(Projection.builder(2, c1));
-        f5 = f1.andFactory(f_list);
-        System.out.println("*** card di " + f5 + " : " + f5.card());
-        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-
-        f_list.remove(f14);
-        f_list.add(ProjectionComp.factory(Projection.builder(1, 1, c1)).cast());
-        f5 = f1.andFactory(f_list);
-        //System.out.println("*** forma semplificata? " + ((Intersection)f5).hasSimplifiedForm() );
-        //System.out.println("*** parti con lo stesso index-set: " +( (Intersection)f5).index_separated_args() );
-        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-        //System.out.println("constraint di "+ f5+ ": "+f5.card());
-        //System.exit(0);
-
-        f_list.add(Projection.builder(1, 1, c1));
-        f_list.add(ProjectionComp.factory(Projection.builder(2, c1)).cast());
-        f5 = f1.andFactory(f_list);
-        System.out.println("*** card di " + f5 + " : " + f5.card());
-        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-        //System.out.println("constraint di "+ f5+ ": "+f5.card());
-
-        f_list.clear();
-
-        SetFunction pc1 = ProjectionComp.factory(f1).cast();
-        
         // parte sui nultiset -- modificata dopo ultimi cambiamenti di bag expressions
         testMultiset();
 
         Guard g2;
         Util.getChar();
-        
-        Domain d2 = new Domain(c1, c1);
-        Tuple t4 = new Tuple(d2, f2, pc1), t5 = new Tuple(d2, f1, f2), t6;
-        //System.out.println("T4: "+t4);
-        //Bag<FunctionTuple> b4 = mset_c.build(t4, t4, t5);
-        //System.out.println("b4: " + b4);
-        //System.out.println("b4 normalizzato: " + b4.normalize());
-        //System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b4));
-        Guard e1 = Equality.builder(f1, (Projection) f2, true, d2);
-        //Bag<FunctionTuple> b5 = mset_c.build(t4, t4, t5);
-        //System.out.println("b5: " + b5);
-        //System.out.println("b5 normalizzato: " + (b5 = (Bag<FunctionTuple>) b5.normalize()));
-        //System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b5));
-        t6 = new Tuple(d2, f2, f2);
-        //Bag<FunctionTuple> b6 = mset_c.build(t4, t4, t6);
-        //System.out.println("b6: " + b6);
-        //System.out.println("b6 normalizzato: " + b6.normalize());
-        //System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b6));
 
-        //System.out.println("transpose: " + new BagTranspose(mset_c).normalize());
-        //Util.getChar();
+        testTupleExamples(f1);
 
-        
-        f1 = Projection.builder(2, c1);
-        //f_list.add(ProjectionComp.factory((Projection)f1));
-        //f_list.add(/*ProjectionComp.factory(*/(Projection) f1)/*)*/;
-        f_list.add(ProjectionComp.factory(Projection.builder(2, 1, c1)).cast());
-        f_list.add(ProjectionComp.factory(Projection.builder(1, c1)/*(Projection) f1)*/).cast());
-        f_list.add(ProjectionComp.factory(Projection.builder(1, 1, c1)).cast());
-        //f_list.add(Projection.factory (3,c1));
-        //f_list.add(f1);
-        f5 = f1.andFactory(f_list);
-        System.out.println("forma right composable di " + f5);
-        //for (SetFunction.GuardedFunction gf : ((Intersection)(f5)).toGuardedForm(new True(f5.inferDomain())).toRightComposableSet()) 
-        //System.out.println(gf);
-        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-        //System.out.println("constraint di "+ f5+ ": "+f5.card());
 
-        f1 = Projection.builder(1, c1);
-        f2 = Successor.factory(1, f1);
-        f4 = (SetFunction) f1.andFactory(f1, f2);
-        System.out.println("semplifico\n" + f4 + '\n' + Expressions.toStringDetailed(f4.simplify()));
-        System.out.println("*** card di " + f4 + " : " + f4.card());
-        //System.out.println("constraint di "+ f1+ ": "+f1.card());
+        testRightComposable(f_list);
 
-        f3 = ProjectionComp.factory(Projection.builder(2, 1, c1)).cast();//S-!X_2
-        f6 = (SetFunction) f1.orFactory(false, f3, f2);
-        f7 = (SetFunction) f1.andFactory(f3, f2);
-        f4 = (SetFunction) f1.andFactory(f1, f6);
-        f8 = Projection.builder(2, c1);
-        f9 = (SetFunction) f1.orFactory(false, f8, f1);
-        f10 = (SetFunction) f1.andFactory(f9, f6);
-
-        System.out.println("semplifico\n" + f10);
-        System.out.println(Expressions.toStringDetailed(f10.simplify()));
-        System.out.println("semplifico\n" + f4 + "\n" + f4.simplify());
-        System.out.println("semplifico compl. di \n" + f6 + "\n" + Expressions.toStringDetailed(Complement.factory(f6).simplify()));
-        //NEW
-        System.out.println("semplifico compl. di \n" + f7 + "\n" + Expressions.toStringDetailed(Complement.factory(f7).simplify()));
-
-        f9 = (SetFunction) f1.orFactory(false, ProjectionComp.factory((Projection) (f1 = Projection.builder(1, c1))).cast(), f1.andFactory(Projection.builder(2, 1, c1), f1));
-        System.out.println(f9);
-        //System.out.println(f9  + " equivalente a " + (f10 = Complement.factory(f4)) + '\n'+Util.equivalent(f9,Complement.factory(f4)));
-
-        System.out.println("ecco l'unione (semplificata) di " + f9 + " e " + f10);
-        System.out.println(Expressions.toStringDetailed(f1.orFactory(false, f9, f10).simplify()));
-        System.out.println("ecco l'intersezione (semplificata) di " + f9 + " e " + f10 + '\n' + Expressions.toStringDetailed(f1.andFactory(f9, f10).simplify()));
-
-        f5 = Complement.factory(f4);
-        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
-        System.out.println("ho semplificato\n" + f5);
-        f16 = (SetFunction) f1.andFactory(f10, f9);
-        System.out.println("semplifico\n" + f16 + "\n" + f16.simplify());
-        f17 = (SetFunction) f1.orFactory(false, f5, f16);
-
-        System.out.println("semplifico\n" + f17);
-        System.out.println("splitdelim: " + f17.splitDelim());
-
-        System.out.println(Expressions.toStringDetailed(f17.simplify()));//critical
-
-        f11 = Complement.factory(f17);
-        System.out.println("semplifico\n" + f11 + "\n" + Expressions.toStringDetailed(f11.simplify()));
+        testProjectionComposition();
 
         //System.out.println("---testing bags---");
         //testBag();
@@ -868,7 +668,7 @@ public class Main {
         System.out.println("diff:\n" + d);
         d = (BagExpr<ElementaryFunction>) d.normalize();
         System.out.println("diff semplificata:\n" + d);
-        d = bagexpr.BagUtils.disjoin(d);
+        d = BagUtils.disjoin(d);
         System.out.println("disgiunta:\n" + d);
         l = new LinearComb(c_1, c_2, c_2, c_1, c_1, S_1, S_1, S_2);
         System.out.println(l + " -> " + l.components());
@@ -924,7 +724,7 @@ public class Main {
         comp_d_1 = ProjectionComp.factory(d_1).cast(); // S - d_1
         Subcl sd2 = Subcl.factory(2, D); // constant D{2}
         SetFunction inter;
-        inter = Intersection.factory(comp_d_1, sd2); // D{2} \cap S -d1 
+        inter = Intersection.factory(comp_d_1, sd2); // D{2} \cap S -d1
         Domain dom = new Domain(C, C, D); // domain C^2 x D
         Guard g1 = Membership.build(d_1, sd2, true, dom); // guard d_1 \in D{2}
         Tuple t1, t2, t3;
@@ -946,6 +746,250 @@ public class Main {
         Expressions.printResults(tr.simplify());
         //if (true)
         //System.exit(0);
+
+    }
+
+    private static void testNeutralClass() {
+        System.out.println("\n*** test neutral class ***");
+
+        SetFunction xn;
+
+        xn = All.getInstance(c_neutral);
+        System.out.println("normalizzo " + xn + ':' + xn.normalize());
+
+        xn = Complement.factory(xn);
+        System.out.println("normalizzo " + xn + ':' + xn.normalize());
+
+        Util.getChar();
+    }
+
+    private static void testComplementSimplify(Projection f1) {
+        SetFunction f1c = Complement.factory(f1);
+
+        System.out.println("ecco il complemento di " + f1);
+
+        Collection<? extends ParametricExpr> cf1 = f1c.simplify();
+        SetFunction f2 = (SetFunction) cf1.iterator().next();
+
+        SetFunction f18 = (SetFunction) f1.orFactory(false, f1, f1c);
+
+        System.out.println("SEMPLIFICO " + f18 + ':');
+        System.out.println(Expressions.toStringDetailed(f18.simplify()));
+
+        System.out.println("ecco il complemento di " + f2 + '\n' + Expressions.toStringDetailed((f2 = Complement.factory(f2)).simplify()));
+        System.out.println("ecco il complemento di " + f2 + '\n' + Expressions.toStringDetailed(Complement.factory(f2).simplify()));
+    }
+
+    private static void testSuccessorSimplify(Projection f1){
+        SetFunction f2 = f1;
+        SetFunction f15 = Successor.factory(1, f2);
+
+        System.out.println("SEMPLIFICO "
+                + (f15 = Successor.factory(-4, f15))
+                + '\n'
+                + Expressions.toStringDetailed(f15.simplify()));
+    }
+
+    private static void testIntersectionSimplify(List<SetFunction> f_list, Projection f1, SetFunction f3){
+        f_list.add(ProjectionComp.factory(Projection.builder(1,2,c1)).cast());
+        f_list.add(f1);
+        f_list.add(f1);
+        f_list.add(Successor.factory(3,f1));
+        f_list.add(f3);
+        f_list.add(Projection.builder(2,c1));
+
+        SetFunction f5 = Successor.factory(1, Intersection.factory(f_list));
+
+        System.out.println("semplifico *** " + f5.toStringDetailed());
+        System.out.println(Expressions.toStringDetailed(f5.simplify()));
+    }
+
+    private static void testProjectionComplementSuccessor(){
+        SetFunction f6 = Projection.builder(1, -4, c1);
+        System.out.println("semplifico " + f6.toStringDetailed());
+        System.out.println(Expressions.toStringDetailed(f6.simplify()));
+        SetFunction f7;
+        System.out.println("semplifico " + (f7 = ProjectionComp.factory((Projection) f6).cast()));
+        System.out.println(Expressions.toStringDetailed(f7.simplify()));
+
+        SetFunction f8, f9, f10, f11, f12, f13, f14;
+        System.out.println(f8 = Successor.factory(2, f7));
+        System.out.println(Expressions.toStringDetailed(f8.simplify()));
+        System.out.println(f9 = Complement.factory(f8));
+        System.out.println(Expressions.toStringDetailed(f9.simplify()));
+        System.out.println((f10 = Complement.factory(f9)));
+        System.out.println(Expressions.toStringDetailed(f10.simplify()));
+
+        System.out.println(f11 = Successor.factory(-1, f10));
+        System.out.println(Expressions.toStringDetailed(f11.simplify()));
+        System.out.println(f12 = Successor.factory(1, f11));
+        System.out.println(Expressions.toStringDetailed(f12.simplify()));
+        System.out.println(f13 = Complement.factory(f12));
+        System.out.println(Expressions.toStringDetailed(f13.simplify()));
+
+        f14 = Complement.factory(Union.factory(false, f12, f13));
+        System.out.println(f14);
+        System.out.println(Expressions.toStringDetailed(f14.simplify()));
+    }
+
+    private static void testSubclasses(Projection f1){
+        SetFunction e;
+        System.out.println((e = Complement.factory(All.getInstance(c1))) + "\ntermine da semplificare");
+        System.out.println(Expressions.toStringDetailed(e.simplify()));
+        Subcl s2 = Subcl.factory(2, c2), s1 = Subcl.factory(1, c2), s3 = Subcl.factory(3, c2);
+        SetFunction f18;
+        System.out.println((f18 = Complement.factory(s2)) + "\n" + Expressions.toStringDetailed(f18.simplify()));
+        System.out.println((f1.orFactory(false, f18, s1)) + "\n" + Expressions.toStringDetailed(f1.orFactory(false, f18, s1).simplify()));
+        System.out.println((Union.factory(false, Projection.builder(2, c2), s1, s2, s3)) + "\n" + Expressions.toStringDetailed(Union.factory(false, Projection.builder(2, c2), s1, s2, s3).simplify()));
+        System.out.println((f1.andFactory(s1, f18)) + "\n" + Expressions.toStringDetailed(f1.andFactory(s1, f18).simplify()));
+        System.out.println((Intersection.factory(true, Projection.builder(2, c2), s1, s2)) + "\n" + Expressions.toStringDetailed(Intersection.factory(true, Projection.builder(2, c2), s1, s2).simplify()));
+    }
+
+    private static void testIntersection(List<SetFunction> f_list, Projection f1, SetFunction f4){
+        f_list.remove(f4);
+        SetFunction f5 = f1.andFactory(f_list);
+        System.out.println("splitdelim di " + f5 + ':' + f5.splitDelim());
+        System.out.println("semplifico " + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+        //System.out.println("f5 dopo sostituzione !X_2 -> X_1 : " + f5.facotory(Projection.factory(2,1,c1), Projection.factory(1,c1)));
+        //nuovo
+        f5 = Union.factory(false, f5, Complement.factory(Projection.builder(1, c1)), Complement.factory(Projection.builder(2, c1)));
+        System.out.println(f5.getSort());
+        //System.out.println("splitdelim di " + f5+ ':'+f5.splitDelim());
+        System.out.println("semplifico " + f5);
+        System.out.println(Expressions.toStringDetailed(f5.simplify()));
+        System.out.println("\nsemplifico " + Complement.factory(f5));
+        System.out.println(Complement.factory(f5).simplify());
+        System.out.println("semplifico " + f1.andFactory(Complement.factory(f5), All.getInstance(f5.getSort())));
+        System.out.println(Expressions.toStringDetailed(f1.andFactory(Complement.factory(f5), All.getInstance(f5.getSort())).simplify()));
+        //System.out.println("f5 equiv a S : "+Util.equivalent(f5, new All (f5.getSort())));
+
+        SetFunction f14 = Projection.builder(1, 1, c1);
+        f_list.add(f14);
+        f5 = f1.andFactory(f_list);
+        //System.out.println("*** card di "+f5+" : "+f5.card());
+        System.out.println("semplifico " + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+
+        f_list.removeAll(Collections.singleton(f1));
+        f_list.add(ProjectionComp.factory(Projection.builder(2, -1, c1)).cast());
+        f_list.add(ProjectionComp.factory(Projection.builder(1, c1)).cast());
+        f5 = (SetFunction) f1.orFactory(false, Projection.builder(1, c1), Projection.builder(1, 1, c1));
+        System.out.println("*** card di " + f5 + " : " + f5.card());
+        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+
+        f5 = f1.andFactory(f_list);
+        //System.out.println("somma dei max succ exp in " + f5+ ':'+((Intersection)f5).splitDelim());
+        System.out.println("semplifico " + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+        f_list.add(Projection.builder(2, c1));
+        f5 = f1.andFactory(f_list);
+        System.out.println("*** card di " + f5 + " : " + f5.card());
+        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+
+        f_list.remove(f14);
+        f_list.add(ProjectionComp.factory(Projection.builder(1, 1, c1)).cast());
+        f5 = f1.andFactory(f_list);
+        //System.out.println("*** forma semplificata? " + ((Intersection)f5).hasSimplifiedForm() );
+        //System.out.println("*** parti con lo stesso index-set: " +( (Intersection)f5).index_separated_args() );
+        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+        //System.out.println("constraint di "+ f5+ ": "+f5.card());
+        //System.exit(0);
+
+        f_list.add(Projection.builder(1, 1, c1));
+        f_list.add(ProjectionComp.factory(Projection.builder(2, c1)).cast());
+        f5 = f1.andFactory(f_list);
+        System.out.println("*** card di " + f5 + " : " + f5.card());
+        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+        //System.out.println("constraint di "+ f5+ ": "+f5.card());
+
+        f_list.clear();
+    }
+
+    private static void testTupleExamples(Projection f1){
+        Domain d2 = new Domain(c1, c1);
+        SetFunction f2 = f1;
+        SetFunction pc1 = ProjectionComp.factory(f1).cast();
+        Tuple t4 = new Tuple(d2, f2, pc1), t5 = new Tuple(d2, f1, f2), t6;
+        //System.out.println("T4: "+t4);
+        //Bag<FunctionTuple> b4 = mset_c.build(t4, t4, t5);
+        //System.out.println("b4: " + b4);
+        //System.out.println("b4 normalizzato: " + b4.normalize());
+        //System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b4));
+        Guard e1 = Equality.builder(f1, (Projection) f2, true, d2);
+        //Bag<FunctionTuple> b5 = mset_c.build(t4, t4, t5);
+        //System.out.println("b5: " + b5);
+        //System.out.println("b5 normalizzato: " + (b5 = (Bag<FunctionTuple>) b5.normalize()));
+        //System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b5));
+        t6 = new Tuple(d2, f2, f2);
+        //Bag<FunctionTuple> b6 = mset_c.build(t4, t4, t6);
+        //System.out.println("b6: " + b6);
+        //System.out.println("b6 normalizzato: " + b6.normalize());
+        //System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(b6));
+
+        //System.out.println("transpose: " + new BagTranspose(mset_c).normalize());
+        //Util.getChar();
+    }
+
+    private static void testRightComposable(List<SetFunction> f_list){
+        Projection f1 = Projection.builder(2, c1);
+        //f_list.add(ProjectionComp.factory((Projection)f1));
+        //f_list.add(/*ProjectionComp.factory(*/(Projection) f1)/*)*/;
+        f_list.add(ProjectionComp.factory(Projection.builder(2, 1, c1)).cast());
+        f_list.add(ProjectionComp.factory(Projection.builder(1, c1)/*(Projection) f1)*/).cast());
+        f_list.add(ProjectionComp.factory(Projection.builder(1, 1, c1)).cast());
+        //f_list.add(Projection.factory (3,c1));
+        //f_list.add(f1);
+        SetFunction f5 = f1.andFactory(f_list);
+        System.out.println("forma right composable di " + f5);
+        //for (SetFunction.GuardedFunction gf : ((Intersection)(f5)).toGuardedForm(new True(f5.inferDomain())).toRightComposableSet())
+        //System.out.println(gf);
+        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+        //System.out.println("constraint di "+ f5+ ": "+f5.card());
+    }
+
+    private static void testProjectionComposition(){
+        Projection f1 = Projection.builder(1, c1);
+        SetFunction f2 = Successor.factory(1, f1);
+        SetFunction f4 = (SetFunction) f1.andFactory(f1, f2);
+        System.out.println("semplifico\n" + f4 + '\n' + Expressions.toStringDetailed(f4.simplify()));
+        System.out.println("*** card di " + f4 + " : " + f4.card());
+        //System.out.println("constraint di "+ f1+ ": "+f1.card());
+
+        SetFunction f3 = ProjectionComp.factory(Projection.builder(2, 1, c1)).cast();//S-!X_2
+        SetFunction f6 = (SetFunction) f1.orFactory(false, f3, f2);
+        SetFunction f7 = (SetFunction) f1.andFactory(f3, f2);
+        f4 = (SetFunction) f1.andFactory(f1, f6);
+        SetFunction f8 = Projection.builder(2, c1);
+        SetFunction f9 = (SetFunction) f1.orFactory(false, f8, f1);
+        SetFunction f10 = (SetFunction) f1.andFactory(f9, f6);
+
+        System.out.println("semplifico\n" + f10);
+        System.out.println(Expressions.toStringDetailed(f10.simplify()));
+        System.out.println("semplifico\n" + f4 + "\n" + f4.simplify());
+        System.out.println("semplifico compl. di \n" + f6 + "\n" + Expressions.toStringDetailed(Complement.factory(f6).simplify()));
+        //NEW
+        System.out.println("semplifico compl. di \n" + f7 + "\n" + Expressions.toStringDetailed(Complement.factory(f7).simplify()));
+
+        f9 = (SetFunction) f1.orFactory(false, ProjectionComp.factory((Projection) (f1 = Projection.builder(1, c1))).cast(), f1.andFactory(Projection.builder(2, 1, c1), f1));
+        System.out.println(f9);
+        //System.out.println(f9  + " equivalente a " + (f10 = Complement.factory(f4)) + '\n'+Util.equivalent(f9,Complement.factory(f4)));
+
+        System.out.println("ecco l'unione (semplificata) di " + f9 + " e " + f10);
+        System.out.println(Expressions.toStringDetailed(f1.orFactory(false, f9, f10).simplify()));
+        System.out.println("ecco l'intersezione (semplificata) di " + f9 + " e " + f10 + '\n' + Expressions.toStringDetailed(f1.andFactory(f9, f10).simplify()));
+
+        SetFunction f5 = Complement.factory(f4);
+        System.out.println("semplifico\n" + f5 + "\n" + Expressions.toStringDetailed(f5.simplify()));
+        System.out.println("ho semplificato\n" + f5);
+        SetFunction f16 = (SetFunction) f1.andFactory(f10, f9);
+        System.out.println("semplifico\n" + f16 + "\n" + f16.simplify());
+        SetFunction f17 = (SetFunction) f1.orFactory(false, f5, f16);
+
+        System.out.println("semplifico\n" + f17);
+        System.out.println("splitdelim: " + f17.splitDelim());
+
+        System.out.println(Expressions.toStringDetailed(f17.simplify()));//critical
+
+        SetFunction f11 = Complement.factory(f17);
+        System.out.println("semplifico\n" + f11 + "\n" + Expressions.toStringDetailed(f11.simplify()));
 
     }
 
@@ -976,13 +1020,13 @@ public class Main {
         TupleBag b1 = new TupleBag(true,wnt1, wnt1);
         TupleBag b2 = new TupleBag(Util.singleMap(wnt2, 2));
         //WNtupleBag b2 = new WNtupleBag(wnt2, 1), b3;
-        BagExpr<WNtuple> s = new wnbag.ArcFunSum(b1, b2);
+        BagExpr<WNtuple> s = new ArcFunSum(b1, b2);
         System.out.println(s);
         System.out.println("normalizzo:");
         BagExpr<WNtuple> tbag = s.normalize();
         if (tbag instanceof Bag) {
             System.out.println(tbag);
-            System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients((Bag<WNtuple>) tbag));
+            System.out.println("map guardie-> max coeff: " + BagUtils.mapGuardsToMaxCoefficients((Bag<WNtuple>) tbag));
         }
         //System.out.println("prodotto Cartesiano m x m x m:\n" + bagexpr.BagUtils.product(m, m, m));
         //System.out.println("map guardie-> coefficienti: " + m);
@@ -1006,5 +1050,4 @@ public class Main {
         //System.out.println("diff between: " + b1 + " and " + b2 + '\n' + BagDiff.build(b1, b2).normalize());
         Util.getChar();
     }
-
 }
