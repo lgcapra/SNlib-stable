@@ -10,10 +10,7 @@ import graph.InequalityGraph;
 import guard.*;
 import tuple.*;
 import util.Util;
-import wnbag.ArcFunSum;
-import wnbag.ArcFunction;
-import wnbag.TupleBag;
-import wnbag.WNtuple;
+import wnbag.*;
 import wncolorfunction.LinearComb;
 
 /**
@@ -64,91 +61,91 @@ public class Main {
      * @param args command line arguments (not used)
      */
     public static void main(String[] args) {
-        /*try {
-           Runtime.getRuntime().exec(new String[] { "java", "-jar", "E:\\lorenzo\\CLISVN\\SNexpressions\\SNexCLI.jar" });
-           return;
-       } catch (IOException ex) {
-           Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-       }*/
-
- /*int n = Integer.MAX_VALUE;
-        for (int i = 0; i < 32; i++)
-            System.out.print(Util.checkBit(n, i) ? "1" : "0");
-        System.out.println();*/
-        petriNets20();
-
-        test0();
-
-        //testBag();
-        System.out.println("\n*** testGuard *** ");
-        testGuard();
-        Util.getChar();
-        //test of new, possibly ordered, split classes
-        /*Integer[] iset = {1};
-        Subcl ordsc = (Subcl) Subcl.factory(new HashSet<>(Arrays.asList(iset)),  c0ord, new Interval(1,2));
-
-        System.out.println(ordsc);
-        Util.getChar();*/
-
- /*try {testExtra(); }
-        catch (NullPointerException ex) {
-            ex.printStackTrace();
-        }*/
-        //System.exit(0);
-        testGraph();
-        Util.getChar();
-        Projection f1;
-        SetFunction f3, f4, f5;
-
-        //testGuard();
-        //testInequalitygraph();
-        testBasicComposition();
-        //System.exit(0);
-
-        //test of neutral class
-        testNeutralClass();
-
-        f1 = Projection.builder(1, c1);
-
-        testComplementSimplify(f1);
-
-        testSuccessorSimplify(f1);
-
-        f3 = All.getInstance(c1);
-        f4 = Empty.getInstance(c1);
-        //f4 = ProjectionComp.factory(2,cc1);
-        List<SetFunction> f_list = new ArrayList<>();
-
-        testIntersectionSimplify(f_list, f1, f3);
-
-        f_list.add(f4);
-        f5 = Intersection.factory(f_list);
-        System.out.println("semplifico " + f5.toStringDetailed());
-        System.out.println(Expressions.toStringDetailed(f5.simplify()));
-
-        testProjectionComplementSuccessor();
-
-        testSubclasses(f1);
-
-        //System.out.println(f1+" intersez "+ f2 + " implies " + f1 + " :" + LogicalExprs.implies(f1.andFactory(f1, f2), f1));
-        //System.out.println(f2 + " implies " + f1+" intersez "+ f2 + " :" + LogicalExprs.implies(f2,f1.andFactory(f1, f2)));
-        testIntersection(f_list, f1, f4);
+//        /*try {
+//           Runtime.getRuntime().exec(new String[] { "java", "-jar", "E:\\lorenzo\\CLISVN\\SNexpressions\\SNexCLI.jar" });
+//           return;
+//       } catch (IOException ex) {
+//           Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+//       }*/
+//
+// /*int n = Integer.MAX_VALUE;
+//        for (int i = 0; i < 32; i++)
+//            System.out.print(Util.checkBit(n, i) ? "1" : "0");
+//        System.out.println();*/
+//        petriNets20();
+//
+//        test0();
+//
+//        //testBag();
+//        System.out.println("\n*** testGuard *** ");
+//        testGuard();
+//        Util.getChar();
+//        //test of new, possibly ordered, split classes
+//        /*Integer[] iset = {1};
+//        Subcl ordsc = (Subcl) Subcl.factory(new HashSet<>(Arrays.asList(iset)),  c0ord, new Interval(1,2));
+//
+//        System.out.println(ordsc);
+//        Util.getChar();*/
+//
+// /*try {testExtra(); }
+//        catch (NullPointerException ex) {
+//            ex.printStackTrace();
+//        }*/
+//        //System.exit(0);
+//        testGraph();
+//        Util.getChar();
+//        Projection f1;
+//        SetFunction f3, f4, f5;
+//
+//        //testGuard();
+//        //testInequalitygraph();
+//        testBasicComposition();
+//        //System.exit(0);
+//
+//        //test of neutral class
+//        testNeutralClass();
+//
+//        f1 = Projection.builder(1, c1);
+//
+//        testComplementSimplify(f1);
+//
+//        testSuccessorSimplify(f1);
+//
+//        f3 = All.getInstance(c1);
+//        f4 = Empty.getInstance(c1);
+//        //f4 = ProjectionComp.factory(2,cc1);
+//        List<SetFunction> f_list = new ArrayList<>();
+//
+//        testIntersectionSimplify(f_list, f1, f3);
+//
+//        f_list.add(f4);
+//        f5 = Intersection.factory(f_list);
+//        System.out.println("semplifico " + f5.toStringDetailed());
+//        System.out.println(Expressions.toStringDetailed(f5.simplify()));
+//
+//        testProjectionComplementSuccessor();
+//
+//        testSubclasses(f1);
+//
+//        //System.out.println(f1+" intersez "+ f2 + " implies " + f1 + " :" + LogicalExprs.implies(f1.andFactory(f1, f2), f1));
+//        //System.out.println(f2 + " implies " + f1+" intersez "+ f2 + " :" + LogicalExprs.implies(f2,f1.andFactory(f1, f2)));
+//        testIntersection(f_list, f1, f4);
 
         // parte sui nultiset -- modificata dopo ultimi cambiamenti di bag expressions
         testMultiset();
 
-        Guard g2;
-        Util.getChar();
-
-        testTupleExamples(f1);
-
-
-        testRightComposable(f_list);
-
-        testProjectionComposition();
-
-        //System.out.println("---testing bags---");
-        //testBag();
+//        Guard g2;
+//        Util.getChar();
+//
+//        testTupleExamples(f1);
+//
+//
+//        testRightComposable(f_list);
+//
+//        testProjectionComposition();
+//
+//        //System.out.println("---testing bags---");
+//        //testBag();
     }
 
     /**
@@ -1000,33 +997,27 @@ public class Main {
         System.out.println("--- multiset ---");
 
         Projection pr2 = Projection.builder(2, fc2),
-                pr1 = Projection.builder(1, fc2);
-        SetFunction f1 = Projection.builder(1, c1);
+                pr1 = Projection.builder(1, fc2),
+                pr3 = Projection.builder(3, fc2);
         Projection f2 = Projection.builder(1, c1);
-        SetFunction pc1 = ProjectionComp.factory((Projection) f1).cast();
         SetFunction pc2 = ProjectionComp.factory(f2).cast();
 
-        f1 = (SetFunction) f1.andFactory(pc1, f2);
-        SetFunction f7 = Union.factory(false, f1, f1);
-
-        System.out.println("normalizzo\n" + f7 + "\n" + Expressions.toStringDetailed(f7.simplify()));
         WNtuple wnt1, wnt2;
         Domain npd2 = new Domain(fc2, fc2);
 
         wnt2 = new WNtuple(npd2 , new LinearComb(pr2, pr1), new LinearComb(pr1));
         wnt1 = new WNtuple(npd2, new LinearComb(pr1), new LinearComb(pr2, pr2));
         TupleBag tb = new TupleBag(false, wnt1, wnt2);
-        System.out.println("semplifico\n" + tb + "\n" + Expressions.toStringDetailed(tb.simplify()));
-        TupleBag b1 = new TupleBag(true,wnt1, wnt1);
+        System.out.println("semplifico " + tb + "\n" + Expressions.toStringDetailed(tb.simplify()));
+        TupleBag b1 = new TupleBag(true,wnt1, wnt2);
         TupleBag b2 = new TupleBag(Util.singleMap(wnt2, 2));
         //WNtupleBag b2 = new WNtupleBag(wnt2, 1), b3;
-        BagExpr<WNtuple> s = new ArcFunSum(b1, b2);
-        System.out.println(s);
-        System.out.println("normalizzo:");
+        ArcFunSum s = new ArcFunSum(b1, b2);
+        System.out.println("normalizzo " + s);
         BagExpr<WNtuple> tbag = s.normalize();
         if (tbag instanceof Bag) {
             System.out.println(tbag);
-            System.out.println("map guardie-> max coeff: " + BagUtils.mapGuardsToMaxCoefficients((Bag<WNtuple>) tbag));
+            //System.out.println("map guardie-> max coeff: " + BagUtils.mapGuardsToMaxCoefficients((Bag<WNtuple>) tbag));
         }
         //System.out.println("prodotto Cartesiano m x m x m:\n" + bagexpr.BagUtils.product(m, m, m));
         //System.out.println("map guardie-> coefficienti: " + m);
@@ -1038,7 +1029,7 @@ public class Main {
         System.out.println("supporto di " + diff + '\n' + new TupleSupport(diff)./*simplify()*/normalize());
         Util.getChar();
 
-        FunctionTuple ris = new TupleComposition(new TupleTranspose(new TupleSupport(diff)), new TupleSupport(b2), true);
+        ArcFunComp ris = new ArcFunComp(diff, b2);
         System.out.println("semplifico\n" + ris);
         System.out.println(ris.simplify());
 

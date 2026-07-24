@@ -44,7 +44,7 @@ public final class TupleSupport implements FunctionTuple, SingleArg<ArcFunction,
             //        suppfunc.add(t.asSetFunction() );
             //    }
             //    return TupleSum.factory(suppfunc, bag.disjoined());
-            }
+        }
         
         return this;
     }

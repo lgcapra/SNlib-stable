@@ -102,10 +102,10 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
 //                            // to do
                         }
                         else   // the right operand is a bag with many terms
-                            rb.asMap().entrySet().forEach(y -> { blist.add( buildOp(lb, rb.build(y.getValue(),y.getKey()))); });
+                            rb.asMap().forEach((key, value) -> blist.add(buildOp(lb, rb.build(value, key))));
                     } 
                     else  // the left operand is a bag with many terms  
-                        lb.asMap().entrySet().forEach(x -> { blist.add(buildOp(lb.build(x.getValue(), x.getKey()), rb )); });
+                        lb.asMap().forEach((key, value) -> blist.add(buildOp(lb.build(value, key), rb)));
 
                     if (! blist.isEmpty() )
                         return buildBagSum(blist);

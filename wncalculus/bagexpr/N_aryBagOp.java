@@ -33,18 +33,12 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
       if ( Util.checkAll(this.args, Bag.class::isInstance) ) {
         Iterator<? extends BagExpr<E>> iterator = this.args.iterator();
         Bag<E> bres = ((Bag<E>) iterator.next());
-        try {
-            bres = bres.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        } // copy of first bag-operand
         while (iterator.hasNext()) {
-                Bag<E> bag = (Bag<E>) iterator.next(); // next bag-operand
-                bres = Op(bres, bag);
-             }
-             return bres;
-        }  
-    
+            Bag<E> bag = (Bag<E>) iterator.next(); // next bag-operand
+            bres = Op(bres, bag);
+        }
+        return bres;
+      }
       return this;
     }
 

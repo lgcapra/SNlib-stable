@@ -142,19 +142,7 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
     }
     
 
-     //the following methods are protected because they can modify the current object  
-
-     /* 
-     * sets the multiplicity of an element; if the multiplicity is zero, the element is removed from the bag;   
-     * @param k the multiplicity of the element
-     * @param e the element
-     */
-    private void set(E e, int k) {
-        if (k == 0)
-            this.map.remove(e);
-        else
-            this.map.put(e, k);
-    }
+     //the following methods are protected because they can modify the current object
 
     /**
      * @param b a bag    
@@ -163,12 +151,12 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
      * 
      */
     protected Bag<E> sum(Bag<E> b) {
+        Map<E,Integer> m = new HashMap<>(this.map);
         for (Map.Entry<? extends E, Integer> x : b.asMap().entrySet()) {
-            int k = b.mult(x.getKey());
-            if (k != 0)
-                this.set(x.getKey(), k + x.getValue());
+            int k = mult(x.getKey());
+            m.put(x.getKey(), k + x.getValue());
         }
-        return this;
+        return build(m);
     }
 
     /**
@@ -179,17 +167,18 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
      * 
      */
     protected Bag<E> intersection(Bag<E> b) {
+        Map<E,Integer> m = new HashMap<>(this.map);
         if (isProperBag() && b.isProperBag()) {
             for (Map.Entry<? extends E, Integer> x : b.asMap().entrySet()) {
-                int k = b.mult(x.getKey());
-                this.set(x.getKey(), Math.min(k, x.getValue()));
+                int k = mult(x.getKey());
+                m.put(x.getKey(), Math.min(k, x.getValue()));
             }
         }
-        return this;
+        return build(m);
     }
 
     public Bag<E> clone() throws CloneNotSupportedException {
-        return (Bag<E>) build(asMap());
+        return build(asMap());
     }
 
     /**
