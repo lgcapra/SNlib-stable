@@ -72,47 +72,35 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
     @Override
     public BagExpr<E> specSimplify () {
         BagExpr<E> lx = left(), rx = right();
-        if (rx instanceof ScalarProd) { 
-            ScalarProd<E> sp = (ScalarProd<E>) rx;
+        if (rx instanceof ScalarProd<E> sp) {
             return buildScProd(buildOp(lx, sp.getArg()), sp.k()); // to do: to check whether the composition of a bag with a scalar product can be simplified by "pushing" the scalar product down the composition tree, i.e. by applying distributivity
         }
         
-        if (lx instanceof Bag ) {
-            Bag<E> lb = (Bag<E>) lx;
-            if (lb.isEmpty() ) 
+        if (lx instanceof Bag<E> lb) {
+            if (lb.isEmpty() )
                 return build();
             
-            if (rx instanceof Bag) {
-                Bag<E> rb = (Bag<E>) rx;
-                if (rb .isEmpty()) 
+            if (rx instanceof Bag<E> rb) {
+                if (rb .isEmpty())
                     return build();
-                
+                // Proprietà 1
                 if ( lb.isConstant() ) { // composition between a constant and a constant-size bag
-                    Integer c = rb.cardLb();        
-                    if (c != null)
-                        return ((Bag<E>)lb.clone(rb.getDomain())).scalarProd(c);
+                    Integer n = rb.cardLb();
+                    if (n != null)
+                        return ((Bag<E>)lb.clone(rb.getDomain())).scalarProd(n);
                 }
                 else { //both lb and rb are (non empty) bags, with lb other than constant
                     ArrayList<BagExpr<E>> blist = new ArrayList<>();
                     if ( lb.size() == 1 ) { // the left one is a singleton bag
-                        E lf = lb.support().iterator().next(); // the left bag's term
-                        int k = lb.mult(lf); 
-                        if (rb.size()== 1) { // the right one  is a singleton bag
-                            E rf = rb.support().iterator().next();
-//                            // to do
-                        }
-                        else   // the right operand is a bag with many terms
-                            rb.asMap().forEach((key, value) -> blist.add(buildOp(lb, rb.build(value, key))));
-                    } 
-                    else  // the left operand is a bag with many terms  
+                        if (rb.size()> 1) // the right operand is a bag with many terms
+                           rb.asMap().forEach((key, value) -> blist.add(buildOp(lb, rb.build(value, key))));
+                    }
+                    else  // the left operand is a bag with many terms
                         lb.asMap().forEach((key, value) -> blist.add(buildOp(lb.build(value, key), rb)));
-
-                    if (! blist.isEmpty() )
-                        return buildBagSum(blist);
+                    return buildBagSum(blist);
                 }
             }
-        } else if (lx instanceof ScalarProd) {
-            ScalarProd<E> sp = (ScalarProd<E>) lx;
+        } else if (lx instanceof ScalarProd<E> sp) {
             return buildScProd(buildOp(sp.getArg(), rx), sp.k()); // to do: to check whether the composition of a bag with a scalar product can be simplified by "pushing" the scalar product down the composition tree, i.e. by applying distributivity
         }
          

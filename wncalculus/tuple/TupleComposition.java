@@ -49,8 +49,7 @@ public final class TupleComposition implements FunctionTuple, LogComposition<Fun
     
     @Override
     public FunctionTuple specSimplify() {
-        if ( left instanceof FilteredTuple ) {
-            FilteredTuple ft = (FilteredTuple) left;
+        if (left instanceof FilteredTuple ft) {
             return FilteredTuple.factory(ft.guard(), new TupleComposition(ft.expr(), right));
         } else { 
             //System.out.println("***\n"+this);

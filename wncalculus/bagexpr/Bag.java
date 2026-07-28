@@ -150,7 +150,7 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
      * @return <code>this</code> 
      * 
      */
-    protected Bag<E> sum(Bag<E> b) {
+    public Bag<E> sum(Bag<E> b) {
         Map<E,Integer> m = new HashMap<>(this.map);
         for (Map.Entry<? extends E, Integer> x : b.asMap().entrySet()) {
             int k = mult(x.getKey());

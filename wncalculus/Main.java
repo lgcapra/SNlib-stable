@@ -1008,7 +1008,7 @@ public class Main {
         wnt2 = new WNtuple(npd2 , new LinearComb(pr2, pr1), new LinearComb(pr1));
         wnt1 = new WNtuple(npd2, new LinearComb(pr1), new LinearComb(pr2, pr2));
         TupleBag tb = new TupleBag(false, wnt1, wnt2);
-        System.out.println("semplifico " + tb + "\n" + Expressions.toStringDetailed(tb.simplify()));
+        System.out.println("semplifico " + tb + "\n" + tb.normalize());
         TupleBag b1 = new TupleBag(true,wnt1, wnt2);
         TupleBag b2 = new TupleBag(Util.singleMap(wnt2, 2));
         //WNtupleBag b2 = new WNtupleBag(wnt2, 1), b3;
@@ -1031,7 +1031,7 @@ public class Main {
 
         ArcFunComp ris = new ArcFunComp(diff, b2);
         System.out.println("semplifico\n" + ris);
-        System.out.println(ris.simplify());
+        System.out.println(ris.normalize());
 
 
         //System.out.println("transposing: " + new BagTranspose(s));
