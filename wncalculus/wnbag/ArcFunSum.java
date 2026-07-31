@@ -2,25 +2,30 @@ package wnbag;
 
 import java.util.Collection;
 import java.util.List;
-
 import bagexpr.BagExpr;
 import bagexpr.BagSum;
 
 public final class ArcFunSum extends BagSum<WNtuple> implements ArcFunction {
     
-    
-    public ArcFunSum(Collection<? extends ArcFunction> l) {
-        super(l, true);
-     }
-
-    public ArcFunSum(ArcFunction ... l) {
-        this(List.of(l));
-     }
-
-    @Override
-    public BagExpr<WNtuple> buildOp(Collection<? extends BagExpr<WNtuple>> args) {
-        return ArcFunction.super.buildBagSum(args);
+    public static ArcFunction factory(Collection<? extends ArcFunction> c) {
+        if (c.size() == 1)
+            return c.iterator().next();
+        
+        return new ArcFunSum(c);
     }
 
+    public static ArcFunction factory(ArcFunction ... l) {
+        return factory(List.of(l));
+    }
+    
+    private ArcFunSum(Collection<? extends ArcFunction> c) {
+        super(c, true);
+     }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ArcFunction buildOp(Collection<? extends BagExpr<WNtuple>> args) {
+        return factory((Collection<? extends ArcFunction>) args);
+    }
 
 }

@@ -1012,7 +1012,7 @@ public class Main {
         TupleBag b1 = new TupleBag(true,wnt1, wnt2);
         TupleBag b2 = new TupleBag(Util.singleMap(wnt2, 2));
         //WNtupleBag b2 = new WNtupleBag(wnt2, 1), b3;
-        ArcFunSum s = new ArcFunSum(b1, b2);
+        ArcFunction s = ArcFunSum.factory(b1, b2);
         System.out.println("normalizzo " + s);
         BagExpr<WNtuple> tbag = s.normalize();
         if (tbag instanceof Bag) {

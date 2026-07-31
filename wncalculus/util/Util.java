@@ -57,6 +57,44 @@ public class Util  {
                 
         return -1;
     }
+
+    /**
+     * 
+     * @param <E>
+     * @param l
+     * @param iset
+     * @returnn
+     * @throws IndexOutOfBoundsException
+     */
+    public static <E> List<? extends E> projection(List<? extends E> l, SortedSet<Integer> iset) {
+        if (iset.size() == l.size())
+            return l;
+
+        List<E> res = new ArrayList<>();
+        for (Integer i : iset)  
+            res.add(l.get(i-1));
+
+        return res;
+    }
+
+    /**
+     * 
+     * @param <E>
+     * @param l
+     * @param iset
+     * @returnn
+     * @throws IndexOutOfBoundsException
+     */
+    public static <E> List<? extends E> projectionNot(List<? extends E> l, SortedSet<Integer> iset) {
+        if (iset.size() == l.size())
+            return l;
+
+        List<E> res = new ArrayList<>();
+        for (Integer i : iset)  
+            res.add(l.get(i-1));
+
+        return res;
+    }
              
     /**
      * checks whether all the elements of a collection satisfy a given predicate

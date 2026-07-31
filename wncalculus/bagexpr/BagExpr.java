@@ -25,7 +25,7 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
      * @param c a collection of bag-expressions
      * @return a sum of bag-expressions like <code>this</code> with the specified collection of arguments
      */
-    default BagSum<E> buildBagSum(Collection<? extends BagExpr<E>> c) {
+    default BagExpr<E> buildSum(Collection<? extends BagExpr<E>> c) {
         throw new UnsupportedOperationException("bag-sum construction is not supported by this bag expression");
     }
 
@@ -38,7 +38,7 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
      * @param coeff the integer coefficient
      * @return a scalar product built from the given operand and coefficient
      */
-    default ScalarProd<E> buildScProd(BagExpr<E> arg, int coeff) {
+    default BagExpr<E> buildScProd(BagExpr<E> arg, int coeff) {
         throw new UnsupportedOperationException("scalar-product construction is not supported by this bag expression");
     }
 

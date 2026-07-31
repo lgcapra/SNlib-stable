@@ -16,7 +16,6 @@ public abstract class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E>
         this.k = coeff;
     }
 
-
     /**
      * 
      * @return the scalar value 
@@ -68,7 +67,7 @@ public abstract class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E>
     
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj) && this.k == ((ScalarProd<?>)obj).k;
+        return this == obj || super.equals(obj) && this.k == ((ScalarProd<?>)obj).k;
     }
 
     @Override

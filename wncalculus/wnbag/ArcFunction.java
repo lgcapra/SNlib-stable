@@ -46,25 +46,23 @@ public interface ArcFunction extends BagExpr<WNtuple> {
 
     @SuppressWarnings("unchecked")
     @Override
-     default ArcFunSum buildBagSum(Collection<? extends BagExpr<WNtuple>> c) {
-        return new ArcFunSum((Collection<? extends ArcFunction>) c);
+     default ArcFunction buildSum(Collection<? extends BagExpr<WNtuple>> c) {
+        return ArcFunSum.factory((Collection<? extends ArcFunction>) c);
      }
 
      @Override
-     default ArcFunScalar buildScProd(BagExpr<WNtuple> arg, int coeff) {
-        return new ArcFunScalar((ArcFunction) arg, coeff);
+     default ArcFunction buildScProd(BagExpr<WNtuple> arg, int coeff) {
+        return ArcFunScalar.factory((ArcFunction) arg, coeff);
      }
 
-     @Override
+    @Override
     public default TupleBag build() {
-            return new TupleBag(getDomain(), getCodomain());
+        return new TupleBag(getDomain(), getCodomain());
     }
 
     @Override
      public default ArcFunction buildTransp() {
         return new ArcFunTransp(this);
      }
-
-
 
 }

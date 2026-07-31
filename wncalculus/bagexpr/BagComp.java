@@ -1,6 +1,7 @@
 package bagexpr;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import color.Sort;
 import expr.*;
@@ -81,7 +82,7 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
                 return build();
             
             if (rx instanceof Bag<E> rb) {
-                if (rb .isEmpty())
+                if (rb.isEmpty())
                     return build();
                 // Proprietà 1
                 if ( lb.isConstant() ) { // composition between a constant and a constant-size bag
@@ -94,10 +95,17 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
                     if ( lb.size() == 1 ) { // the left one is a singleton bag
                         if (rb.size()> 1) // the right operand is a bag with many terms
                            rb.asMap().forEach((key, value) -> blist.add(buildOp(lb, rb.build(value, key))));
-                    }
+                        else  { // both lb and rb are elementary bags : base case!
+                            Entry<? extends E, Integer> b1 = lb.asMap().entrySet().iterator().next(),
+                                                        b2 = rb.asMap().entrySet().iterator().next();
+                            return buildScProd(buildOp(b1.getKey().cast(), b2.getKey().cast()), b1.getValue() * b2.getValue());
+ 
+                        }
+                                              }
                     else  // the left operand is a bag with many terms
                         lb.asMap().forEach((key, value) -> blist.add(buildOp(lb.build(value, key), rb)));
-                    return buildBagSum(blist);
+                    
+                    return buildSum(blist);
                 }
             }
         } else if (lx instanceof ScalarProd<E> sp) {

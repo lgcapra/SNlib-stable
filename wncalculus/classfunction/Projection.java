@@ -93,7 +93,7 @@ public final class Projection extends ProjectionBased {
 
     /**
      * @return a projection with the same color successor exponent as
-     * <code>this</code>, and with the new specified index
+     * <code>this</code>, and with index 1
      */
     @Override
     public Projection setDefaultIndex() {

@@ -119,7 +119,7 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
 
     @Override
     public final boolean equals (Object o) {
-        return super.equals(o) || o != null && getClass().equals(o.getClass()) && ((Bag)o).asMap().equals(this.map);
+        return super.equals(o) || o != null && getClass().equals(o.getClass()) && ((Bag<?>)o).asMap().equals(this.map);
     }
 
     @Override

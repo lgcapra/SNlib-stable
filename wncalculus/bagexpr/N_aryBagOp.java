@@ -21,6 +21,9 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
 
     //constructor: raises an exception if the collection is buildOp
     protected N_aryBagOp(Collection <? extends BagExpr<E>> c, boolean check) {
+        if (c.size() < 2) //
+            throw new IllegalArgumentException("cannot create an n-ary operator with " + c.size() + " operand(s)!\n");
+
         this.args = Collections.unmodifiableCollection( c);
         if (check)
             Expressions.checkArity(c);
@@ -32,9 +35,10 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
     public final BagExpr<E> specSimplify() {
       if ( Util.checkAll(this.args, Bag.class::isInstance) ) {
         Iterator<? extends BagExpr<E>> iterator = this.args.iterator();
-        Bag<E> bres = ((Bag<E>) iterator.next());
+        System.out.println(args + " (debug)");
+        Bag<E> bres = iterator.next().cast();
         while (iterator.hasNext()) {
-            Bag<E> bag = (Bag<E>) iterator.next(); // next bag-operand
+            Bag<E> bag = iterator.next().cast(); // next bag-operand
             bres = Op(bres, bag);
         }
         return bres;
