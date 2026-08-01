@@ -113,8 +113,8 @@ public final class ProjectionComp extends ProjectionBased {
     }
 
     @Override
-    public ProjectionComp setDefaultIndex() {
-        final Projection p = this.pr.setDefaultIndex();
+    public ProjectionComp setIndex(int idx) {
+        final Projection p = this.pr.setIndex(idx);
         return p == this.pr ? this : (ProjectionComp) factory(p);
     }
 

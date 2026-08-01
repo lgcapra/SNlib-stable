@@ -1,6 +1,7 @@
 package wncolorfunction;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import bagexpr.BagExpr;
 import bagexpr.BagSum;
@@ -53,5 +54,10 @@ public final class LinearCombSum extends BagSum<ElementaryFunction> implements C
     public LinearComb clone(Domain newdom) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'clone'");
+    }
+
+    @Override
+    public LinearComb setIndex(int idx) {
+        throw new UnsupportedOperationException();
     }
 }

@@ -2,8 +2,7 @@ package wnbag;
 
 import bagexpr.BagComp;
 import bagexpr.BagExpr;
-import classfunction.ProjectionBased;
-import color.ColorClass;
+import classfunction.ClassFunction;
 import util.Util;
 import wncolorfunction.ColorFunction;
 
@@ -43,15 +42,14 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                 if (!(comp.right() instanceof WNtuple right))
                     return res;
 
-                TreeSet<Integer> leftindx = left.getComponents().stream()
+                List<ColorFunction> leftcomp = left.getComponents();
+                TreeSet<Integer> leftindx = leftcomp.stream()
                         .flatMap(cf -> cf.indexSet().stream())
                         .collect(Collectors.toCollection(TreeSet::new));
                  
                 List<ColorFunction> rightcomp = right.getComponents();
                 List<? extends ColorFunction> reducedComponents = Util.projection(rightcomp, leftindx);
-                if (reducedComponents == rightcomp) {
-
-                } else {
+                if (reducedComponents != rightcomp) {
                     WNtuple tx = new WNtuple(reducedComponents,right.guard(), false);
                     // calcoliamo la cardinalità della sotto-tupla dx "non proiettata"
                     int card = 1;
@@ -59,12 +57,13 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                         if (!leftindx.contains(i)) {
                              card *= rightcomp.get(i -1).cardLb(); 
                         }
-                  // riscalare gli indici delle proiezioni nella tupla sx
-                   ArrayList<ColorFunction> lscaled = new ArrayList<>(left.getComponents());
-                   // to do 
-                   WNtuple tr = new WNtuple(lscaled, left.guard(), false);
-                   return ArcFunScalar.factory(new ArcFunComp(tr, tx), card); // k⋅(Tr∘TX′);
-                     
+                  // riscalare (nel caso) gli indici delle proiezioni nella tupla sx
+                   if (leftindx.last() > leftindx.size()) {
+                     leftcomp = ClassFunction.scaleIndex(leftcomp, Util.scaledIndex(leftindx));
+                   }
+                   WNtuple lred = new  WNtuple(leftcomp,left.guard().clone(tx.getCodomain()), false); // bisogna adeguare il dom sx --- soluz. parziale (considerare le proiezioni della tupla sx)
+                   //System.out.println("(ArcFunComp) left: " + lred + ", right: " + tx); //debug
+                   res = ArcFunScalar.factory(new ArcFunComp(lred, tx), card); // k⋅(Tr∘TX′);
                 }
             }
         }

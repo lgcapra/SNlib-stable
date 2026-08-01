@@ -982,7 +982,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                     } else {
                         var comps = t.getComponents();
                         if (i != 1) {
-                            comps = ClassFunction.setDefaultIndex(comps);
+                            comps = ClassFunction.setIndex(comps, 1);
                         }
                         final var l = new Tuple(Util.singleSortedMap(cc, comps), new Domain(cc)); //a copy of this tuple with index 1
                         final var r = new Tuple(f_i, right.guard());

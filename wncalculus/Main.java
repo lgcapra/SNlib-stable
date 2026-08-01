@@ -133,6 +133,7 @@ public class Main {
 
         // parte sui nultiset -- modificata dopo ultimi cambiamenti di bag expressions
         testMultiset();
+        testMultisetComp();
 
 //        Guard g2;
 //        Util.getChar();
@@ -1041,4 +1042,32 @@ public class Main {
         //System.out.println("diff between: " + b1 + " and " + b2 + '\n' + BagDiff.build(b1, b2).normalize());
         Util.getChar();
     }
+
+     public static void testMultisetComp() {
+        System.out.println("--- multiset comp ---");
+
+        Projection pr1 = Projection.builder(1, fc2),
+                pr2 = Projection.builder(2, fc2),
+                pr3 = Projection.builder(3, fc2);
+        Projection f2 = Projection.builder(1, c1);
+        SetFunction pc2 = ProjectionComp.factory(f2).cast();
+
+        WNtuple wnt1, wnt2;
+        Domain npd2 = new Domain(fc2, fc2, fc2);
+        //Esempio1 (gli indici nella tupla sx non sono contigui)
+        wnt1 = new WNtuple(npd2 , new LinearComb(pr1), new LinearComb(pr3));
+        wnt2 = new WNtuple(npd2, new LinearComb(pr2), new LinearComb(pr1,pr2), new LinearComb(pr3));
+
+        ArcFunComp c = new ArcFunComp(wnt1, wnt2);
+        System.out.println("semplifico\n" + c);
+        System.out.println(c.normalize());
+
+        //Esempio2 (gli indici nella tupla sx sono contigui)
+        wnt1 = new WNtuple(npd2 , new LinearComb(pr2), new LinearComb(pr1));
+        wnt2 = new WNtuple(npd2, new LinearComb(pr2), new LinearComb(pr1,pr2), new LinearComb(pr3,pr1));
+        c = new ArcFunComp(wnt1, wnt2);
+        System.out.println("semplifico\n" + c);
+        System.out.println(c.normalize());
+}
+
 }

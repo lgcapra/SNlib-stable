@@ -167,8 +167,8 @@ public class Union extends N_aryClassOperator implements OrOp<SetFunction>  {
     }
     
     @Override
-    public final SetFunction setDefaultIndex( ) {
-        return Union.factory(ClassFunction.setDefaultIndex( getArgs() ), this.disjoined); 
+    public final SetFunction setIndex(int idx ) {
+        return Union.factory(ClassFunction.setIndex( getArgs(), idx), this.disjoined); 
     }
 
 }

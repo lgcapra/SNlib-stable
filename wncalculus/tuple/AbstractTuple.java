@@ -153,7 +153,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      /**
       * infers the tuple's codomain from a map colors-(sub)tuples possibly checking the map againts a color domain
       * representing the entire tuple's domain
-      * if the specified tuple's domain is <code>null</code> skips the checkPar
+      * if the specified tuple's domain is <code>null</code> skips the check
       * @param <E> the type of tuple components
       * @param map the map
       * @param dom the tuple'd domain
@@ -170,7 +170,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
                 else {
                     var cc = entry.getKey();
                     if (dom != null) {
-                        Set<? extends Integer> idxset = ClassFunction.indexSet(st); // the projection or_index set of st
+                        Set<? extends Integer> idxset = ClassFunction.indexSet(st); // the projection's index set of st
                         if (! idxset.isEmpty() && Collections.max(idxset)  > dom.mult(cc) )
                             throw new IllegalDomain("failed tuple's building:\nincorrect domain specification (projection index outside the range of color "+cc+
                                     "\ntuple components: "+st+"), domain: "+dom);

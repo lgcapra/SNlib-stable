@@ -65,5 +65,10 @@ public abstract class UnaryClassOp extends SetFunction implements UnaryOp<SetFun
             throw new IllegalArgumentException("Only All an Empty may have a neutral colour");
         }
     }
+
+    public final <E extends ClassFunction> E setIndex(int idx) {
+        throw new NoSuchMethodError();
+    }
+ 
     
 }

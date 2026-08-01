@@ -265,8 +265,8 @@ public final class Intersection extends N_aryClassOperator implements AndOp<SetF
     }
 
     @Override
-    public final SetFunction setDefaultIndex() {
-        return Intersection.factory(ClassFunction.setDefaultIndex(getArgs()));
+    public final SetFunction setIndex(int idx) {
+        return Intersection.factory(ClassFunction.setIndex(getArgs(), idx));
     }
 
     @Override

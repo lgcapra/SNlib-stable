@@ -211,7 +211,6 @@ public class Util  {
         SortedMap<K, List<E>> m = new TreeMap<>();
         fillMap(m, c, feature);
         SortedMap<K, List<? extends E>> um = Collections.unmodifiableSortedMap(m);
-        
         return um;
     }
     
@@ -580,6 +579,21 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
         return new_val > 0 && val < 0 ? n - new_val : new_val;
     }
 
+   
+    /**
+     * rescales the indices of the set so that they become consecutive
+     * @param s
+     * @return
+     */
+    public static Map<Integer, Integer> scaledIndex(SortedSet<Integer> s) {
+          int i = 1;
+          HashMap<Integer, Integer> m = new HashMap<>();
+          for (Integer n : s) 
+            m.put(n, i++);
+
+        return m;
+    }
+
     /**
      * computes the integers between a lower (included) and an upper (excluded) bound
      * (both assumed strictly positive and congruent) that are missing in a given collection
@@ -589,7 +603,7 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param upper a (positive) upper bound
      * @return the set of values between the specified bounds that are missing in the collection
      */
-    public static HashSet<Integer> missing (Set<? extends Integer> c, int lower, int upper) {
+    public static Set<Integer> missing (Set<? extends Integer> c, int lower, int upper) {
         HashSet<Integer> numbers = new HashSet<>();
         for (int i = lower; i < upper; i++) 
             numbers.add(i);

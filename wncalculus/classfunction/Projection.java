@@ -91,13 +91,12 @@ public final class Projection extends ProjectionBased {
         return new Pair<>(Successor.factory(this.succ, right), null);
     }
 
+    
     /**
-     * @return a projection with the same color successor exponent as
-     * <code>this</code>, and with index 1
+     * @return a projection with the same index as <code>this</code>
      */
-    @Override
-    public Projection setDefaultIndex() {
-        return 1 == this.index ? this : Projection.builder(1, this.succ, getSort());
+    public Projection setIndex(int idx) {
+        return idx == this.index ? this : Projection.builder(idx, this.succ, getSort());
     }
 
     /**

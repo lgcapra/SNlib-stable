@@ -89,5 +89,11 @@ public final class Diff extends SetFunction  {
         }
     }
 
+    @Override
+    public <E extends ClassFunction> E setIndex(int idx) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setIndex'");
+    }
+
 
 }

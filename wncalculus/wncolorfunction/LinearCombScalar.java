@@ -63,4 +63,10 @@ public final class LinearCombScalar extends ScalarProd<ElementaryFunction> imple
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'clone'");
     }
+
+    @Override
+    public <E extends ClassFunction> E setIndex(int idx) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setIndex'");
+    }
 }

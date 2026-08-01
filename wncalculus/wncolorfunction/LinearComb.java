@@ -11,6 +11,7 @@ import guard.Equality;
 import util.Util;
 
 import java.util.*;
+import java.util.Map.Entry;
 
     /**
      * this class defines linear combination of basic class-funtions
@@ -183,4 +184,21 @@ import java.util.*;
         public Map<Sort, Integer> splitDelimiters() {
             return super.splitDelimiters();
         }
+
+
+        @Override
+        public LinearComb setIndex(int idx) {
+            Set<Integer> iset = this.indexSet();
+            if (iset.isEmpty())
+                return this;
+
+            if (iset.size() == 1) {
+                HashMap<ElementaryFunction, Integer> m = new HashMap<>();
+                for (Entry<? extends ElementaryFunction, Integer> e : this.asMap().entrySet()) {
+                    m.put(e.getKey().setIndex(idx), e.getValue());
+                }
+                return new LinearComb(m);
+            }
+
+            throw new UnsupportedOperationException();                   }
     }

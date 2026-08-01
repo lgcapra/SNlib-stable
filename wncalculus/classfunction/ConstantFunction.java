@@ -30,10 +30,11 @@ public abstract class ConstantFunction extends ElementaryFunction   {
                       super.baseCompose(right);     
     }
    
-   @Override
-   public final ElementaryFunction setDefaultIndex() {
-       return this;
-   }
+
+   @Override 
+   public final ConstantFunction setIndex(int idx) {
+        return this;
+    }
 
     @Override
     public int splitDelim() {

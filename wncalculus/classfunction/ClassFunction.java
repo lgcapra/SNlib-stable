@@ -161,7 +161,15 @@ public interface ClassFunction extends SingleSortExpr {
      * @return a copy of this term with the new index or <code>this</code> if
      * the index is the same as the current one or the function is a constant
      */
-    <E extends ClassFunction> E setDefaultIndex();
+    default <E extends ClassFunction> E setDefaultIndex() {
+       return setIndex(1);
+    }
+
+    /**
+     * @return a projection with the same index as <code>this</code>
+     */
+    <E extends ClassFunction> E setIndex(int idx);
+
 
     /**
      * given an iterator over ClassFunction, builds a corresponding list in
@@ -170,13 +178,30 @@ public interface ClassFunction extends SingleSortExpr {
      * @param ite the collection of class-functions
      * @return a list of class-functions with the new projection index
      */
-    public static <E extends ClassFunction> List<E> setDefaultIndex(final Iterable<? extends E> ite) {
+    public static <E extends ClassFunction> List<E> setIndex(final Iterable<? extends E> ite, int idx) {
         final List<E> new_list = new ArrayList<>();
         ite.forEach(f -> {
-            new_list.add(f.setDefaultIndex());
+            new_list.add(f.setIndex(idx));
         });
         return new_list;
     }
+    
+    /**
+     * rescale the indices of a list of classfunctions, assuming that they are mono-index
+     * @param <E>
+     * @param l
+     * @param m
+     * @return
+     */
+    public static <E extends ClassFunction> List<E> scaleIndex(List<E> l, Map<Integer,Integer> m) {
+        ArrayList<E> nl = new ArrayList<>();
+        for (ClassFunction f : l)   {
+            Integer i = f.indexSet().iterator().next(); // we assume that indexSet is a singleton
+            nl.add(f.setIndex(m.get(i)));
+        }
+        return nl;
+    }
+
 
     /**
      * checks whether a class-function is "ordered"

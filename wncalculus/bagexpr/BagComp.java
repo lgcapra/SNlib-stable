@@ -24,8 +24,11 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
      * @throws IllegalDomain if the operands cannot be composed due their (co-)domains
      */
     public BagComp(BagExpr<E> left, BagExpr<E> right) {
-         if (! left.composable(right) )
-            throw new IllegalDomain();
+         if (! left.composable(right) ) {
+            System.out.println(left.getDomain());
+            System.out.println(right.getCodomain());
+            throw new IllegalDomain("incompatible domains!\n");
+         }
          
          this.left = left;
          this.right= right;

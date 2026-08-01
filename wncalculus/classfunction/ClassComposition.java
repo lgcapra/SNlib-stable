@@ -139,9 +139,8 @@ public final class ClassComposition extends SetFunction implements LogCompositio
 
     }
 
-    @Override
-    public ClassFunction setDefaultIndex() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public ClassFunction setIndex(int i) {
+        throw new NoSuchMethodError("Not yet imèlemented\n");
     }
 
     @Override
