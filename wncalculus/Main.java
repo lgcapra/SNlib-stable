@@ -131,9 +131,10 @@ public class Main {
 //        //System.out.println(f2 + " implies " + f1+" intersez "+ f2 + " :" + LogicalExprs.implies(f2,f1.andFactory(f1, f2)));
 //        testIntersection(f_list, f1, f4);
 
-        // parte sui nultiset -- modificata dopo ultimi cambiamenti di bag expressions
+        // parte sui multiset -- modificata dopo ultimi cambiamenti di bag expressions
         testMultiset();
-        testMultisetComp();
+        testLemma1();
+        testProperty2();
 
 //        Guard g2;
 //        Util.getChar();
@@ -1043,8 +1044,8 @@ public class Main {
         Util.getChar();
     }
 
-     public static void testMultisetComp() {
-        System.out.println("--- multiset comp ---");
+     public static void testLemma1() {
+        System.out.println("--- Lemma 1 ---");
 
         Projection pr1 = Projection.builder(1, fc2),
                 pr2 = Projection.builder(2, fc2),
@@ -1068,6 +1069,31 @@ public class Main {
         c = new ArcFunComp(wnt1, wnt2);
         System.out.println("semplifico\n" + c);
         System.out.println(c.normalize());
-}
+    }
+
+    /**
+     * PROPERTY 2
+     * If f0 is constant, then <f, f0> ∘ h = <f ∘ h, f0>
+     */
+    public static void testProperty2() {
+        System.out.println("--- Property 2 ---");
+
+        Projection pr1 = Projection.builder(1, fc2),
+                pr2 = Projection.builder(2, fc2);
+        SetFunction prc1 = ProjectionComp.factory(pr1).cast();
+        SetFunction all = All.getInstance(fc2);
+
+        Domain d = new Domain(fc2, fc2);
+
+        // Left tuple: <p1, All>  (non-constant, constant)
+        Tuple left = new Tuple(d, pr1, all);
+        // Right tuple: <p1c, p1>
+        Tuple right = new Tuple(d, prc1, pr2);
+
+        TupleComposition c = new TupleComposition(left, right);
+
+        System.out.println("semplifico\n" + c);
+        System.out.println(c.normalize());
+    }
 
 }

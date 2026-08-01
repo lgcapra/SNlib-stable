@@ -475,9 +475,16 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     private static List<SetFunction> compose(final List<? extends SetFunction> list, final SetFunction right) {
         final List<SetFunction> newcomps = new ArrayList<>(); // the resulting tuple components
         list.forEach((sx) -> {
-            var f = (SetFunction) new ClassComposition(sx, right).specSimplify();
-            //System.out.println(sx + " . "+ right + " ->\n" + f); //debug
-            newcomps.add(f);
+            // PROPERTY 2: Check if the component is constant
+            if (sx.isConstant()){
+                // If sx is constant, then sx ∘ h = sx, so we add it unchanged
+                newcomps.add(sx);
+            } else {
+                // For non-constant components, perform the composition
+                var f = (SetFunction) new ClassComposition(sx, right).specSimplify();
+                //System.out.println(sx + " . "+ right + " ->\n" + f); //debug
+                newcomps.add(f);
+            }
         });
         return newcomps;
     }
@@ -1020,8 +1027,20 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         final Map<Integer, Collection<Integer>> complements = new HashMap<>(); // stores complements repetitions 
         checkLeftCompForm(projections, complements, lcomps);
         final int npr = projections.size(), ncmp = complements.size();
-        if (npr + ncmp < 2 || rx.card().singleValue(1)) { // base case: |rx| == 1 or no repetitions 
-            return new Tuple(cc, compose(lcomps, rx), rg);
+        if (npr + ncmp < 2 || rx.card().singleValue(1)) { // base case: |rx| == 1 or no repetitions
+            // Apply PROPERTY 2: skip composition for constant components
+            final List<SetFunction> newcomps = new ArrayList<>();
+            for (SetFunction f : lcomps) {
+                if (f.isConstant()){
+                    // PROPERTY 2: constant component f stays unchanged in composition
+                    // f ∘ rx = f, so we add it without composing
+                    newcomps.add(f);
+                } else {
+                    // Non-constant component must be composed with rx
+                    newcomps.add(new ClassComposition(f, rx).specSimplify());
+                }
+            }
+            return new Tuple(cc, newcomps, rg);
         } else {
             //System.out.println("tupleBaseCompose:\nleft"+this+"\nright"+right); //debug 
             // the right function's card set > 1 and there are repetitions of X^1 on the left tuple
@@ -1049,6 +1068,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                     filters.add(Equality.builder(p_1, Projection.builder(j, succ_1 - j_exp, cc), false, ncd));
                 });
             });
+            // compose(...) applies PROPERTY 2 internally
             final var tuple = new Tuple(filters.isEmpty() ? True.getInstance(ncd) : And.factory(filters), cc, compose(newcomps, rx), rg);
             return npr != 0 ? tuple : new TupleProjection(tuple, lcomps.size());
         }

@@ -5,10 +5,6 @@ import classfunction.ClassFunction;
 import classfunction.ElementaryFunction;
 import color.ColorClass;
 import expr.Domain;
-import expr.Expression;
-import wnbag.ArcFunIntersection;
-import wnbag.ArcFunction;
-import wnbag.WNtuple;
 
 import java.util.Collection;
 import java.util.Map;
@@ -51,6 +47,12 @@ public final class LinearCombIntersection extends BagIntersection<ElementaryFunc
     @Override
     public <E extends ClassFunction> E setDefaultIndex() {
         throw new UnsupportedOperationException("Unimplemented method 'setDefaultIndex'");
+    }
+
+    // TO DO
+    @Override
+    public <E extends ClassFunction> E setIndex(int idx) {
+        throw new UnsupportedOperationException("Unimplemented method 'setIndex'");
     }
 
     @Override
