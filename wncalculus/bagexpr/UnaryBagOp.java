@@ -3,6 +3,7 @@ package bagexpr;
 import java.util.Map;
 import java.util.Objects;
 import color.Sort;
+import expr.Domain;
 import expr.ParametricExpr;
 import expr.UnaryOp;
 
@@ -14,7 +15,6 @@ import expr.UnaryOp;
 public abstract class UnaryBagOp<E extends ParametricExpr> implements UnaryOp<BagExpr<E>>, BagExpr<E> {
     
     private final BagExpr<E> bexpr; // the function to be transposed
-    private boolean simplified;
     
     /**
      * buils a unary bag-operator
@@ -31,12 +31,11 @@ public abstract class UnaryBagOp<E extends ParametricExpr> implements UnaryOp<Ba
 
     @Override
     public final boolean simplified() {
-        return this.simplified;
+        return false;
     }
 
     @Override
     public final void setSimplified(boolean simplified) {
-        this.simplified = simplified;
     }
 
     @Override
@@ -66,6 +65,16 @@ public abstract class UnaryBagOp<E extends ParametricExpr> implements UnaryOp<Ba
     @Override
     public final UnaryBagOp<E> clone(Map<Sort, Sort> split_map) {
        return (UnaryBagOp<E>) BagExpr.super.clone(split_map); // default implementation is fine
+    }
+
+    @Override
+    public Domain getDomain() {
+        return this.bexpr.getDomain();
+    }
+
+    @Override
+    public final Integer cardLb() {
+       return null; 
     }
 
 }

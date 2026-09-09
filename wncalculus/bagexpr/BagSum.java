@@ -11,28 +11,29 @@ import expr.*;
  */
 public abstract class BagSum<E extends ParametricExpr> extends N_aryBagOp<E> {
 
+    Integer card = null; // the cardinality of the sum (if it exists)
+    
     protected BagSum(Collection<? extends BagExpr<E>> c, boolean check) {
         super(c, check);
     }
     
    @Override
-    public Bag<E> Op(Bag<E> b1, Bag<E> b2){
+    public final Bag<E> Op(Bag<E> b1, Bag<E> b2){
         return b1.sum(b2);
     }
 
-
     @Override
-    // could be moved in N_aryOp
-    public Integer cardLb() {
-        int card = 0;
-        for (BagExpr<E> b : this.args) {
-            Integer c = b.cardLb();
-            if (c == null)
-                return c;
-            card += c;
-        }      
-        return card;     
+    public final Integer cardLb() {
+        if (card == null) {
+            card = 0;
+            for (BagExpr<E> b : this.getArgs()) {
+                Integer c = b.cardLb();
+                if (c == null)
+                    return card = null;
+                card += c;
+            }
+        }
+        return card;
     }
-
     
 }

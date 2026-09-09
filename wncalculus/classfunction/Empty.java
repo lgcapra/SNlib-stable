@@ -42,12 +42,6 @@ public final class Empty extends ConstantFunction  {
     public Interval card() {
         return new Interval(0,0);
     }
-    
-    @Override
-    public boolean zeroCard () {
-        return true;
-    }
-    
    
     @Override
     public Pair<SetFunction,Integer> baseCompose(SetFunction right) {

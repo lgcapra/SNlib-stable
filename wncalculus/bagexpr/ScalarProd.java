@@ -31,7 +31,7 @@ public abstract class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E>
 
     @Override
     public boolean isDistributive (Class<? extends  MultiArgs> optk) {
-        return BagSum.class.equals(optk);
+        return BagSum.class.isAssignableFrom(optk);
     }
     
     //if the argument is a bag maps to the corresponding method
@@ -42,14 +42,13 @@ public abstract class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E>
             return build();
         }
 
-        BagExpr<E> arg = getArg();
+        final BagExpr<E> arg = getArg();
         if (this.k == 1) {
             return arg;
         }
 
-        if (arg instanceof ScalarProd) {
-            ScalarProd<E> sprod = (ScalarProd<E>) arg;
-            return buildScProd(sprod.getArg(), sprod.k * this.k);
+        if (arg instanceof ScalarProd sprod) {
+            return buildScProd(sprod.getArg().cast(), sprod.k * this.k);
         }
         
         if (arg instanceof Bag) {
@@ -78,13 +77,7 @@ public abstract class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E>
     
     @Override
     public String toString() {
-        return "" +this.k + "*("+getArg()+')';
-    }
-
-    @Override
-    public Integer cardLb() {
-       Integer card = getArg().cardLb();
-       return card != null ? card * this.k : null;
+        return this.k + "*("+getArg()+')';
     }
     
 }

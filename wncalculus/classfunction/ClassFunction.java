@@ -73,6 +73,7 @@ public interface ClassFunction extends SingleSortExpr {
         c.forEach(f -> {
             idxset.addAll(f.indexSet());
         });
+        
         return idxset;
     }
 
@@ -225,16 +226,23 @@ public interface ClassFunction extends SingleSortExpr {
         return Collections.emptySet();
     }
 
-    /*
+    /**
       default implementation of cardLb, to be overridden by classes for which a lower bound on cardinality can be computed
-        * @return a lower bound on the cardinality of the function, or <code>null</code> if it cannot be computed                   
+      * @return a lower bound on the cardinality of the function, or <code>null</code> if it cannot be computed                   
       */
-      default Integer cardLb() {
+    default Integer cardLb() {
         return null;
     }
-
+    
     @Override
     default ParametricExpr buildTransp() {
         throw new UnsupportedOperationException("Unimplemented method 'buildTransp' for ClassFunction");
     }
+
+    /**
+     * 
+     * @return <code>true<</code> if and only if the function cardinality has been shown equal to zero 
+     */
+    abstract boolean zeroCard();
+
 }

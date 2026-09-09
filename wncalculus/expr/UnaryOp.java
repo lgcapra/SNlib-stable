@@ -27,17 +27,18 @@ public interface UnaryOp<E extends ParametricExpr>  extends SingleArg<E,E> {
         return false;
     }
          
+    @SuppressWarnings("unchecked")
     @Override
     default E genSimplify() {
         //System.out.println("\nunary op genSimplify of " + this+':'+getClass()); //debug
         E res = SingleArg.super.genSimplify();
-        if (res == this) {
+        if (equals(res)) {
             E arg = getArg();
             if (isInvolution() && getClass().equals(arg.getClass())  )
                 res = ((SingleArg<E,E>)arg).getArg() ;
             else {
                 MultiArgs<E,E> op;
-                if (arg instanceof MultiArgs && isDistributive( (op= ((MultiArgs)arg )).getClass() ) ) {
+                if (arg instanceof MultiArgs && isDistributive( (op= ((MultiArgs<E,E>)arg )).getClass() ) ) {
                     Collection<E> nargs = new ArrayList<>();
                     op.getArgs().forEach( e -> { nargs.add( buildOp(e).cast() );  });//casts Expression to E
                     res =  op.buildOp(nargs);

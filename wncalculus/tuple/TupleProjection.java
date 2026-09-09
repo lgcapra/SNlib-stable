@@ -137,14 +137,14 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
                             System.out.println("mon_bound: " + this.mboundoff); //debug
                             if (this.mboundoff == 0) { // corollary 14: the tuple's cardinality lower bounds satisfy the projection mon. bound
                                 eq_restr.addAll(ieq_restr); // the k-restriction of the filter
-                                return new Tuple(And.buildAndFormWithD(eq_restr, codom), projected, guard); // k-restr of the whole tuple
+                                return new Tuple(And.buildAndFormWithDom(eq_restr, codom), projected, guard); // k-restr of the whole tuple
                             }
                             // the tuple's lower bounds do not satisfy the projection mon. bound
                             if (this.graph.isSimpleForm()) {
                                 final boolean clique_k = this.graph.isClique(this.k);
                                 if (clique_k && minLb(inequalities, components, this.k) >= this.graph.chromaticNumber()) { //Lemmaa 10: g[T] is simple, the inequalities restriction is a clique, and the lower bounds are at least as the chromatic numb.
                                     eq_restr.addAll(ieq_restr);
-                                    return new Tuple(And.buildAndFormWithD(eq_restr, codom), projected, guard); // k-restr of the tuple
+                                    return new Tuple(And.buildAndFormWithDom(eq_restr, codom), projected, guard); // k-restr of the tuple
                                 } else { // either the inequalities restriction is not a clique or some extended component (that ..) has card. lb  < X
                                     FunctionTuple ft = tuple.reduceFilterClassIneqs(inequalities, this.cc);
                                     if (ft != tuple) {  // [g]T is not a fixed-point (we may drop this condition)

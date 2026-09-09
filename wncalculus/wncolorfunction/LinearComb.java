@@ -8,6 +8,7 @@ import color.ColorClass;
 import color.Sort;
 import expr.Domain;
 import guard.Equality;
+import util.Pair;
 import util.Util;
 
 import java.util.*;
@@ -26,36 +27,32 @@ import java.util.Map.Entry;
          * base constructor: creates a linear-combination of (elementary) class-functions
          * @param m a map corresponding to the linear combination
          */
-        public LinearComb(Map<? extends ElementaryFunction, Integer> m) {
+        public LinearComb(Map<? extends ElementaryFunction, Integer> m, boolean check) {
             super(m);
             if (m.isEmpty()) {
                 throw new IllegalArgumentException("Empty linear combination");
             }
             ElementaryFunction first = m.keySet().iterator().next();
-            this.cc = first.getSort();
-            for (ElementaryFunction elementaryFunction : m.keySet()) {
-                if (!elementaryFunction.getSort().equals(this.cc)) {
-                    throw new IllegalArgumentException("Elementary functions with different color classes");
+            this.cc = first.getSort();    
+            if (check) {
+                for (ElementaryFunction elementaryFunction : m.keySet()) {
+                    if (!elementaryFunction.getSort().equals(this.cc)) {
+                        throw new IllegalArgumentException("Elementary functions with different color classes");
+                    }
                 }
             }
-        }
+        } 
 
-
-        /**
-         * creates a linear-combination from a map with disjointness flag (ignored for compatibility)
-         * @param m a map corresponding to the linear combination
-         * @param disjoint ignored (kept for API compatibility)
-         */
-        public LinearComb(Map<ElementaryFunction, Integer> m, boolean disjoint) {
-            this(m);  // ignoriamo per ora il flag disjoint
+        public LinearComb(Map<? extends ElementaryFunction, Integer> m ) {
+            this(m, false);
         }
 
         /**
          * creates a linear-combination from a collection
          * @param c a collection of class-functions
          */
-        public LinearComb(Collection<? extends ElementaryFunction> c) {
-            this(Util.asMap(c));
+        public LinearComb(Collection<? extends ElementaryFunction> c, boolean check) {
+            this(Util.asMap(c), check);
         }
 
 
@@ -64,7 +61,7 @@ import java.util.Map.Entry;
          * @param f a list of functions
          */
         public LinearComb(ElementaryFunction ... f) {
-            this(Arrays.asList(f));
+            this(Arrays.asList(f), false);
         }
 
         /**
@@ -91,6 +88,20 @@ import java.util.Map.Entry;
             super(new Domain(cc), new Domain(cc));
             this.cc = cc;
         }
+        
+        /**
+         * builds a linear-combination from a collection of pairs (function, multiplicity)
+         * parameters are inverted to avoid ambiguity with the other constructor    
+         * @param c a collection of pairs (function, multiplicity)
+         * @param check whether to check the color class consistency
+         */
+        public LinearComb (boolean check, Collection<Pair<ElementaryFunction, Integer>> c) {
+            this(Util.pairsAsMap(c), check);
+        }
+
+        public LinearComb (Pair<ElementaryFunction, Integer> ... c) {
+            this(false, Arrays.asList(c));
+        }
 
         // ========== ClassFunction interface implementation ==========
 
@@ -109,7 +120,7 @@ import java.util.Map.Entry;
             Map<ElementaryFunction, Integer> m = new HashMap<>();
             support().forEach(x -> { m.put(x.setDefaultIndex(), mult(x)); });
 
-            return (E) new wncolorfunction.LinearComb(m);
+            return (E) new wncolorfunction.LinearComb(m, false);
         }
 
         /**
@@ -153,7 +164,7 @@ import java.util.Map.Entry;
                 copy.compute(k, (key, m) -> value + (m == null ? 0 : m));
             });
 
-            return (E) new wncolorfunction.LinearComb(copy);
+            return (E) new wncolorfunction.LinearComb(copy, false);
         }
 
         @Override
@@ -162,22 +173,23 @@ import java.util.Map.Entry;
             HashMap<ElementaryFunction, Integer> newmap = new HashMap<>();
             asMap().forEach((key, value) -> newmap.put(key.copy(newcc), value));
 
-            return (E) new wncolorfunction.LinearComb(newmap);
+            return (E) new wncolorfunction.LinearComb(newmap, false);
         }
 
         public wncolorfunction.LinearComb build(Map<ElementaryFunction, Integer> smap, boolean disj) {
-            return new wncolorfunction.LinearComb(smap);
+            return new wncolorfunction.LinearComb(smap, false);
+
         }
 
 
         @Override
         public  LinearComb buildEmpty(Domain dom, Domain codom) {
-            return new LinearComb(asMap());
+            return new LinearComb(asMap(), false);
         }
 
         @Override
         public  LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-            return new LinearComb (m);
+            return new LinearComb (m, false);
         }
 
         @Override
@@ -197,8 +209,11 @@ import java.util.Map.Entry;
                 for (Entry<? extends ElementaryFunction, Integer> e : this.asMap().entrySet()) {
                     m.put(e.getKey().setIndex(idx), e.getValue());
                 }
-                return new LinearComb(m);
+                return new LinearComb(m, false);
             }
 
-            throw new UnsupportedOperationException();                   }
+            throw new IllegalArgumentException();                   
+        }
+
+        
     }

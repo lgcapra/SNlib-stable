@@ -21,8 +21,8 @@ public final class ArcFunScalar extends ScalarProd<WNtuple> implements ArcFuncti
 
 
     @Override
-    public ArcFunScalar buildOp(BagExpr<WNtuple> arg) { // check if used somewhere else 
-        return arg.cast();
+    public ArcFunScalar buildOp(BagExpr<WNtuple> arg) {  
+        return new ArcFunScalar(arg.cast(), this.k);
     }  
 
 }

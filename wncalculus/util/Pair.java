@@ -56,7 +56,7 @@ public class Pair<K,V> implements Map.Entry<K,V> {
     public final boolean equals (Object o) {
         boolean res = o != null && o.getClass().equals(getClass());
         if (res) {
-            Pair p = (Pair) o;
+            Pair<?,?> p = (Pair<?,?>) o;
             res = Objects.equals(this.key,p.key) && Objects.equals(this.value, p.value);
         }
         

@@ -2,19 +2,12 @@ package bagexpr;
 
 import java.util.*;
 import java.util.function.BiFunction;
-
 import expr.Domain;
 import expr.IllegalDomain;
 import guard.*;
-import logexpr.GuardedExpr;
-import tuple.FunctionTuple;
-import tuple.Tuple;
-import tuple.AbstractTuple;
-import tuple.AllTuple;
 import util.Pair;
 import util.Util;
 import wnbag.WNtuple;
-import logexpr.LogicalExprs;
 
 /**
  * Utility statiche per operazioni su bag e mappe guardie->coeff
@@ -245,10 +238,8 @@ public final class BagUtils {
         return res;
     }
 
-    // Minimal no-op disjoin: mantiene compatibilità col codice esistente.
-    @SuppressWarnings("unchecked")
-    public static <E extends expr.ParametricExpr> bagexpr.BagExpr<E> disjoin(bagexpr.BagExpr<E> b) {
-        return b;
-    }
-
 }
+
+
+    
+

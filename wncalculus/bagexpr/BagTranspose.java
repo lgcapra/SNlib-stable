@@ -67,13 +67,7 @@ public abstract class BagTranspose<E extends ParametricExpr> extends UnaryBagOp<
     
     @Override
     public boolean isDistributive (Class<? extends  MultiArgs> optk) {
-        return BagSum.class.equals(optk);
+        return BagSum.class.isAssignableFrom(optk);
     }
 
-    @Override
-    public Integer cardLb() {
-       return getArg().cardLb(); // check if this is right
-    }
-
-    
 }

@@ -1,15 +1,12 @@
 package wncolorfunction;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
-
 import bagexpr.BagExpr;
 import bagexpr.BagSum;
 import classfunction.ClassFunction;
 import classfunction.ElementaryFunction;
 import color.ColorClass;
-import expr.Domain;
-import expr.Expression;
+import expr.Domain; 
 
 public final class LinearCombSum extends BagSum<ElementaryFunction> implements ColorFunction  {
 
@@ -19,7 +16,7 @@ public final class LinearCombSum extends BagSum<ElementaryFunction> implements C
 
     @Override
     public LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-        return new LinearComb(m);
+        return new LinearComb(m,true);
     }
 
     @Override
@@ -40,19 +37,16 @@ public final class LinearCombSum extends BagSum<ElementaryFunction> implements C
 
     @Override
     public <E extends ClassFunction> E copy(ColorClass newcc) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'copy'");
     }
 
     @Override
     public <E extends ClassFunction> E setDefaultIndex() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setDefaultIndex'");
     }
 
     @Override
     public LinearComb clone(Domain newdom) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'clone'");
     }
 

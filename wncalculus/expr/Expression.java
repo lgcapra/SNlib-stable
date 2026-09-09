@@ -1,7 +1,6 @@
 package expr;
 
 import color.Sort;
-
 import java.util.*;
 
 /**
@@ -54,7 +53,7 @@ public interface Expression {
                 //break;
             }
         }   
-        simpterm.setSimplified(true);
+        //simpterm.setSimplified(true); // RIPRISTINARE
         
         return simpterm;
     }    
@@ -96,8 +95,7 @@ public interface Expression {
  <code>null</code> otherwise
      */
     default Sort oneSorted() {
-        Set<? extends Sort> cdsupp = getCodomain().support();
-        
+        Set<? extends Sort> cdsupp = getCodomain().support();   
         return cdsupp.size() == 1 ? cdsupp.iterator().next() : null;
     }
 
@@ -200,5 +198,11 @@ public interface Expression {
     
     @Override
     abstract String toString(); 
+    
+    /**
+     * 
+     * @return the <code>null</code> value for <code>this</code> expression
+    */
+    abstract Expression getNull() ;
     
 }

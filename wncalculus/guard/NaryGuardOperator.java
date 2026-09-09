@@ -29,7 +29,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @param check check-domain flag
     * @throws IllegalDomain if the guards' domains are different
     */
-    protected NaryGuardOperator(Set<? extends Guard> guards, boolean check) {
+    protected NaryGuardOperator(final Set<? extends Guard> guards, final boolean check) {
         if (check)
             Expressions.checkDomain(guards);
         this.args   =  Collections.unmodifiableSet(guards);
@@ -45,7 +45,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     @Override
     public final Map<ColorClass, Map <Boolean, SortedSet<Equality> > > equalityMap() {
         if ( this.eq_map == null) { 
-            this.eq_map = simple() ?  Collections.unmodifiableMap( setEqualityMap() ) : Collections.EMPTY_MAP;
+            this.eq_map = simple() ?  Collections.unmodifiableMap( setEqualityMap() ) : Collections.emptyMap();
         }
         
         return this.eq_map;
@@ -60,7 +60,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     @Override
     public final Map<ColorClass, Map <Boolean, Set<Membership> > > membMap() {
         if ( this.memb_map == null) {
-            this.memb_map = simple() ? Collections.unmodifiableMap( setMemberMap() ) : Collections.EMPTY_MAP;
+            this.memb_map = simple() ? Collections.unmodifiableMap( setMemberMap() ) : Collections.emptyMap();
         }
         
         return this.memb_map;
@@ -70,13 +70,13 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     initializes the color-map for memberships, based on their sign
     */
     private Map<ColorClass, Map <Boolean, Set<Membership> > > setMemberMap() {
-        Map<ColorClass, Map <Boolean, Set<Membership> > > map = new HashMap<>();
+        final Map<ColorClass, Map <Boolean, Set<Membership> > > map = new HashMap<>();
         this.args.stream().filter(g -> g instanceof Membership).forEachOrdered(g -> {
-            ColorClass cc = ((Membership)g).getSort();
+            final ColorClass cc = ((Membership)g).getSort();
             Map<Boolean, Set<Membership>> m_cc = map.get(cc);
             if (m_cc == null)
                 map.put(cc, m_cc = new HashMap<>());
-            Membership gm = (Membership) g;
+            final Membership gm = (Membership) g;
             Util.addElem(gm.sign(), gm, m_cc);
         });
         
@@ -87,15 +87,15 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     initializes the color-maps for equalities, based on their sign
     */
     private Map<ColorClass, Map<Boolean, SortedSet<Equality>> > setEqualityMap () {
-        Map<ColorClass, Map<Boolean, SortedSet<Equality>> > map  = new HashMap<>();
+        final Map<ColorClass, Map<Boolean, SortedSet<Equality>> > map  = new HashMap<>();
         //Comparator<Equality> comp = (e1,e2) -> { int c = e1.firstIndex().compareTo(e2.firstIndex()); //the equalities have the same color and sign
                     //if (c == 0 && (c = e1.secondIndex().compareTo(e2.secondIndex()) ) ==0) c = e1.getSucc().compareTo(e2.getSucc()); return c;};
         this.args.stream().filter(g -> g instanceof Equality).forEachOrdered( g -> {
-            ColorClass cc = ((Equality)g).getSort();
+            final ColorClass cc = ((Equality)g).getSort();
             Map<Boolean, SortedSet<Equality>> m_cc = map.get(cc);
             if (m_cc == null)
                 map.put(cc, m_cc = new HashMap<>());
-            Equality ge = (Equality) g;
+            final Equality ge = (Equality) g;
             Util.addOrdElem(ge.sign(), ge, m_cc, null );
         });
         
@@ -110,8 +110,8 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @param congr congruence flag (<code>true</code> if the operator is <code>And</code>, <code>false</code> otherwise)
      * @return the corresponding (possibly empty) set of "congruent" equalities (depends of the kind of logical operator)
      */
-    public final SortedSet<Equality> congruentEq (ColorClass cc, boolean congr) {
-        Map<Boolean, SortedSet<Equality>> cmap = equalityMap().get(cc);
+    public final SortedSet<Equality> congruentEq (final ColorClass cc, final boolean congr) {
+        final Map<Boolean, SortedSet<Equality>> cmap = equalityMap().get(cc);
         
         return cmap != null ? cmap.getOrDefault(congr == this.congrsign, Collections.emptySortedSet()) : Collections.emptySortedSet();
     }
@@ -123,8 +123,8 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @param sign the equal/not-equal flag
      * @return the (possibly empty) corresponding set of (in)equalities (depends of the sign)
      */
-    public final SortedSet<Equality> equality (ColorClass cc, boolean sign) {
-        Map<Boolean, SortedSet<Equality>> emap = equalityMap().get(cc);
+    public final SortedSet<Equality> equality (final ColorClass cc, final boolean sign) {
+        final Map<Boolean, SortedSet<Equality>> emap = equalityMap().get(cc);
         
         return emap != null ? emap.getOrDefault(sign, Collections.emptySortedSet()) : Collections.emptySortedSet();
     }
@@ -138,10 +138,10 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * (depends on the kind of logical operator:
      * in is congruent for <code>And</code>, notin for <code>Or</code>);
      */
-    public final Set<Membership> congruentMemb(ColorClass cc, boolean congr) {
-        Map<Boolean, Set<Membership>> cmap;
-        return !cc.isSplit() || (cmap = membMap().get(cc)) == null ? Collections.EMPTY_SET 
-                  :  cmap.getOrDefault(congr == this.congrsign, Collections.EMPTY_SET); //efficient
+    public final Set<Membership> congruentMemb(final ColorClass cc, final boolean congr) {
+        final Map<Boolean, Set<Membership>> cmap;
+        return !cc.isSplit() || (cmap = membMap().get(cc)) == null ? Collections.emptySet() 
+                  :  cmap.getOrDefault(congr == this.congrsign, Collections.emptySet()); //efficient
     }
     
     /**
@@ -151,9 +151,9 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @return the corresponding (possibly empty) set of membership clauses of
      * specified sign (in/notin) and color
      */
-    public final Set<Membership> membership (ColorClass cc, boolean sign) {
-        Map<Boolean, Set<Membership>> map = membMap().get(cc);
-        return map != null ? map.getOrDefault(sign, Collections.EMPTY_SET) : Collections.EMPTY_SET;
+    public final Set<Membership> membership (final ColorClass cc, final boolean sign) {
+        final Map<Boolean, Set<Membership>> map = membMap().get(cc);
+        return map != null ? map.getOrDefault(sign, Collections.emptySet()) : Collections.emptySet();
     }
             
      /*
@@ -173,7 +173,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
    collects the elementary guards of this operator into a set
    */
    final Set<? extends ElementaryGuard> getElementaryArgs() {
-        Set<ElementaryGuard> eset = new HashSet<>();
+        final Set<ElementaryGuard> eset = new HashSet<>();
         for (Map<Boolean, SortedSet<Equality>> x : equalityMap().values()) {
             eset.addAll(x.getOrDefault(true, Collections.emptySortedSet()));
             eset.addAll(x.getOrDefault(false, Collections.emptySortedSet()));
@@ -189,7 +189,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
     
     
     @Override
-    public final boolean equals (Object o) {
+    public final boolean equals (final Object o) {
         return N_aryOp.super.isEqual(o);
     }
 
@@ -248,8 +248,8 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @param dom the new domain of guards
      * @return a <code>Set</code> of copies of the guards associated with the new domain
      */
-    public final static Set<? extends Guard> cloneArgs ( Collection<? extends Guard> c , Domain dom)  {
-        Set<Guard> new_args = new HashSet<>();
+    public final static Set<? extends Guard> cloneArgs (final Collection<? extends Guard> c , final Domain dom)  {
+        final Set<Guard> new_args = new HashSet<>();
         c.forEach(g -> { new_args.add(g.clone(dom) ); });
         
         return new_args;
@@ -259,7 +259,7 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * @param dom the (possibly) new domain
      * @return a copy of <code>this</code> guard's operands of the specified domain
      */
-    public final Set<? extends Guard> cloneArgs (Domain dom)  {
+    public final Set<? extends Guard> cloneArgs (final Domain dom)  {
         return cloneArgs(this.args, dom);
     }    
             
@@ -283,21 +283,21 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
    private Guard reduceMemberships () {
         Set<Guard> guards = null; // (light) copy of the operands
         for (Map.Entry<ColorClass, Map<Boolean, Set<Membership>>> em : membMap().entrySet()) {
-            ColorClass cc = em.getKey();
+            final ColorClass cc = em.getKey();
             final int n = cc.subclasses();
             if (n > 1) { // partitioned class
-                Map<Boolean, Set<Membership>> map_cc = em.getValue();
-                Set<Membership> c_memb  = map_cc.getOrDefault( this.congrsign, Collections.EMPTY_SET), 
-                                nc_memb = map_cc.getOrDefault(!this.congrsign, Collections.EMPTY_SET);
-                HashMap<Integer, Set<Membership>> c_i_map = Util.mapFeature(c_memb,  m -> m.firstIndex()/*, m -> m.subcl().index()*/);
+                final Map<Boolean, Set<Membership>> map_cc = em.getValue();
+                final Set<Membership> c_memb  = map_cc.getOrDefault( this.congrsign, Collections.emptySet()), 
+                                nc_memb = map_cc.getOrDefault(!this.congrsign, Collections.emptySet());
+                final HashMap<Integer, Set<Membership>> c_i_map = Util.mapFeature(c_memb,  m -> m.firstIndex()/*, m -> m.subcl().index()*/);
                 for (Set<Membership> cs :  c_i_map.values() )  
                     if ( cs.size() > 1  ) 
                         return (Guard) getZero(); 
                 // for each projection, there is at most one "congruent" membership of color cc
                 Set<Map.Entry<Integer, Set<Membership>>> nc_i_set = Util.mapFeature( nc_memb,  m -> m.firstIndex() ).entrySet();
                 for (Map.Entry<Integer, Set<Membership>> sim_nc : nc_i_set) {
-                    Set<Membership> ncs = sim_nc.getValue(), cs; 
-                    int m = ncs.size();
+                    final Set<Membership> ncs = sim_nc.getValue(), cs; 
+                    final int m = ncs.size();
                     if ( m == n || (cs = c_i_map.get(sim_nc.getKey())) != null && ncs.contains(cs.iterator().next().opposite()) ) //cs is either empty or a singleton ...
                         return  (Guard) getZero();
                     // there are no complementary guards are and, for each projection, less than n "non-congruent" memberships
@@ -305,8 +305,8 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
                         guards = Util.lightCopy(guards, this.args);
                         guards.removeAll(ncs);
                         if (cs == null) {// no corresponding congruent term: ncs is replaced by the equivalent "opposite"
-                            Projection pi = ncs.iterator().next().getArg1();
-                            HashSet<Membership> oppargs = new HashSet<>();
+                            final Projection pi = ncs.iterator().next().getArg1();
+                            final HashSet<Membership> oppargs = new HashSet<>();
                             for (int j = 1 ; j <= n ; j++) {
                                 Membership mem = Membership.build(pi, j, this.congrsign, getDomain());
                                 if (!ncs.contains(mem.opposite())) //sbagliato: se sono più di uno bisogna aggiungere l'operatore
@@ -326,14 +326,14 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
    map (non)congruent equalities of a given color (assumed already sorted) into lists characterized by
    the same indices
    */
-   Map<Pair<Integer,Integer>, List<? extends Equality>> similarCongrEqMap(ColorClass  cc, boolean congr)  {
+   Map<Pair<Integer,Integer>, List<? extends Equality>> similarCongrEqMap(final ColorClass  cc, final boolean congr)  {
         return Util.mapFeatureToList( congruentEq(cc, congr), e -> new Pair<>(e.firstIndex(), e.secondIndex()) );
    }
    
    /*
    efficiently checks if two (complementary) sets of elementary guards conain any opposite elements
    */
-   private static  <E extends ElementaryGuard> boolean chekForCompl(Set<E> cset, Set<E> nc_set) {
+   private static  <E extends ElementaryGuard> boolean chekForCompl(final Set<E> cset, final Set<E> nc_set) {
        return cset.size() > nc_set.size() ? Util.checkAny(nc_set, t -> cset.contains(t.opposite())) : Util.checkAny(cset, t -> nc_set.contains(t.opposite()));
    }
    
@@ -346,14 +346,15 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
    private Guard reduceEqualities() {
        Set<Guard> argscopy = null;
        for (Map.Entry<ColorClass, Map<Boolean, SortedSet<Equality>>> e : equalityMap().entrySet()) {
-           ColorClass cc = e.getKey();
-           SortedSet<Equality> cset = congruentEq(cc,true), nc_set = congruentEq(cc,false);
+           final ColorClass cc = e.getKey();
+           final SortedSet<Equality> cset = congruentEq(cc,true), nc_set = congruentEq(cc,false);
            if (chekForCompl(cset, nc_set))
                return (Guard) getZero();
            
            if ( cc.isOrdered() ) {
                 Map<Pair<Integer, Integer>, List<? extends Equality>> cmap = null;     
-                int lb  = cc.lb(), size;
+                final int lb  = cc.lb();
+                int size;
                 // we first check for the presence of non-singleton, similar congruents lists, and (in case of singleton), that of complementary non.congruent
                 boolean to_split = false;
                 if (! this.congrsign) {// an "and" is excluded, assuming it is already canonical
@@ -371,15 +372,15 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
                 //similar congruents lists of color cc are singletons: we consider the non congruent lists    
                 final boolean fixed_size = cc.hasFixedSize();
                 for (Map.Entry<Pair<Integer, Integer>, List<? extends Equality>> sim_nc : similarCongrEqMap(cc, false).entrySet()) {
-                    List<? extends Equality> poset = sim_nc.getValue(); //list of non congruent, similar terms
+                    final List<? extends Equality> poset = sim_nc.getValue(); //list of non congruent, similar terms
                     size = poset.size();
                     if ( fixed_size && size  == lb)  
                         return (Guard) getZero(); // the outcome is either 0 or S ...
                     else { 
                         final Pair<Integer, Integer> key = sim_nc.getKey();
                         final int exp, min, max;
-                        boolean one_missing = fixed_size && size == lb -1;
-                        List<? extends Equality> singlet; // the corresponding congruent singleton list   
+                        final boolean one_missing = fixed_size && size == lb -1;
+                        final List<? extends Equality> singlet; // the corresponding congruent singleton list   
                         if (cmap == null/*this.congrsign*/)
                             cmap = similarCongrEqMap(cc, true);
                         if ( one_missing || ( singlet = cmap.get( key )) != null && 
@@ -411,14 +412,16 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
      * are either (in)equalities or memberships; <code>null</code> in all the other cases
      */
     public final ColorClass getSort() {
-        Map<ColorClass, Map<Boolean, SortedSet<Equality>>> c_e = equalityMap();
-		Map<ColorClass, Map<Boolean, Set<Membership>>> c_m = membMap();
-        int n1 = c_e.size(), n2 = c_m.size(), s;
+        final Map<ColorClass, Map<Boolean, SortedSet<Equality>>> c_e = equalityMap();
+		final Map<ColorClass, Map<Boolean, Set<Membership>>> c_m = membMap();
+        final int n1 = c_e.size(), n2 = c_m.size(), s;
+        
         if (n1 < 2 && n2 < 2 && (s = n1 + n2) > 0 && (s < 2 || c_e.keySet().equals(c_m.keySet())) )  {
-	        ColorClass cc = n1 == 1 ? c_e.keySet().iterator().next() : c_m.keySet().iterator().next();
+	        final ColorClass cc = n1 == 1 ? c_e.keySet().iterator().next() : c_m.keySet().iterator().next();
 	        if (equality(cc,true).size() + equality(cc,false).size() + membership(cc,true).size() + membership(cc,false).size() == this.args.size())
 	        	return cc ;
         }
+
         return null;
       }
     

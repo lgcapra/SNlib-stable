@@ -5,7 +5,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.*;
 import java.util.*;
-
 import expr.Expression;
 
 /**
@@ -22,7 +21,7 @@ public class Util  {
     * @param t the corresponding class tokens
     * @return <code>res</code>
     */
-   public static <E>  List<E> filter (Collection<?> c, List<E> res, Class<? extends E> t ) {
+   public static <E>  List<E> filter (final Collection<?> c, final List<E> res, final Class<? extends E> t ) {
        c.stream().filter(o -> t.isInstance(o)).forEachOrdered( o -> { res.add(t.cast(o)); }); 
        
        return res;
@@ -36,7 +35,7 @@ public class Util  {
      * @return the first occurrence of an element which is compatible with type (doing a cast);
     *  null if there are no such elements
     */
-    public static <E> E find(Collection<?> c, Class<E> type) {
+    public static <E> E find(final Collection<?> c, final Class<E> type) {
          for (Object t : c) 
              if ( type.isInstance(t) ) 
                   return type.cast(t);
@@ -50,7 +49,7 @@ public class Util  {
      * @return the position of the first occurrence of an element compatible with
         the specified types;  -1 if there are no such occurrences
      */
-     public static int indexOf(List<?> list, Class<?> type) {   
+     public static int indexOf(final List<?> list, final Class<?> type) {   
         for (int i = 0; i < list.size() ; i++) 
             if ( type.isInstance(list.get(i)) ) 
                     return i;
@@ -59,37 +58,18 @@ public class Util  {
     }
 
     /**
-     * 
-     * @param <E>
-     * @param l
-     * @param iset
-     * @returnn
-     * @throws IndexOutOfBoundsException
+     * projects a list of elements according to a given sorted set of indices
+     * @param <E> the type of list's elements
+     * @param l a list of elements
+     * @param iset a sorted set of indices
+     * @return a list of elements of <tt>l</tt> corresponding to the indices in <tt>iset</tt>
+     * @throws IndexOutOfBoundsException if any index in <tt>iset</tt> is out of bounds for <tt>l</tt>
      */
-    public static <E> List<? extends E> projection(List<? extends E> l, SortedSet<Integer> iset) {
+    public static <E> List<? extends E> projection(final List<? extends E> l, final SortedSet<Integer> iset) {
         if (iset.size() == l.size())
             return l;
 
-        List<E> res = new ArrayList<>();
-        for (Integer i : iset)  
-            res.add(l.get(i-1));
-
-        return res;
-    }
-
-    /**
-     * 
-     * @param <E>
-     * @param l
-     * @param iset
-     * @returnn
-     * @throws IndexOutOfBoundsException
-     */
-    public static <E> List<? extends E> projectionNot(List<? extends E> l, SortedSet<Integer> iset) {
-        if (iset.size() == l.size())
-            return l;
-
-        List<E> res = new ArrayList<>();
+        final List<E> res = new ArrayList<>();
         for (Integer i : iset)  
             res.add(l.get(i-1));
 
@@ -103,7 +83,7 @@ public class Util  {
      * @param p the predicate to be checked
      * @return <tt>true</tt> if and only if all the elements of the collection meet <tt>p</tt>
      */
-    public static <E> boolean  checkAll (Collection<? extends E> c, Predicate<E> p) {
+    public static <E> boolean  checkAll (final Collection<? extends E> c, final Predicate<E> p) {
          return c.stream().allMatch(e -> p.test(e) );
     }
     
@@ -114,7 +94,7 @@ public class Util  {
      * @param p the predicate to be checked
      * @return <tt>true</tt> if and only if any elements of the collection meet <tt>p</tt>
      */
-    public static <E> boolean  checkAny (Collection<? extends E> c, Predicate<E> p) {
+    public static <E> boolean  checkAny (final Collection<? extends E> c, final Predicate<E> p) {
          return c.stream().anyMatch(e -> p.test(e) );
     }
     
@@ -126,8 +106,8 @@ public class Util  {
      * @param p the predicate to be checked
      * @return the set of collection's element meeting <tt>p</tt>
      */
-    public static <E> HashSet<E>  filter (Collection<? extends E> c, Predicate<E> p) {
-        HashSet<E> s = new HashSet<>();
+    public static <E> HashSet<E>  filter (final Collection<? extends E> c, final Predicate<E> p) {
+        final HashSet<E> s = new HashSet<>();
         c.stream().filter(e -> p.test(e)).forEachOrdered( e -> { s.add(e); });
         
         return s;
@@ -143,8 +123,8 @@ public class Util  {
      * @param value a given value of collection's elements
      * @return  a feature-based map of collection's elements to sets of values sharing the feature
      */ 
-    public static <E, K, V> HashMap<K, Set<V>> mapFeature(Collection<? extends E> c, Function<E,K> feature,  Function<E,V> value) {
-        HashMap<K, Set<V>> m = new HashMap<>();
+    public static <E, K, V> HashMap<K, Set<V>> mapFeature(final Collection<? extends E> c, final Function<E,K> feature,  final Function<E,V> value) {
+        final HashMap<K, Set<V>> m = new HashMap<>();
         c.forEach( f -> { addElem(feature.apply(f), value.apply(f), m); });
         
         return m;
@@ -159,7 +139,7 @@ public class Util  {
      * @param feature a given feature of collection's elements
      * @return a feature-based map of collection's elements to sets sharing the feature
      */
-    public static <E, K> HashMap<K, Set<E>> mapFeature(Collection<? extends E> c, Function<E,K> feature) {
+    public static <E, K> HashMap<K, Set<E>> mapFeature(final Collection<? extends E> c, final Function<E,K> feature) {
         return mapFeature(c, feature, e -> e);
     }
     
@@ -174,8 +154,9 @@ public class Util  {
      * @return a feature-based map of collection's elements into (ordered, if the comparator is not <code>null</code>)
      * sets sharing the feature
      */
-     public static <E, K> Map<K,SortedSet<E>> mapFeature(Collection<? extends E> c, Function<E,K> feature, Comparator<? super E> comp ) {
-        Map<K, SortedSet<E>> m = new HashMap<>();
+     public static <E, K> Map<K,SortedSet<E>> mapFeature(final Collection<? extends E> c,
+                final Function<E,K> feature, final Comparator<? super E> comp ) {
+        final Map<K, SortedSet<E>> m = new HashMap<>();
         c.forEach( f -> { addOrdElem(feature.apply(f), f, m, comp); });
         
         return m;
@@ -190,8 +171,8 @@ public class Util  {
      * @param feature a given feature of collection's elements
      * @return a (unmodifiable) feature-based map of collection's elements into lists sharing the feature
      */
-     public static <E, K> Map<K, List<? extends E>> mapFeatureToList(Collection<? extends E> c, Function<E,K> feature ) {
-        HashMap<K, List<E>> m = new HashMap<>();
+     public static <E, K> Map<K, List<? extends E>> mapFeatureToList(final Collection<? extends E> c, final Function<E,K> feature ) {
+        final HashMap<K, List<E>> m = new HashMap<>();
         fillMap(m, c, feature);
         Map<K, List<? extends E>> um=Collections.unmodifiableMap(m);
         
@@ -207,14 +188,15 @@ public class Util  {
      * @param feature a given feature of collection's elements
      * @return a (unmodifiable) feature-based map of collection's elements into lists sharing the feature
      */
-    public static <E, K> SortedMap<K, List<? extends E>> sortedmapFeatureToList(Collection<? extends E> c, Function<E,K> feature ) {
-        SortedMap<K, List<E>> m = new TreeMap<>();
+    public static <E, K> SortedMap<K, List<? extends E>> sortedmapFeatureToList(final Collection<? extends E> c, final Function<E,K> feature ) {
+        final SortedMap<K, List<E>> m = new TreeMap<>();
         fillMap(m, c, feature);
         SortedMap<K, List<? extends E>> um = Collections.unmodifiableSortedMap(m);
+        
         return um;
     }
     
-    private static <E, K> void fillMap (Map<K, List<E>> m, Collection<? extends E> c, Function<E,K> feature ) {
+    private static <E, K> void fillMap (final Map<K, List<E>> m, Collection<? extends E> c, final Function<E,K> feature ) {
         c.forEach( f -> {
             K k = feature.apply(f);
             List<E> l = m.get(k);
@@ -232,8 +214,8 @@ public class Util  {
      * @param type the specified sub-type's token
      * @return a set with the elements of the given sub-type, meeting the predicate
      */
-    public static <E, F extends E> Set<F> getType(Collection<? extends E> c, Class<? extends F> type) {
-        Set<F> s = new HashSet<>();
+    public static <E, F extends E> Set<F> getType(final Collection<? extends E> c, final Class<? extends F> type) {
+        final Set<F> s = new HashSet<>();
         c.stream().filter(e -> type.isInstance(e)).forEachOrdered(e -> { s.add(type.cast(e)); });
         
         return s;
@@ -248,8 +230,8 @@ public class Util  {
     * @return a copy of the collection whose elements have been casted
     * @throws ClassCastException if any elements canno be casted
     */ 
-   public static <E> List<E> copyAndCast(Collection<?> c, Class<E> t) {
-       List<E> l = new ArrayList<>();
+   public static <E> List<E> copyAndCast(final Collection<?> c, final Class<E> t) {
+       final List<E> l = new ArrayList<>();
        c.forEach( x -> 
             { try{l.add(t.cast(x)); } 
                 catch (ClassCastException e) {
@@ -270,7 +252,8 @@ public class Util  {
     * @return the given collections casted to <tt>Collection&lt;E&gt;</tt>
     * @throws ClassCastException if any elements cannot be casted
     */
-   public static <E> Collection<E> cast(Collection<?> c, Class<E> t, boolean check) {
+@SuppressWarnings("unchecked")
+public static <E> Collection<E> cast(final Collection<?> c, final Class<E> t, final boolean check) {
        if ( !check || checkAll(c, t::isInstance) )
            return (Collection<E>) c;
        
@@ -285,7 +268,7 @@ public class Util  {
      * @param t a token type
      * @return the given collections casted to <tt>Collection&lt;E&gt;</tt>
      */
-   public static <E> Collection<E> cast(Collection<?> c, Class<E> t) {
+   public static <E> Collection<E> cast(final Collection<?> c, final Class<E> t) {
        return cast(c, t, false);
    }
    
@@ -296,7 +279,7 @@ public class Util  {
     * @return if the collection is actually a List, the collection itself (casted);
     * otherwise a copy of the collection
     */
-   public static <E> List<E> asList (Collection<E> c) {
+   public static <E> List<E> asList (final Collection<E> c) {
        return c instanceof List ? (List<E>)c : new ArrayList<>(c);
    }
    
@@ -307,7 +290,7 @@ public class Util  {
     * @return if the collection is actually a Set, the collection itself (casted);
     * otherwise a copy of the collection
     */
-   public static <E> Set<E> asSet (Collection<E> c) {
+   public static <E> Set<E> asSet (final Collection<E> c) {
        return c instanceof Set<?> ? (Set<E>)c : new HashSet<>(c);
    }
                    
@@ -317,7 +300,7 @@ public class Util  {
      * @param o the list element
      * @return a singleton list holding o
      */
-    public static <T> List<T> singletonList(T o) {
+    public static <T> List<T> singletonList(final T o) {
         List<T> single = new ArrayList<>();
         single.add(o);
         
@@ -331,7 +314,7 @@ public class Util  {
      * @param c a comparator
      * @return a singleton holding t
      */
-    public static <T> SortedSet<T> singleton(T t, Comparator<? super T> c) {
+    public static <T> SortedSet<T> singleton(final T t, final Comparator<? super T> c) {
         SortedSet<T> single = new TreeSet<>(c);
         single.add(t);
         
@@ -347,7 +330,7 @@ public class Util  {
      * @return the map k to v
      * @throws NullPointerException if the key is null
      */
-    public static <K, V> HashMap<K,V> singleMap (K k, V v) {
+    public static <K, V> HashMap<K,V> singleMap (final K k, final V v) {
         if (k == null) {
             throw new NullPointerException("null key!");
         } else{
@@ -366,7 +349,7 @@ public class Util  {
      * @return a singleton sorted-map {k = e}
      * @throws NullPointerException if the key is null
      */
-    public static <E, K> SortedMap<K, E> singleSortedMap(K k, E e ) {
+    public static <E, K> SortedMap<K, E> singleSortedMap(final K k, final E e ) {
         if (k == null) {
             throw new NullPointerException("null key!");
         } else {
@@ -421,8 +404,8 @@ public class Util  {
      * @param c the collection
      * @return a (possibly empty) map corresponding to <code>c</code>
      */
-    public static <K> HashMap<K,Integer> asMap(Collection<? extends K> c) {
-        HashMap<K,Integer> res = new HashMap<>();
+    public static <K> HashMap<K,Integer> asMap(final Collection<? extends K> c) {
+        final HashMap<K,Integer> res = new HashMap<>();
         c.forEach(key -> { res.put(key, res.containsKey(key) ?  res.get(key)+1 :  1 ); });
 
         return res;
@@ -438,7 +421,7 @@ public class Util  {
      * @param e a value
      * @return <tt>true</tt> if and only if the element is added
      */
-    public static <K,E>  boolean addElem(K k, E e, Map<K, Set<E> > m ) {
+    public static <K,E>  boolean addElem(final K k, final E e, final Map<K, Set<E> > m ) {
         Set<E> s = m.get(k);
         if (s == null)
             m.put(k, s = new HashSet<>());
@@ -459,7 +442,7 @@ public class Util  {
      * @param type the type of newly created collections
      * @return <tt>true</tt> if and only if the element is added
      */
-    public static <K,E>  boolean addElem(K k, E e, Map<K, Collection<E> > m , Class<? extends Collection> type) {
+    public static <K,E>  boolean addElem(final K k, final E e, final Map<K, Collection<E> > m , final Class<? extends Collection> type) {
         Collection<E> s = m.get(k);
         if (s == null)
             m.put(k, s = Set.class.isAssignableFrom(type) ?  new HashSet<>() : new ArrayList<>());
@@ -478,29 +461,41 @@ public class Util  {
      * @param comp a (possibly null) comparator of @code {E} elements
      * @return <tt>true</tt> if and only if the elementy is added
      */
-    public static <K,E>  boolean addOrdElem(K k, E e, Map<K, SortedSet<E> > m, Comparator<? super E> comp) {
+    public static <K,E>  boolean addOrdElem(final K k, final E e, final Map<K, SortedSet<E> > m, final Comparator<? super E> comp) {
         SortedSet<E> s = m.get(k);
         if (s == null)
             m.put(k, s = new TreeSet<>(comp));
         
         return s.add(e);
     }
-	
+    
+    /**
+     * builds a map of integers from a collection of pairs with integer values
+     * @param <K> the type of the pairs' keys
+     * @param c the collection of pairs
+     * @return a map with the same keys as the pairs and their counts as values
+     */
+    public static <K> HashMap<K,Integer> pairsAsMap(final Collection<Pair<K, Integer>> c) {
+        final HashMap<K,Integer> res = new HashMap<>();
+        c.forEach(pair -> { res.put(pair.getKey(), res.containsKey(pair.getKey()) ? res.get(pair.getKey()) + pair.getValue() : pair.getValue()); });
+        
+        return res;
+    }
 	    
     /**
      * performs the Cartesian product among a collection of sets of terms of a given type
      * @param <E> the terms' type
-     * @param listofset the list of sets
+     * @param listofset the list of sets (actually any collection can be used)
      * @return a set of list corresponding to the product; a singleton containing
      * an empty list (by convention) if either <tt>sets</tt> or any set is empty
      */
-    public static <E> Set<Collection<E>> cartesianProd(final Collection<? extends Set<? extends E>> listofset) {
+    public static <E> Set<Collection<E>> cartesianProd(final Collection<? extends Collection<? extends E>> listofset) {
         final boolean isalist = listofset instanceof List;
         final Set<Collection<E>> init = Collections.singleton(isalist ?
                 Collections.emptyList() : Collections.emptySet());
     	Set<Collection<E>> res = init; //at the beginning res contains just an empty list
     	
-        for (Set<? extends E> iset : listofset) {
+        for (Collection<? extends E> iset : listofset) {
             if ( iset.isEmpty() )
                 return init;
 
@@ -519,7 +514,7 @@ public class Util  {
     }
  
  //stackoverflow
- public static Set<Set<Object>> cartesianProduct(Set<?>... sets) {
+ public static Set<Set<Object>> cartesianProduct(final Set<?>... sets) {
     if (sets.length < 2)
         throw new IllegalArgumentException(
                 "Can't have a product of fewer than two sets (got " +
@@ -528,8 +523,8 @@ public class Util  {
     return _cartesianProduct(0, sets);
 }
 
-private static Set<Set<Object>> _cartesianProduct(int index, Set<?>... sets) {
-    Set<Set<Object>> ret = new HashSet<>();
+private static Set<Set<Object>> _cartesianProduct(final int index, final Set<?>... sets) {
+    final Set<Set<Object>> ret = new HashSet<>();
     if (index == sets.length) {
         ret.add(new HashSet<>());
     } else {
@@ -553,9 +548,9 @@ private static Set<Set<Object>> _cartesianProduct(int index, Set<?>... sets) {
  * @return an <code>HashSet</code> which results from applying the operator to
  * all pairs of collection elements
  */
-public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collection<? extends E> c2, BiFunction<E,E,E> op) {
+public static <E> HashSet<E> binaryProduct(final Collection<? extends E> c1, final Collection<? extends E> c2, final BiFunction<E,E,E> op) {
     //System.out.println(c1.size()+ " "+c2.size()); //debug
-    HashSet<E> res = new HashSet<>();
+    final HashSet<E> res = new HashSet<>();
     c1.forEach(x -> {
         c2.forEach(y -> {
             res.add(op.apply(x,y));
@@ -573,8 +568,8 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param n the modulo size (assumed &gt; 0)
      * @return val modulo n (e.g., if val == -4 and n ==3, it returns 2)
      */
-    public static int valueModN(int val, int n) {
-        int new_val = Math.abs(val) % n; // new_val >= 0
+    public static int valueModN(final int val, final int n) {
+        final int new_val = Math.abs(val) % n; // new_val >= 0
         
         return new_val > 0 && val < 0 ? n - new_val : new_val;
     }
@@ -585,9 +580,9 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param s
      * @return
      */
-    public static Map<Integer, Integer> scaledIndex(SortedSet<Integer> s) {
+    public static Map<Integer, Integer> scaledIndex(final SortedSet<Integer> s) {
           int i = 1;
-          HashMap<Integer, Integer> m = new HashMap<>();
+          final HashMap<Integer, Integer> m = new HashMap<>();
           for (Integer n : s) 
             m.put(n, i++);
 
@@ -603,8 +598,8 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param upper a (positive) upper bound
      * @return the set of values between the specified bounds that are missing in the collection
      */
-    public static Set<Integer> missing (Set<? extends Integer> c, int lower, int upper) {
-        HashSet<Integer> numbers = new HashSet<>();
+    public static Set<Integer> missing (final Set<? extends Integer> c, final int lower, final int upper) {
+        final HashSet<Integer> numbers = new HashSet<>();
         for (int i = lower; i < upper; i++) 
             numbers.add(i);
         
@@ -624,7 +619,7 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @return the first occorrence of a missing succ value of the sequence lower, lower+1, ...;
      * lower + c.size() if the list contains all the above sequence of consecutive values
      */
-    public static <E> int missingNext (Collection<? extends E> c, Function<E,Integer> f, int lower) {
+    public static <E> int missingNext (final Collection<? extends E> c, final Function<E,Integer> f, int lower) {
         for (E x : c) 
             if (f.apply(x) == lower)
                 lower++;
@@ -642,8 +637,8 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param set the set of values
      * @return the set of values in [a,u] which are not contained in @code {set}
      */
-    public static Set<Integer> missing (int l, final int u, Set<? extends Integer> set) {
-        Set<Integer> res = new HashSet<>();
+    public static Set<Integer> missing (int l, final int u, final Set<? extends Integer> set) {
+        final Set<Integer> res = new HashSet<>();
         for (; l <= u; ++l) //all the values in [l,u]
             if (!set.contains(l))
                 res.add(l);
@@ -663,9 +658,10 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * raises an exception of the specified type (with an error message) if argument ex is other than
      * <tt>null</tt>
      */
-    public static <E> boolean checkProperty(Collection<? extends E> c, BiFunction<E, E, Boolean> check, Function<E,String> textprop, Class<? extends RuntimeException> ex ) {
+    public static <E> boolean checkProperty(final Collection<? extends E> c, final BiFunction<E, E, Boolean> check,
+            final Function<E,String> textprop, final Class<? extends RuntimeException> ex ) {
         if (!c.isEmpty()) {
-            Iterator<? extends E> ite = c.iterator();
+            final Iterator<? extends E> ite = c.iterator();
             E first = ite.next(), next;
             while ( ite.hasNext() ) 
                 if ( ! check.apply(first, next = ite.next()) ) 
@@ -691,8 +687,8 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param m the map
      * @return the "inverted" map
      */
-    public static <E,K> Map<E,Set<K>> invert (Map<? extends K, ? extends E> m) {
-        Map<E,Set<K>> im = new HashMap<>(); 
+    public static <E,K> Map<E,Set<K>> invert (final Map<? extends K, ? extends E> m) {
+        final Map<E,Set<K>> im = new HashMap<>(); 
         m.entrySet().forEach( e -> { Util.addElem(e.getValue() , e.getKey(), im); });
         
         return im;
@@ -704,8 +700,8 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param m a map to sets
      * @return the obverall size of values in the map 
      */
-    public static <E,K>  int valuesSize(Map<? extends E,? extends Set<? extends K>> m) {
-        int size = 0;
+    public static <E,K>  int valuesSize(final Map<? extends E,? extends Set<? extends K>> m) {
+        final int size = 0;
         
         return m.values().stream().map( x -> x.size()).reduce(size, Integer::sum);
     }
@@ -716,8 +712,8 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param m the map
      * @return <code>true</code> iff the map is injective
      */
-    public static <K, E> boolean injective (Map<? extends K, ? extends E> m) {
-         HashSet<E> set = new HashSet<>();
+    public static <K, E> boolean injective (final Map<? extends K, ? extends E> m) {
+         final HashSet<E> set = new HashSet<>();
          
          return m.values().stream().allMatch( x -> set.add(x));
     }
@@ -733,8 +729,8 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @return the single value present on the map, if there is just one, and the map's key
      * set coincides with the specified set; <code>null</code> otherwise
      */
-    public static <K,E> E isConstantSurjective (Map<? extends K, ? extends E> m, Set<? extends K> set) {
-       Collection<? extends E> vals;
+    public static <K,E> E isConstantSurjective (final Map<? extends K, ? extends E> m, final Set<? extends K> set) {
+       final Collection<? extends E> vals;
        m.keySet().retainAll(set);
        
        return set.size() == m.size() && new HashSet<>(vals = m.values()).size() == 1 ? vals.iterator().next() : null;
@@ -749,7 +745,7 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param c a collection
      * @return <code>set</code>, if not null, otherwise the reference to a new set built from the given collection
      */
-    public static <E> Set<E> lightCopy(Set<E> set, Collection<? extends E> c) {
+    public static <E> Set<E> lightCopy(final Set<E> set, final Collection<? extends E> c) {
         return set == null ? new HashSet<>(c) : set;
     }
     
@@ -760,7 +756,7 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param c a collection
      * @return <code>list</code>, if not null, otherwise the reference to a new list built from the collection
      */
-    public static <E> List<E> lightCopy(List<E> list, Collection<? extends E> c) {
+    public static <E> List<E> lightCopy(final List<E> list, final Collection<? extends E> c) {
         return list == null ? new ArrayList<>(c) : list;
     }
     
@@ -770,7 +766,7 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param c a collection
      * @return a copy of @code{c}, of the same type
      */
-    public static <E> Collection<E> copy(Collection<? extends E> c) {
+    public static <E> Collection<E> copy(final Collection<? extends E> c) {
         return c instanceof Set<?> ? new HashSet<>(c) : new ArrayList<>( c);
     }
     
@@ -781,7 +777,7 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
      * @param k a bit position 
      * @return <tt>true</tt> iff the k-th bit is set
      */
-    public static boolean checkBit(int x, int k) {
+    public static boolean checkBit(final int x, final int k) {
         return (x & 1 << k) != 0;
     }
     
@@ -810,5 +806,68 @@ public static <E> HashSet<E> binaryProduct(Collection<? extends E> c1, Collectio
     }    
 
   public static int count;
+
+  /**
+   * searches the input list for elements satisfying the given predicate 
+   * and returns a map of positions to selected elements. The positions are 1-based indices.
+   * If no elements satisfy the predicate, the returned map will be empty.
+   * @param   <E> the type of the elements in the list
+   * @param   list the input list of elements
+   * @param   predicate a predicate to identify selected elements
+   * @return  a map where the keys are the 1-based indices of the selected elements in the input list, and the values are the selected elements themselves
+   */
+  public static <E> Map<Integer, E> select(List<? extends E> list, Predicate<E> predicate) { 
+    Map<Integer, E> res = new HashMap<>();
+    for (int i = 1; i <= list.size(); i++) {
+        E func = list.get(i - 1);
+        if (predicate.test(func)) 
+            res.put(i, func);
+    }
+    return res;
+  }
+
+  /**
+     * Removes elements from a list based on specified 1-based indices.
+     * @param   <E> the type of elements in the lists
+     * @param   l the input list
+     * @param   indices a set of 1-based indices indicating which elements to remove from the list
+     * @return  a (new) list containing only the elements from the input list that
+     * are not at the specified indices; if the indices are empty, the list passed as an argument
+     */
+   public static <E> List<? extends E> remove(final List<? extends E> l, final Set<Integer> indices) { 
+    if (indices.isEmpty()) 
+        return l;
+    
+    final List<E> result = new ArrayList<>(l.size() - indices.size());
+    for (int i = 0; i < l.size(); i++) { 
+        if (!indices.contains(i + 1)) // indices start at 1
+            result.add(l.get(i));
+    }
+    return result;
+    
+  }
+
+  /**
+   * Expands a list by inserting the elements of the map in the corresponding positions
+   * @param <E> the type of list elements
+   * @param list the input list to be expanded
+   * @param map a map of positions (1-based) to elements to be inserted into the list
+   * @return a new list with the elements from the map inserted at the specified positions, while preserving the order of the original list
+   * If the map is empty, a copy of the original list is returned. 
+   * @param result (the copy of) the possibly expanded list
+   * @throws <code>IndexOutOfBoundsException</code> If some positions are outside the bounds of the list
+  */
+  public static <E>  List<? extends E> expandPositions(final List<? extends E> list, final Map<Integer, E> map) {
+        if (map.isEmpty()) {
+            return list; // return a copy of the original list if there are no positions to expand
+        }
+        final var result = new ArrayList<E>(); 
+        for (Map.Entry<Integer, E> posEntry : map.entrySet()) {
+            final int position = posEntry.getKey();
+            final E func = posEntry.getValue();
+            result.add(position - 1, func); // insert at the specified position (1-based index)
+        }
+        return result;
+  }
   
 }

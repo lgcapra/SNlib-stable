@@ -38,23 +38,6 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
         return getDomain();
     }
 
-//    @Override
-//    public final ClassCompAsBag buildBagComp(SetExpr f) {
-//        return new ClassCompAsBag(this, f.cast());
-//    }
-//
-//    @Override
-//    @SuppressWarnings("unchecked")
-//    public <E extends logexpr.SetExpr> Bag<E> nullBag() {
-//        return (Bag<E>) new LinearCombBag(getDomain(), getCodomain());
-//    }
-
-//    @Override
-//    @SuppressWarnings("unchecked")
-//    public <E extends logexpr.SetExpr> Bag<E> asBag() {
-//        return nullBag();
-//    }
-
     @Override
     public final All getTrue() {
         return All.getInstance(getSort());
@@ -119,15 +102,9 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
     /**
      * @return <code>true</code> if and only if this function has (not <code>null</code>) zero cardinality
      */
-    public boolean zeroCard() {
-        if (card() == null) {
-            //System.err.println(toStringDetailed()+": null card");
-            //throw new NullPointerException();
-            return false;
-        } else {
-            var card = card().singleValue();
-            return card != null && card == 0;
-        }
+    public final boolean zeroCard() {
+        var card = card();
+        return card != null && card.ub() == 0;
     }
 
     /**

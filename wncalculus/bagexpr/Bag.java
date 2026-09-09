@@ -1,8 +1,8 @@
 package bagexpr;
 
 import java.util.*;
-
 import expr.*;
+import java.util.Map.Entry;
 
 /**
  * @author Lorenzo Capra
@@ -15,6 +15,7 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
     private final Map<E,Integer> map ; // the bag is implemented as a map for the sake of efficiency
     private final Domain   dom, codom;
     private boolean simplified, disjoined;
+    private Integer card = null; // the bag's cardinality (if it exists)
 
     static final String EMPTY = "<null>";
 
@@ -131,17 +132,19 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
 
     @Override
     public final Integer cardLb() {
-        int card = 0;
-        for (Map.Entry<? extends E, Integer> x : asMap().entrySet()) {
-            Integer k = x.getKey().cardLb();
-            if (k == null)
-                return null;
-            card += k * x.getValue();
+        if (card == null) {
+            card = 0;
+            for (Map.Entry<? extends E, Integer> x : asMap().entrySet()) {
+                Integer k = x.getKey().cardLb();
+                if (k == null) {
+                    return card = null;
+                }
+                card += k * x.getValue();
+            }
         }
         return card;
     }
     
-
      //the following methods are protected because they can modify the current object
 
     /**
@@ -206,7 +209,7 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
     }
 
     /**
-     * @return <code>true</code> if and only if the multi-set is build
+     * @return <code>true</code> if and only if the multi-set is empty
      */
     public boolean isEmpty() {
         return size() == 0;
@@ -245,7 +248,30 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
         HashMap<E,Integer> m = new HashMap<>();
         asMap().forEach((key, value) -> m.put(key, coeff * value));
 
-        return (Bag<E>) build(m);
+        return build(m);
+    }
+    /**
+     *  "separates" the constant and the non-constants parts in <code>this</code> bag 
+      * @param E the type of bag elements
+      * @return a two-size list containing the two parts (the constant is in the 2nd position),
+      * or a singleton list if either the constant or the non-constant part are empty
+    */
+    public List<? extends Bag<E>> separateConst() {
+       final Map<E,Integer> b_const = new HashMap<>(), b_no_const = new HashMap<>();
+       for (Entry<E, Integer> e : this.map.entrySet()) {
+            final E f = e.getKey();
+            if (f.isConstant())
+                b_const.put(f, e.getValue());
+            else
+                b_no_const.put(f, e.getValue());
+       }
+       if (b_no_const.isEmpty())
+          return List.of(build(b_const));
+
+       if (b_const.isEmpty())
+          return List.of(build(b_no_const));
+       
+       return List.of(build(b_no_const), build(b_const));   
     }
 
 }

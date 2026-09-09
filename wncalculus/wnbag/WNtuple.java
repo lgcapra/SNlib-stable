@@ -2,8 +2,6 @@ package wnbag;
 
 import java.util.*;
 import java.util.Map.Entry;
-
-import classfunction.ElementaryFunction;
 import color.ColorClass;
 import expr.*;
 import guard.And;
@@ -19,6 +17,10 @@ import wncolorfunction.LinearComb;
  * @author lorenzo capra
  */
 public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcFunction {
+    
+    //cache fields
+    private Boolean simple = null;
+    private Integer card = null;
 
     /**
      * base constructor: creates a <tt>WNtuple</tt> from a list of linear comb. of class-functions
@@ -76,57 +78,32 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         return new WNtuple(filter, getHomSubTuples(), guard);
     }
 
+    /**
+     * 
+     * @return <code>true</code> if and only if this tuple is built of <code>LinearComb</code>s
+     */
+    public boolean simple() {
+        if (simple == null)
+          simple = Util.checkAll(getComponents(), LinearComb.class::isInstance);
+
+        return simple;
+    }
+
     @Override
     public Integer cardLb() {
-        Integer card = 0;
-        for (ColorFunction o : getComponents()) {
-                Integer lb = ((LinearComb) o).cardLb();
+        if (card == null) {
+            card = 1;
+            for (ColorFunction o : getComponents()) {
+                Integer lb = o.cardLb();
                 if (lb == null)
                     return lb;
-                card += lb;
+                card *= lb;
             }
+        }
+
         return card;
     }
 
-    /**
-     * 
-     * @return a set (that is a sum) of list of entries matching tuple's components containing variables of the same index
-     * it builds on <tt>Util.cartesianProd</tt>
-     * should be invoked on single-color tuples
-     */
-    private Set<Collection<Entry<Integer, Map<ElementaryFunction, Integer>>>> separate( ) {
-    	List<Set<Entry<Integer, Map<ElementaryFunction, Integer>>>> l = new ArrayList<>();
-        getComponents().stream().map(cx -> ((ColorFunction) cx).components().entrySet()).forEachOrdered(l::add);
-    	
-    	return Util.cartesianProd(l);
-    }
-    
-    /**
-     * @return a tuple's expansion into a set (i.e., sum) of tuples whose components contain constants
-     * or variables with the same index
-     * should be invoked on single-color tuples, otherwise, it raises an exception
-     * it builds on <tt>expand()</tt>
-     * performs a kind of Cartesian product on <tt>this</tt> tuple, resulting in the set of
-     * tuples with equal-index components
-     * @return the tuple's expansion in a set of tuples whose components contain variables of the same index
-     * should be invoked on single-color tuples, otherwise, it raises an exception
-     * it build on <tt>expand()</tt>
-     */
-    public Set<? extends WNtuple> singleIndexComponentsTuples() {
-    	Set<Collection<Entry<Integer, Map<ElementaryFunction, Integer>>>> expansion = separate();
-    	if (expansion.size() == 1)
-            return Collections.singleton(this); //optimization
-        //System.out.println("expansion:\n"+expansion);
-        HashSet<WNtuple> tset = new HashSet<>();
-        ColorClass cc = getSort(); // the tuple is assumed-single color
-    	for (Collection<Entry<Integer, Map<ElementaryFunction, Integer>>> lx : expansion) {
-            List<ColorFunction> lc = new ArrayList<>();
-            lx.forEach(x -> { lc.add(new LinearComb(x.getValue())); });
-            tset.add(new WNtuple ( Util.singleSortedMap(cc, lc), guard() ));
-    	}
-    	//System.out.println("tset:\n"+tset); //debug
-    	return tset;		
-    }
     
     /**
      * separates <tt>this</tt> tuple into its independent sub-tuples, given a partition of variable indices
@@ -261,5 +238,33 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
         return Collections.singleton(new AbstractMap.SimpleEntry<>(cf, 1));
     }
+
+    @Override
+    public ArcFunction specSimplify() {
+        //System.out.println("specSimplify("+this.toStringDetailed()+")"); //debug
+        ArcFunction res = super.specSimplify().cast();
+        if (! (res instanceof WNtuple tres))
+            return res;
+        // complete!
+        return tres;
+    }
+
+    @Override
+    public WNtuple build(final Guard filter, final SortedMap<ColorClass, List<? extends ColorFunction>> map,
+            final Guard guard) {
+        return new WNtuple(filter,map, guard);
+    }
+
+    /**
+     * base composition between <code>this</code> tuple (assumed single-color, simple, and without constants inside)
+     * and the <code>other</code> tuple (assumed entirely projected by <code>this</code>) 
+     * @param other
+     * @return
+     */
+    ArcFunction baseCompose(WNtuple other) {
+        //dummy implementation
+        return new ArcFunComp.BaseComp(this, other);
+    }
+
 
 }

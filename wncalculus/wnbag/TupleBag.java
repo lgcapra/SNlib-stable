@@ -61,5 +61,18 @@ public final class TupleBag extends Bag<WNtuple> implements ArcFunction {
         return new TupleBag(new HashMap<>(asMap()));
     }
 
+    @Override 
+    public ArcFunction specSimplify() {
+        final ArcFunction res = super.specSimplify().cast();
+        if (res instanceof TupleBag tb) {
+            final var map = tb.asMap();
+            final var values = map.values();
+            if (values.size() == 1 && values.iterator().next() == 1) {  // if the unique tuple has multiplicity 1, we can return the tuple
+                return map.keySet().iterator().next();
+            }
+        }   
+        return res;
+    } 
+
 
 }

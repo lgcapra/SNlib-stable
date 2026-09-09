@@ -2,6 +2,7 @@ package logexpr;
 
 import java.util.*;
 import expr.*;
+import util.Util;
 
 /**
  * LogicalExprs is a collector of generic algorithms for the
@@ -74,7 +75,7 @@ public class LogicalExprs {
      * nor boolean constants
      */
      public static boolean simple(Collection<? extends LogicalExpr > c) {
-        return c.stream().noneMatch( t -> t instanceof NonTerminal || t.isFalse() || t.isTrue());
+        return ! Util.checkAny(c, t -> t instanceof NonTerminal || t.isFalse() || t.isTrue());
     }
     
    public static boolean print;  

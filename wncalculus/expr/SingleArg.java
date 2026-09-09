@@ -20,10 +20,10 @@ public interface SingleArg<E extends ParametricExpr, F extends ParametricExpr> e
     
     @Override
     default F genSimplify() {
-        //System.out.println("\nunary op genSimplify of " + this+':'+getClass()); //debug
-        E s_arg = getArg().normalize(). cast(); 
-        // System.out.println("arg simplified:\n" + s_arg); //debug
-        return s_arg != getArg() ? buildOp(s_arg) : cast();
+        //System.out.println("\nunary op genSimplify of:\n" + this+':'+getClass()); //debug
+        Expression s_arg = getArg().normalize(); 
+        //System.out.println("arg simplified:\n" + s_arg); //debug
+        return s_arg.equals(getArg()) ? this.cast() : buildOp(s_arg.cast());
     }
      
     /**

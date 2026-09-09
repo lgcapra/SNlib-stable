@@ -234,6 +234,11 @@ public interface LogicalExpr extends ParametricExpr  {
     default Set<LogicalExpr> simplify() {
         return simplify(true/*false*/, true);
     }
+
+    @Override
+    default LogicalExpr getNull() {
+        return getFalse();
+    }
     
       
 }

@@ -16,26 +16,25 @@ import java.util.*;
  */
 public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<BagExpr<E>>, BagExpr<E>  {
 
-    protected final Collection <? extends BagExpr<E>> args ;
-    protected boolean simplified;
-
+    private final Collection <? extends BagExpr<E>> args ;
+    
     //constructor: raises an exception if the collection is buildOp
     protected N_aryBagOp(Collection <? extends BagExpr<E>> c, boolean check) {
         if (c.size() < 2) //
             throw new IllegalArgumentException("cannot create an n-ary operator with " + c.size() + " operand(s)!\n");
 
-        this.args = Collections.unmodifiableCollection( c);
         if (check)
             Expressions.checkArity(c);
+        
+        this.args = Collections.unmodifiableCollection(c);
     }
     
 
     //maps (if possible) the sum to the bag's sum
     @Override
-    public final BagExpr<E> specSimplify() {
+    public BagExpr<E> specSimplify() {
       if ( Util.checkAll(this.args, Bag.class::isInstance) ) {
         Iterator<? extends BagExpr<E>> iterator = this.args.iterator();
-        System.out.println(args + " (debug)");
         Bag<E> bres = iterator.next().cast();
         while (iterator.hasNext()) {
             Bag<E> bag = iterator.next().cast(); // next bag-operand
@@ -43,6 +42,7 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
         }
         return bres;
       }
+
       return this;
     }
 
@@ -70,12 +70,12 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
 
     @Override
     public final boolean simplified() {
-        return this.simplified;
+        return false;
     }
 
     @Override
     public final void setSimplified(boolean simplified) {
-        this.simplified = simplified;
+        // Do nothing, as simplified is always false
     }
 
     @Override
@@ -90,10 +90,8 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
 
     @Override
     public final int hashCode() {
-        int hash = 7;
-        hash = 59 * hash + Objects.hashCode(this.args);
-        
-        return hash;
+        final int hash = 7;
+        return 59 * hash + Objects.hashCode(this.args);
     }
 
 
@@ -102,6 +100,5 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
     public final N_aryBagOp<E> clone(Map<Sort, Sort> split_map) {
         return (N_aryBagOp<E>) BagExpr.super.clone(split_map); // default implementation is fine
     }
-
     
 }

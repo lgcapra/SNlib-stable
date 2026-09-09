@@ -44,7 +44,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @return the newly built guard
      * @throws IllegalDomain NullPointerException NoSuchElementException
      */
-    public static Guard factory(Collection<?  extends Guard> arglist, boolean check) {
+    public static Guard factory(final Collection<?  extends Guard> arglist, final boolean check) {
         Set<? extends Guard> asSet = Util.asSet(arglist);
         return asSet.size() < 2 ?  asSet.iterator().next() : new And (asSet, check);
     }
@@ -55,7 +55,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @param term_list the collection of operands
      * @return the newly built guard
      */
-    public static Guard factory(Collection<? extends Guard> term_list)  {
+    public static Guard factory(final Collection<? extends Guard> term_list)  {
         return factory(term_list, true);
     }
     
@@ -65,7 +65,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @param args a list of operands
      * @return the newly built guard
      */
-    public static Guard factory (boolean check, Guard ... args)  {
+    public static Guard factory (final boolean check, final Guard ... args)  {
         return factory(Arrays.asList(args), check); 
     }
     
@@ -75,12 +75,12 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @param args a list of operands
      * @return  the newly built guard
      */
-    public static Guard factory(Guard ... args) {
+    public static Guard factory(final Guard ... args) {
         return factory(true, args);
     }
     
     @Override
-    public Guard buildOp(Collection<? extends Guard> args)  {
+    public Guard buildOp(final Collection<? extends Guard> args)  {
         return factory(args, false);
     }
     
@@ -124,7 +124,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * NOTE this version assumes that for each colour the corresponding inequalities form
      * an independent set
      */
-    public Map<Color, InequalityGraph> igraph (boolean checkdom) {
+    public Map<Color, InequalityGraph> igraph (final boolean checkdom) {
         if (this.igraph == null) {
             this.igraph = new HashMap<>();
             equalityMap().entrySet().forEach(e -> {
@@ -161,7 +161,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @param cc the (pre-calculated) color class of the And 
      * @return a singleton map from the color to the inequality graph
      */
-    public Map<Color, InequalityGraph> igraph (ColorClass cc) {
+    public Map<Color, InequalityGraph> igraph (final ColorClass cc) {
         if (this.igraph == null) {
             SortedSet<Equality> inequalities = equalityMap().get(cc).get(false);
             if (! (inequalities == null || inequalities.isEmpty() ) )  
@@ -183,7 +183,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * (based on related memebership clauses)
      * <code>null</code> if for any reasons the check fails, or there are no memebership clauses
      */
-    private SubclSet checkDomain (Set<? extends Projection> vset, ColorClass cc) {
+    private SubclSet checkDomain (final Set<? extends Projection> vset, final ColorClass cc) {
         final Map<Boolean, Set<Membership>> m = membMap().get(cc);
         if (m != null) {
             final Set<Membership> in    = m.getOrDefault(true,Collections.emptySortedSet()), 
@@ -204,7 +204,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     }  
 
     @Override
-    public And clone(Domain new_dom) {
+    public And clone(final Domain new_dom) {
         return new_dom.equals(getDomain()) ? this : new And (cloneArgs(new_dom), false);
     }
     
@@ -218,7 +218,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @throws IllegalDomain if the operands' domains are different from the given one
      * @throws IllegalArgumentException if the domain is null.
      */
-    public static Guard buildAndFormWithD (Collection<? extends Guard> eg_set, Domain dom) {
+    public static Guard buildAndFormWithDom (final Collection<? extends Guard> eg_set, final Domain dom) {
         if (dom == null)
             throw new IllegalArgumentException("expected a non-null domain");
             
@@ -233,7 +233,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @param es a set of equalities to put into a canonical form
      * @return <tt>true</tt> if and only if the set is modified
      */
-    public /*private*/static boolean toCanonicalForm (SortedSet<Equality> es) {
+    public /*private*/static boolean toCanonicalForm (final SortedSet<Equality> es) {
         final List<Equality> processed  = new ArrayList<>(),
                              to_process = new ArrayList<>(); // already processed
         boolean rep = false;
@@ -268,7 +268,8 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     @return @code {null} if some replacement results in @code {false}; @code {true} if some replacement
     has been done; @code {false} otherwise
     */
-    private static <E extends ElementaryGuard> Boolean replaceEq (Set<? extends E> elgs, Equality eq,  List<E> replaced) {
+    private static <E extends ElementaryGuard> Boolean replaceEq (final Set<? extends E> elgs, final Equality eq, 
+                                                final List<E> replaced) {
         Boolean done = false;
         for (Iterator<? extends E> ite = elgs.iterator(); ite.hasNext() ;  ) {
             E g = ite.next();
@@ -283,7 +284,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
                  done = true;
                  ite.remove();
                  if (f instanceof ElementaryGuard) // if f is true then it is skipped
-                    replaced.add((E) f); // f is already in its final form 
+                    replaced.add(f.cast()); // f is already in its final form 
              }     
         }
         
@@ -300,7 +301,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @return <code>null</code> if some guards becomes <code>false</code>;
      * <code>true</code> if some replacement has been done, <code>false</code> otherwise
      */
-    /*private*/ public static <E extends ElementaryGuard> Boolean replaceEq (Set<E> egs, SortedSet<? extends Equality> eqs) {
+    /*private*/ public static <E extends ElementaryGuard> Boolean replaceEq (final Set<E> egs, final SortedSet<? extends Equality> eqs) {
         boolean done = false;
         final List<E> replaced = new ArrayList<>();
         //System.out.print("replacment:" + egs +',' + eqs);
@@ -322,12 +323,14 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * removes redundant (in)equalities between symbols that refer to a singleton subclass
      * from an (assumed homogeneous!) list, by possibly adding the missing memberships
      */
-   static boolean replaceRedEqWithMember(Set<Guard> arglist, Map <Boolean, SortedSet<Equality> > eqmap, Map<? extends Projection, Subcl > inmap) {
+   static boolean replaceRedEqWithMember(final Set<Guard> arglist, final Map <Boolean, SortedSet<Equality> > eqmap,
+                    final Map<? extends Projection, Subcl > inmap) {
+       
        boolean changed = false;
        for (Map.Entry<Boolean, SortedSet<Equality>> entry : eqmap.entrySet()) {
            boolean sign = entry.getKey();
            for (Equality e : entry.getValue()) {
-               Projection p1 = e.getArg1(), p2 = e.getArg2();
+               final Projection p1 = e.getArg1(), p2 = e.getArg2();
                Subcl s = inmap.get(p1);
                if (s != null && s.card().ub() == 1)  
                     changed = arglist.remove(e) | arglist.add(Membership.build(p2, s, sign, e.getDomain() ) );
@@ -349,12 +352,14 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @param inmap the pre-computed "in" map
      * @param notinmap the pre-computed "notin" map
      */
-    static boolean removeRedundantIneq(Collection<Guard> arglist, Collection <Equality> ineqs, Map<? extends Projection, Subcl > inmap, Map<? extends Projection, Set<Subcl>> notinmap) {
+    static boolean removeRedundantIneq(final Collection<Guard> arglist, final Collection <Equality> ineqs,
+                final Map<? extends Projection, Subcl > inmap, final Map<? extends Projection, Set<Subcl>> notinmap) {
+        
         boolean reduced = false;
         for (Iterator<Equality> it = ineqs.iterator(); it.hasNext();) {            
-            Equality e = it.next();
-            Projection p1 = e.getArg1(),p2 = e.getArg2();
-            Subcl s1  = inmap.get( p1), s2   = inmap.get(p2);
+            final Equality e = it.next();
+            final Projection p1 = e.getArg1(),p2 = e.getArg2();
+            final Subcl s1  = inmap.get( p1), s2   = inmap.get(p2);
             if ( s1 != null && s2 != null && ! s1.equals(s2) || 
                     notinmap.getOrDefault(p1, Collections.emptySet()).contains(s2) ||
                     notinmap.getOrDefault(p2, Collections.emptySet()).contains(s1) ) {  // p1 and p2 refer to different subclasses
@@ -375,11 +380,15 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
         assumes that redundant inequalities were already removed
         @return <code>true</code> if and only if any change is made 
     */
-    static boolean setVarSameDomain(Collection<Guard> arglist, Collection<? extends Equality> ineqs, Map<? extends Projection, Subcl > inmap, Map<? extends Projection, Set<Subcl>> notinmap) {
+    static boolean setVarSameDomain(final Collection<Guard> arglist, final Collection<? extends Equality> ineqs, 
+            final Map<? extends Projection, Subcl > inmap, final Map<? extends Projection, Set<Subcl>> notinmap) {
+        
         for (Equality e :   ineqs ) {            
-            Projection p1 = e.getArg1(), p2 = e.getArg2(),   p = p2;
-            Subcl s1  = inmap.get( p1),  s2 = inmap.get(p2), s = s1;
-            Set<Guard> list1, list2, list3;
+            final Projection p1 = e.getArg1(), p2 = e.getArg2();
+            Projection p = p2;
+            final Subcl s1  = inmap.get( p1),  s2 = inmap.get(p2);
+            Subcl s = s1;
+            final Set<Guard> list1, list2, list3;
             Domain dom = e.getDomain();
             // we assume that s1 != null && s2 != null ==> s1 == s2  
             if ( s1 != null && s2 == null || s1 == null && (s = s2 ) != null &&  (p = p1) != null/*last redundant*/) { // p1 (p2) refers to a subclass C_1 (C_2), p2 (p1) doesn't (see the assumption ..): we logically add p2(1) in C_1(2) or p2(1) notin C_1(2)
@@ -434,7 +443,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
         //the equalities are first put in the canonical form
         HashSet<ColorClass> involved = new HashSet<>();
         for (Map.Entry<ColorClass, Map<Boolean, SortedSet<Equality>>> e : equalityMap().entrySet()) {
-            SortedSet<Equality> es = e.getValue().get(true);
+            final SortedSet<Equality> es = e.getValue().get(true);
             if (es != null && es.size() > 1 && toCanonicalForm(es) ) {
                 if (es.isEmpty())
                     return getFalse();
@@ -443,7 +452,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
              }
         }
         if (! involved.isEmpty() ) { //new
-            HashSet<Guard> copy = new HashSet<>(); //we copy all guards but the equalities of colors involved in the canonization..
+            final HashSet<Guard> copy = new HashSet<>(); //we copy all guards but the equalities of colors involved in the canonization..
             getArgs().stream().filter(g -> ! (g.isEquality() && involved.contains(((Equality)g).getSort()))). forEachOrdered(g -> { copy.add(g);} );
             involved.forEach(cc -> { copy.addAll( equalityMap().get(cc).get(true) ); });
             
@@ -453,7 +462,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
         boolean replaced = false;
         for (Map.Entry<ColorClass, Map<Boolean, SortedSet<Equality>>> e :  equalityMap().entrySet()) {
             Boolean done;
-            SortedSet<Equality> es  = e.getValue().get(true);
+            final SortedSet<Equality> es  = e.getValue().get(true);
             if (es != null) {
                 SortedSet<Equality> ies = e.getValue().get(false);
                 if (ies != null ) { // we consider the corresponding set of inequalities
@@ -477,7 +486,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
         }
         
         if (replaced) {
-            Guard rep = And.factory( getElementaryArgs() );
+            final Guard rep = And.factory( getElementaryArgs() );
             reset(); // redundant, just for coherence
             //System.out.println("after replacment: -->\n"+rep); //debug
             return rep;
@@ -487,7 +496,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
         //la parte che segue non dovrebbe essere fatta se è un filtro di una tupla T
         if (red == this &&  (red  = reduceRedundanciesAndSetVarDomain() ) == this) 
             for (Map.Entry<Color, InequalityGraph> e : igraph().entrySet() ) { //here!
-                int ub = e.getKey().card().ub();
+                final int ub = e.getKey().card().ub();
                 if ( ub > 0 && ub < e.getValue().chromaticNumber())   // constraint u.b. less than the chromatic N.
                     return  getFalse();
             }
@@ -499,12 +508,12 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
         Set<Guard> oplist = null; // (light) copy of the operands        
         boolean changed = false;    
         for (Map.Entry<ColorClass, Map<Boolean, Set<Membership>>> e : membMap().entrySet()) {
-            ColorClass cc = e.getKey();
-            Map<Boolean, SortedSet<Equality>> eqmap = equalityMap().get(cc);
+            final ColorClass cc = e.getKey();
+            final Map<Boolean, SortedSet<Equality>> eqmap = equalityMap().get(cc);
             if ( eqmap != null) { 
-                Set<Membership> memb = e.getValue().get(true), notmemb ;
-                Map<Projection, Subcl>      inmap    = Collections.EMPTY_MAP;
-                Map<Projection, Set<Subcl>> notinmap = Collections.EMPTY_MAP;
+                final Set<Membership>  memb = e.getValue().get(true), notmemb ;
+                Map<Projection, Subcl> inmap  = Collections.emptyMap();
+                Map<Projection, Set<Subcl>> notinmap = Collections.emptyMap();
                 oplist = Util.lightCopy(oplist, getArgs());
                 if (memb != null)  {
                     inmap = Membership.mapSymbolsNoRep(memb);
@@ -513,7 +522,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
                         continue; //safe: after this step the guards should be simplified
                     }
                 }   
-                Set<Equality> inequalities = eqmap.get(false);
+                final Set<Equality> inequalities = eqmap.get(false);
                 if ( inequalities != null ) {
                     if ( (notmemb = e.getValue().get(false) ) != null) 
                         notinmap = Membership.mapSymbols(notmemb);
@@ -531,6 +540,19 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
     @Override
     public boolean isElemAndForm() {
         return Util.checkAll(getArgs(), ElementaryGuard.class::isInstance);
+        //return simple();//equivalent
+    }
+
+    
+    /**
+     * spits <code>this</code> <code>And</code>, assumed simple, into separate color components  
+     * @return a map from colors to corresponding clauses
+     * @throws ClassCastException if <code>this</code> is not simple
+    */
+    public Map<ColorClass, Set<ElementaryGuard>> splitColors() {
+        Collection<ElementaryGuard> lg = Util.cast(getArgs(), ElementaryGuard.class); // unsafe
+        
+        return Util.mapFeature(lg, g -> getSort());
     }
     
     /* 

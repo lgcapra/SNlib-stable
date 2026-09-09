@@ -6,11 +6,12 @@ import classfunction.ClassFunction;
 import color.ColorClass;
 import expr.*;
 import guard.*;
+import util.Pair;
 import util.Util;
 
 /**
- * this class represents an arbitrary tuple of class-functions, that may be
- * both boolean functions or linear combinations
+ * this class represents an arbitrary tuple (Crtesian product) of class-functions,
+ * which may be set functions or multiset functions (linear combinations)
  * @author lorenzo capra
  * @param <E> the tuple's elements' type (either BoolFunction or BagFunction)
  */
@@ -19,13 +20,13 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
     private  final    SortedMap<ColorClass , List<? extends E>> hom_parts ; // the map between colors and homogenous sub-tuples composing this tuple 
     private  final    Guard   filter, guard; 
     //cache
-    private String   str; // caching (to get efficiency when ordering)
-    private List<E>  components; //caching
+    private String  str; // caching (to get efficiency when ordering)
+    private List<? extends E>  components; //caching
     private boolean  simplified;
         
     /* checks for the tuple's parameters (the filter is trivial) */
     private void checkPar(final SortedMap<ColorClass, List<? extends E>> m, final Guard g) {
-        String msg = "";
+       String msg = "";
        if (g == null)
             msg += "the tuple's guard is null! cannot create it; ";
        if (m == null)
@@ -33,6 +34,22 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
        if (!msg.isEmpty())
             throw new IllegalArgumentException(msg);
     }
+
+    /**
+     * builds a unmodifiable copy of map of lists, with the lists themselves unmodifiable
+    * @param <K> the type of map keys 
+    * @param <E> the type of tuple components
+    * @param m the map 
+    * @return the unmodifiable map copy 
+     */
+    private static final <E,K> SortedMap<K, List<? extends E>> mapCopy (final SortedMap<K, List<? extends E>> m) {
+        final SortedMap<K, List<? extends E>> tmp = new TreeMap<>(m.comparator());
+        for (final Map.Entry<K, List<? extends E>> e : m.entrySet()) {
+            tmp.put(e.getKey(), List.copyOf(e.getValue()));
+            //tmp.put(e.getKey(), Collections.unmodifiableList(e.getValue())); // more efficient but non-independent from original lists
+        }
+        return Collections.unmodifiableSortedMap(tmp);
+    }  
         
     /**
      * base constructor (the others mostly build on it): creates a tuple from a map of colors to corresponding class-function lists;
@@ -61,10 +78,10 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
             this.filter = f;
         
         this.guard  = g;
-        this.hom_parts = Collections.unmodifiableSortedMap(m);
+        this.hom_parts = mapCopy(m);
     }
-    
-    
+
+ 
     /**
      * builds a tuple from a map of colors to corresponding class-function lists with a default guard 
      * @param f the tuple's filter
@@ -122,7 +139,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
         var tcd = buildTupleCodom(m, check ? g.getDomain() : null); 
         this.filter =  True.getInstance(new Domain(tcd));
         this.guard  =  g;
-        this.hom_parts = Collections.unmodifiableSortedMap(m);
+        this.hom_parts = mapCopy(m);
     }
     
     /**
@@ -137,7 +154,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      * creates a tuple from a list of class-functions, with a default filter 
      * and a default guard, with the specified domain;
      */
-    public AbstractTuple(List<? extends E> l, final Domain d, boolean check) {
+    public AbstractTuple(final List<? extends E> l, final Domain d, final boolean check) {
         this(Util.sortedmapFeatureToList(l, ClassFunction::getSort), d, check);
     }
     
@@ -145,7 +162,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      * creates a tuple from a list of class-functions, with a default filter 
      * and a given guard;
      */
-    public AbstractTuple(List<? extends E> l, final Guard g, boolean check) {
+    public AbstractTuple(final List<? extends E> l, final Guard g, final boolean check) {
         this(Util.sortedmapFeatureToList(l, ClassFunction::getSort), g, check);
     }
     
@@ -189,8 +206,17 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      * @return a tuple with the same components as <tt>this</tt> and the specified
      * filter, guard, domain
      */
-    public abstract <T extends AbstractTuple> T build (final Guard filter, final Guard guard);    
+    public abstract AbstractTuple<E> build (final Guard filter, final Guard guard);    
     
+    /**
+     * builder method: build a new tuple
+     * @param filter a guard representing a filter
+     * @param guard a guard
+     * @param a map from color classes to lists (subtuples) of functions
+     * @return a new tuple of the same type as <tt>this</tt>
+     */
+    public abstract AbstractTuple<E> build (final Guard filter, SortedMap<ColorClass, List<? extends E>> m, final Guard guard);    
+
     
     /**
      *
@@ -246,19 +272,19 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      * @return (a read-only) sub-list of components of the specified color class;
      * an empty list if there is no such a sub-list
      */
-    public final List<? extends E> getHomSubTuple(ColorClass cc) {
-        return this.hom_parts.getOrDefault(cc, Collections.EMPTY_LIST);
+    public final List<? extends E> getHomSubTuple(final ColorClass cc) {
+        return this.hom_parts.getOrDefault(cc, Collections.emptyList());
     }
    
     /**
      * @return (an unmodifiable view of) the tuple components;
      * the list is ordered w.r.t. colour-classes
      */
-    public final List<E> getComponents() {
+    public final List<? extends E> getComponents() {
         if (this.components == null) {
             var c = getSort();
             if (c != null){
-                this.components = (List<E>) this.hom_parts.get(c);
+                this.components = this.hom_parts.get(c); //already unmodifiable
             }
             else {
                 List<E> mycomps = new ArrayList<>();
@@ -275,13 +301,14 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      @return the i-th component of the homogenous sub-tuple of the specified color
      @throws IndexOutOfBoundsException if the position is out of the correct range
      */
-    public final E getComponent(int i, ColorClass cc) {
+    public final E getComponent(final int i, final ColorClass cc) {
         return getHomSubTuple(cc).get(i - 1);
     }     
         
     @Override
     public final boolean isConstant() {
-        return ClassFunction.indexSet(getComponents()).isEmpty() && this.guard.isConstant();
+        //return ClassFunction.indexSet(getComponents()).isEmpty() && this.guard.isConstant();
+        return Util.checkAll(getComponents(), e -> e.isConstant()) && this.guard.isConstant();
      }
         
     /**
@@ -289,12 +316,12 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      * @return a copy of <code>this</code> tuple with a trivial filter,
      * <code>this</code> if the filter is trivial
      */
-    public final <T extends AbstractTuple> T withoutFilter () {
+    public final AbstractTuple<E> withoutFilter () {
         if (this.filter.isTrivial()) {
             return cast();
         }
         else {
-            T copy = build (True.getInstance(getCodomain()), this.guard);
+            var copy = build (True.getInstance(getCodomain()), this.guard);
             //copy.setSimplified( simplified() );
             return copy;
         }
@@ -304,28 +331,33 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      * @return a copy of <code>this</code> tuple with a trivial guard,
      * or <code>this</code> if the guard is trivial
      */
-    public final <T extends AbstractTuple> T withoutGuard() {
+    public final AbstractTuple<E> withoutGuard() {
         if (this.guard.isTrivial()) { 
             return cast();
         }
         else {
-            T copy = build (this.filter, True.getInstance(getDomain()));
+            var copy = build (this.filter, True.getInstance(getDomain()));
             //copy.setSimplified( simplified() );
             return copy;
         }
     }
     
     /**
-     * applies a filter to <tt>this</tt> tuple, by joining with the existing onr
+     * applies a filter to <tt>this</tt> tuple, by joining with the existing one
      * @param f a filter
      * @return a tuple with the new filter; <tt>this</tt> tuple if the new filter coincides with the current one
      */
-    public final <T extends AbstractTuple> T joinFilter(Guard f) {
+    public final AbstractTuple<E>  joinFilter(final Guard f) {
         return build(And.factory(this.filter, f), this.guard) ;
         
     }
     
-    public final <T extends AbstractTuple> T joinGuard(Guard g) {
+    /**
+     * 
+     * @param g a guard
+     * @return a tuple with the new guard; <tt>this</tt> tuple if the new guard coincides with the current one
+     */
+    public final AbstractTuple<E>  joinGuard(final Guard g) {
         return build(this.filter, And.factory(this.guard, g));
     }
     
@@ -364,7 +396,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
     public final boolean equals(Object o) {
         var res = super.equals(o);
         if (! res && o != null && getClass().equals( o.getClass() ) )  {
-            var t = (AbstractTuple)o;
+            var t = (AbstractTuple<?>)o;
             res =  t.guard.equals(this.guard) && t.filter.equals(this.filter) && Objects.equals(t.hom_parts,this.hom_parts);
         }
         return res;
@@ -392,6 +424,96 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
     @Override
     public final AbstractTuple<E> clone(Domain newdom) {
         return build(filter, guard.clone(newdom)) ;
+    }
+
+    //NUOVI
+
+    /**
+     * 
+     * @return a map from colors to pairs made up of a list of functions
+     * and a set of (elementary) guards representing the color-based split of <code>this</code> tuple and
+     * the tuple is assumed non-constant ; the guard is assumed trivial or simple;
+     * the filter is assumed trivial;
+     * NOTE only colors in the tuple's domain are considered
+     * @throws ClassCastException if the tuple's guard is neither elementary nor simple
+    */
+    public final Map<ColorClass, Pair<List<? extends E>, Set<? extends ElementaryGuard>> > splitColors() {
+        
+        final Map<ColorClass, Pair<List<? extends E>, Set<? extends ElementaryGuard>> > splitMap = new HashMap<>();
+        final Set<ColorClass> scc = (Set<ColorClass>) Util.cast(getDomain().asMap().keySet(), ColorClass.class);
+        final Map<ColorClass, Set<ElementaryGuard>> gMap;
+        if (guard.isTrivial()) 
+          gMap = Collections.emptyMap();
+        else if (guard instanceof ElementaryGuard eg) 
+          gMap = Util.singleMap(eg.getSort(), Collections.singleton(eg));
+        else 
+            gMap = ((And)guard).splitColors();
+
+        for (var cc : scc) {
+            List<? extends E> lf = this.getHomSubTuple(cc); 
+            if (lf == null)
+                lf = Collections.emptyList();
+            final Set<ElementaryGuard> sg = gMap.getOrDefault(cc, Collections.emptySet());
+            splitMap.put(cc, new Pair<>(lf, sg));
+        }
+        
+        return splitMap;
+    }
+    
+    public boolean isFalse() {
+        return guard() instanceof False || filter() instanceof False || zeroCard();
+    }
+
+    /**
+     * @return <code>true</code> if and only if <code>this</code> tuple contains
+     * a componenent of card zero (should be invoked once the tuple set in a
+     * right-composable form)
+     */
+    public boolean zeroCard() {
+        return Util.checkAny(getComponents(), ClassFunction::zeroCard);
+    }
+
+    @Override
+    public ParametricExpr specSimplify() {
+        //System.out.println("specSimplify("+this.toStringDetailed()+")"); //debug
+        
+        final Guard simp_f, simp_g;
+        if ((simp_f = (Guard) filter().normalize()).isFalse()) {
+            return getNull().cast();
+        }
+
+        if ((simp_g = (Guard) guard().normalize()).isFalse()) {
+            return getNull().cast();
+        } else {
+            var changed = false;
+            final var equalityMap = simp_g.equalityMap();
+            final SortedMap<ColorClass, List<? extends E>> tuplecopy = new TreeMap<>(); //si potrebbe ottimizzare
+            for (var x : getHomSubTuples().entrySet()) {
+                final var c = x.getKey();
+                final ArrayList<? extends E> args_c = new ArrayList<>(x.getValue());
+                if (Expressions.normalize(args_c)) {
+                    changed = true;
+                }
+                if (Util.checkAny(args_c, f -> f.zeroCard())) {
+                    return getNull().cast();
+                }
+                for (var eq : equalityMap.getOrDefault(c, Collections.emptyMap()).getOrDefault(true, Collections.emptySortedSet())) {
+                    if (ClassFunction.replace(args_c, eq)) {
+                        changed = true;
+                    }
+                }
+                tuplecopy.put(c, args_c);
+            }
+            if (changed) {// some  tuple component have been reduced ..
+                return build(simp_f, Collections.unmodifiableSortedMap(tuplecopy), simp_g);
+            }
+            
+            if (!(simp_f.equals(filter()) && simp_g.equals(guard()))) {// the f or the g have been reduced ..
+                return build(simp_f, simp_g); //optimization (more efficient than previous build ..)
+            } 
+        }
+
+        return this;
     }
         
 }

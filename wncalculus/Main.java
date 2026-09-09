@@ -9,6 +9,7 @@ import graph.Graph;
 import graph.InequalityGraph;
 import guard.*;
 import tuple.*;
+import util.Pair;
 import util.Util;
 import wnbag.*;
 import wncolorfunction.LinearComb;
@@ -134,7 +135,7 @@ public class Main {
         // parte sui multiset -- modificata dopo ultimi cambiamenti di bag expressions
         testMultiset();
         testLemma1();
-        testProperty2();
+        //testProperty2();
 
 //        Guard g2;
 //        Util.getChar();
@@ -605,58 +606,7 @@ public class Main {
                 c_4 = Projection.builder(4, C);
         Subcl S_1 = Subcl.factory(1, C),
                 S_2 = Subcl.factory(2, C);
-        Domain d1 = new Domain(C),
-                d2 = new Domain(C, C); // C x C
-        Guard g1 = Membership.build(c_1, S_1, true, d2),
-                g2 = Membership.build(c_2, S_1, true, d2),
-                g1_1 = Membership.build(c_1, S_1, true, d1),
-                g1_2 = Membership.build(c_1, S_2, true, d1);
-        Tuple t, tc1, tc2;
-        t = new Tuple(And.factory(g1, g2), c_2, c_1);
-        tc1 = new Tuple(g1_1, g1, c_1);
-        tc2 = new Tuple(g1_1, g1, c_2);
-        Bag<FunctionTuple> I, t_bag;
-        FunctionTuple[] a = new FunctionTuple[]{tc1, tc1, tc2};
-        //I = new FunctionTupleBag(Util.asMap(Arrays.asList(a)));
-        //t_bag = new FunctionTupleBag(Util.singleMap(t, 1));
-        //BagComp<FunctionTuple> I_comp_t = new BagComp(I, t_bag);
-        //System.out.println("normalizzo:\n" + I_comp_t);
-        //t_bag = (Bag<FunctionTuple>) I_comp_t.normalize(); //possiamo usare sia normalize sia simplify
-        //System.out.println(t_bag.toStringDetailed());
-        //System.out.println("disgiunto & normalizzato:\n");
-        //System.out.println(t_bag.normalize(/*true*/));
-
-        //System.out.println("map guardie -> coefficienti:");
-        //System.out.println(bagexpr.BagUtils.mapGuardsToMaxCoefficients(t_bag));
-        //Util.getChar();
-
-        tc1 = new Tuple(g1_2, g1, c_1);
-        tc2 = new Tuple(g1_2, g1, c_2);
-        a = new FunctionTuple[]{tc1, tc1, tc2};
-        //I = new FunctionTupleBag(Util.asMap(Arrays.asList(a)));
-        //I_comp_t = new BagComp<>(I, new FunctionTupleBag(Util.singleMap(t, 1)));
-        //System.out.println("normalizzo:\n" + I_comp_t);
-        //System.out.println("-->\n" + I_comp_t.normalize());
-
-        //BagComp<FunctionTuple> transp = new BagComp<>(new BagTranspose<>(new FunctionTupleBag(Util.singleMap(t, 1))), new BagTranspose<>(I));
-        //System.out.println("normalizzo:\n" + transp);
-        //System.out.println("-->\n" + transp.normalize());
-        //Util.getChar();
-
-        tc2 = new Tuple(g1_1, g1, c_2);
-        //I = new FunctionTupleBag(Util.singleMap(tc2, 1));
-        //I_comp_t = new BagComp<>(I, new FunctionTupleBag(Util.singleMap(t, 1)));
-        //System.out.println("normalizzo:\n" + I_comp_t);
-        //System.out.println(I_comp_t.normalize());
-        //System.out.println("trasposta di :" + I_comp_t);
-        //System.out.println(t_bag = (Bag<FunctionTuple>) new BagTranspose<>(I_comp_t).normalize());
-        //Util.getChar();
-
-        //System.out.println("map guardie -> coefficienti: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(t_bag));
-        //System.out.println(t_bag);
-        //Util.getChar();
-
-        //testiamo LinearComb
+        
         System.out.println("+++ BagFunction +++");
         LinearComb l = new LinearComb(c_1, c_2, c_2, c_1, c_1, S_1, S_1, S_2);
         LinearComb l1, l2, l3;
@@ -667,8 +617,6 @@ public class Main {
         System.out.println("diff:\n" + d);
         d = (BagExpr<ElementaryFunction>) d.normalize();
         System.out.println("diff semplificata:\n" + d);
-        d = BagUtils.disjoin(d);
-        System.out.println("disgiunta:\n" + d);
         l = new LinearComb(c_1, c_2, c_2, c_1, c_1, S_1, S_1, S_2);
         System.out.println(l + " -> " + l.components());
         l1 = new LinearComb(c_2, c_1, c_1, S_1, S_1, S_2, S_1);
@@ -688,23 +636,7 @@ public class Main {
         And ng1 = (And) And.factory(eq1, eq2);
         System.out.println(ng1.getSort());
         wnt = new WNtuple(lb, ng1, true);
-        System.out.println("\nexpansion of " + wnt);
-        var count = 0;
-        for (WNtuple tx : wnt.singleIndexComponentsTuples()) {
-            System.out.println("-> (\n" + ++count + ") " + tx);
-            System.out.println("independent subtuples of " + tx + "->\n" + tx.independentComponentsV2());
-
-        }
-        /*BagComp<ElementaryFunction> bc = new BagComp<>(l,l1);
-        System.out.println("semplifico:\n"+bc);
-        /*System.out.println(bc.normalize());
-        d = BagDiff.build(new LinearComb(S_1, 2), new LinearComb(c_1));
-        System.out.println(bc.normalize());
-        /*d = BagDiff.build(new LinearComb(S_1, 2), new LinearComb(c_1));
-        bc = new BagComp<>(d,l1);
-        System.out.println("semplifico:\n"+bc);
-        System.out.println(bc.normalize());*/
-
+        
     }
 
     /*
@@ -998,29 +930,29 @@ public class Main {
     public static void testMultiset() {
         System.out.println("--- multiset ---");
 
-        Projection pr2 = Projection.builder(2, fc2),
-                pr1 = Projection.builder(1, fc2),
-                pr3 = Projection.builder(3, fc2);
-        Projection f2 = Projection.builder(1, c1);
-        SetFunction pc2 = ProjectionComp.factory(f2).cast();
-
-        WNtuple wnt1, wnt2;
-        Domain npd2 = new Domain(fc2, fc2);
-
-        wnt2 = new WNtuple(npd2 , new LinearComb(pr2, pr1), new LinearComb(pr1));
-        wnt1 = new WNtuple(npd2, new LinearComb(pr1), new LinearComb(pr2, pr2));
-        TupleBag tb = new TupleBag(false, wnt1, wnt2);
-        System.out.println("semplifico " + tb + "\n" + tb.normalize());
-        TupleBag b1 = new TupleBag(true,wnt1, wnt2);
-        TupleBag b2 = new TupleBag(Util.singleMap(wnt2, 2));
+        Projection pr2_2 = Projection.builder(2, fc2),
+                pr2_1 = Projection.builder(1, fc2),
+                pr1_1 = Projection.builder(1, fc1),
+                pr1_2 = Projection.builder(2, fc1);
+        All all2 = All.getInstance(fc2),
+            all1 = All.getInstance(fc1);
+        Pair<ElementaryFunction, Integer> pall = new Pair<>(all2, 2), 
+        ppr2 = new Pair<>(pr2_2, -1);
+        WNtuple wnt1, wnt2, wnt3;
+        Domain npd2 = new Domain(fc1, fc1, fc2, fc2, fc2);
+        
+        wnt2 = new WNtuple(npd2, new LinearComb(pr1_2, pr1_1), new LinearComb(pr2_2, pr2_1), new LinearComb(pall, ppr2), new LinearComb(pr2_1));
+        wnt1 = new WNtuple(npd2, new LinearComb(pr1_2, pr1_1), new LinearComb(pr2_1), new LinearComb(pr2_2, pr2_2), new LinearComb(pall));
+        TupleBag b1 = new TupleBag(true,wnt1, wnt2),
+                 b2 = new TupleBag(Util.singleMap(wnt2, 2)),
+                 b3;
         //WNtupleBag b2 = new WNtupleBag(wnt2, 1), b3;
         ArcFunction s = ArcFunSum.factory(b1, b2);
         System.out.println("normalizzo " + s);
         BagExpr<WNtuple> tbag = s.normalize();
-        if (tbag instanceof Bag) {
-            System.out.println(tbag);
-            //System.out.println("map guardie-> max coeff: " + BagUtils.mapGuardsToMaxCoefficients((Bag<WNtuple>) tbag));
-        }
+        System.out.println(tbag);
+        
+        //System.out.println("map guardie-> max coeff: " + BagUtils.mapGuardsToMaxCoefficients((Bag<WNtuple>) tbag));
         //System.out.println("prodotto Cartesiano m x m x m:\n" + bagexpr.BagUtils.product(m, m, m));
         //System.out.println("map guardie-> coefficienti: " + m);
         //System.out.println("prodotto Cartesiano m x m x m:\n" + bagexpr.BagUtils.product(m, m, m));
@@ -1028,48 +960,61 @@ public class Main {
 
         ArcFunction diff = (ArcFunction) BagDiff.build(s, b2);
         System.out.println("normalizzo " + diff + '\n' + diff.normalize());
-        System.out.println("supporto di " + diff + '\n' + new TupleSupport(diff)./*simplify()*/normalize());
         Util.getChar();
 
-        ArcFunComp ris = new ArcFunComp(diff, b2);
-        System.out.println("semplifico\n" + ris);
+        wnt3 = new WNtuple(npd2, new LinearComb(pr1_1, 2), new LinearComb(pr1_2), new LinearComb(pr2_1), new LinearComb(pr2_2, pr2_2), new LinearComb(pall));
+        ArcFunComp ris = new ArcFunComp(diff, wnt3);
+        System.out.println("normalizzo\n" + ris);
         System.out.println(ris.normalize());
-
+        Util.getChar();
+        // we change the right operand
+        wnt3 = new WNtuple(npd2, new LinearComb(pr1_1, 2), new LinearComb(pr1_2), new LinearComb(pr2_2, pr2_1), new LinearComb(pr2_1), new LinearComb(pall));
+        b3 = new TupleBag(Util.singleMap(wnt3, 2));
+        ris = new ArcFunComp(diff, b3);
+        System.out.println("normalizzo\n" + ris);
+        System.out.println(ris.normalize());
+        Util.getChar();
 
         //System.out.println("transposing: " + new BagTranspose(s));
         //Bag<FunctionTuple> bt = (Bag<FunctionTuple>) new BagTranspose<>(s).normalize();
         //System.out.println(bt);
         //System.out.println("map guardie-> max coeff: " + bagexpr.BagUtils.mapGuardsToMaxCoefficients(bt));
         //System.out.println("diff between: " + b1 + " and " + b2 + '\n' + BagDiff.build(b1, b2).normalize());
-        Util.getChar();
     }
 
      public static void testLemma1() {
-        System.out.println("--- Lemma 1 ---");
+        System.out.println("--- Lemma 1; Property 2 ---");
 
         Projection pr1 = Projection.builder(1, fc2),
                 pr2 = Projection.builder(2, fc2),
                 pr3 = Projection.builder(3, fc2);
         Projection f2 = Projection.builder(1, c1);
         SetFunction pc2 = ProjectionComp.factory(f2).cast();
+        All all = All.getInstance(fc2);
 
         WNtuple wnt1, wnt2;
         Domain npd2 = new Domain(fc2, fc2, fc2);
         //Esempio1 (gli indici nella tupla sx non sono contigui)
-        wnt1 = new WNtuple(npd2 , new LinearComb(pr1), new LinearComb(pr3));
+        wnt1 = new WNtuple(npd2 , new LinearComb(pr1), new LinearComb(all), new LinearComb(pr3));
         wnt2 = new WNtuple(npd2, new LinearComb(pr2), new LinearComb(pr1,pr2), new LinearComb(pr3));
 
         ArcFunComp c = new ArcFunComp(wnt1, wnt2);
-        System.out.println("semplifico\n" + c);
+        System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
 
         //Esempio2 (gli indici nella tupla sx sono contigui)
         wnt1 = new WNtuple(npd2 , new LinearComb(pr2), new LinearComb(pr1));
         wnt2 = new WNtuple(npd2, new LinearComb(pr2), new LinearComb(pr1,pr2), new LinearComb(pr3,pr1));
         c = new ArcFunComp(wnt1, wnt2);
-        System.out.println("semplifico\n" + c);
+        System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
-    }
+
+        wnt1 = new WNtuple(npd2 , new LinearComb(All.getInstance(fc2)), new LinearComb(pr1), new LinearComb(All.getInstance(fc2),All.getInstance(fc2)), new LinearComb(pr2));
+        System.out.println("tupla 1 con costanti: " + wnt1);
+        c = new ArcFunComp(wnt1, wnt2);
+        System.out.println("normalizzo\n" + c);
+        System.out.println(c.normalize());
+   }
 
     /**
      * PROPERTY 2
@@ -1092,7 +1037,7 @@ public class Main {
 
         TupleComposition c = new TupleComposition(left, right);
 
-        System.out.println("semplifico\n" + c);
+        System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
     }
 

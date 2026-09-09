@@ -25,26 +25,22 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
      * @param c a collection of bag-expressions
      * @return a sum of bag-expressions like <code>this</code> with the specified collection of arguments
      */
-    default BagExpr<E> buildSum(Collection<? extends BagExpr<E>> c) {
-        throw new UnsupportedOperationException("bag-sum construction is not supported by this bag expression");
-    }
+    abstract BagExpr<E> buildSum(Collection<? extends BagExpr<E>> c);
 
+    
     /**
      * Builds a scalar product for this bag-expression family.
-     * The default implementation is intentionally conservative: only concrete
-     * scalar-product implementations override it.
-     *
      * @param arg the bag-expression to scale
      * @param coeff the integer coefficient
      * @return a scalar product built from the given operand and coefficient
      */
-    default BagExpr<E> buildScProd(BagExpr<E> arg, int coeff) {
-        throw new UnsupportedOperationException("scalar-product construction is not supported by this bag expression");
-    }
-
-    default BagIntersection<E> buildIntersection(BagExpr<E> left, BagExpr<E> right) {
-        throw new UnsupportedOperationException("bag-intersection construction is not supported by this bag expression");
-    }
+    abstract BagExpr<E> buildScProd(BagExpr<E> arg, int coeff);
+   
+    /**
+     * @param c a collection of bag-expressions
+     * @return an intersection of bag-expressions like <code>this</code> with
+     */
+    abstract BagExpr<E> buildIntersection(Collection<? extends BagExpr<E>> c);
 
         
     /**
@@ -61,10 +57,19 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
         throw new IllegalDomain("multisets are not parametric");
     }
 
-     @Override
+    @Override
     default ParametricExpr clone(Map<Sort, Sort> split_map) {
             throw new UnsupportedOperationException("clone with split_map is not supported for multisets");
     }
 
+    @Override
+    default Bag<E> getNull() {
+        return build();
+    }
+
+    default boolean zeroCard() {
+        Integer card = cardLb();
+        return card != null && card == 0;   
+    }
     
 }

@@ -1,14 +1,8 @@
 package tuple;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
+
 import classfunction.SetFunction;
 import color.ColorClass;
 import expr.Domain;
@@ -34,7 +28,7 @@ public final class ColorRestriction implements FunctionTuple, UnaryOp<FunctionTu
      * @param t a function-tuple
      * @param sc a set of sorts
      */
-    private ColorRestriction(FunctionTuple t, Set<? extends ColorClass> sc, Domain d) {
+    private ColorRestriction(final FunctionTuple t, final Set<? extends ColorClass> sc, final Domain d) {
         this.arg = t;
         this.ccset = sc;
         this.cod = d;
@@ -46,14 +40,13 @@ public final class ColorRestriction implements FunctionTuple, UnaryOp<FunctionTu
      * @return the color restriction of t, i.e., the projection of t on the other colors of the codomain
      * (<code>this</code>, in the event).
      */
-    public static FunctionTuple factory(FunctionTuple t, Set<? extends ColorClass> sc) {
+    public static FunctionTuple factory(final FunctionTuple t, final Set<? extends ColorClass> sc) {
         if (sc.isEmpty())
            return t;
-
-        {
-        Domain cd = t.getCodomain(), r = cd.restriction(sc);
+        
+        final Domain cd = t.getCodomain(), r = cd.restriction(sc);
         return cd.size() > r.size() ?  new ColorRestriction(t, sc, r) : t;
-        }
+        
     }
 
     @Override

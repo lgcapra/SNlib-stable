@@ -1,8 +1,6 @@
 package bagexpr;
 
 import java.util.*;
-import java.util.Map.Entry;
-
 import color.Sort;
 import expr.*;
 
@@ -14,7 +12,6 @@ import expr.*;
 public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, CompositionOp<BagExpr<E>,BagExpr<E>> {
 
      private final BagExpr<E> left, right;
-     private boolean simplified;
      
      /**
      * build a composition between (expressions over) bag-of-functions
@@ -46,12 +43,11 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
      
     @Override
     public final boolean simplified() {
-        return simplified;
+       return false;
     }
     
     @Override
     public final void setSimplified(boolean simplified) {
-        this.simplified = simplified;
     }
     
     /**
@@ -65,7 +61,7 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
     }
     
     @Override
-    public boolean isLeftAssociative(Class<? extends SingleArg> optk) {
+    public final boolean isLeftAssociative(Class<? extends SingleArg> optk) {
         return ScalarProd.class.isAssignableFrom(optk); // alternative: false
     }
     
@@ -76,43 +72,40 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
     @Override
     public BagExpr<E> specSimplify () {
         BagExpr<E> lx = left(), rx = right();
+        
+        if (lx.zeroCard() || rx.zeroCard())
+            return build();
+
+        if (lx.isConstant()) {
+             Integer n = rx.cardLb();
+            if (n != null)
+                return buildScProd(lx.clone(rx.getDomain()).cast(), n); // Property 1
+        }
+
+        //both lx and rx are non-null, with lx other than constant
         if (rx instanceof ScalarProd<E> sp) {
             return buildScProd(buildOp(lx, sp.getArg()), sp.k()); // to do: to check whether the composition of a bag with a scalar product can be simplified by "pushing" the scalar product down the composition tree, i.e. by applying distributivity
         }
-        
-        if (lx instanceof Bag<E> lb) {
-            if (lb.isEmpty() )
-                return build();
-            
-            if (rx instanceof Bag<E> rb) {
-                if (rb.isEmpty())
-                    return build();
-                // Proprietà 1
-                if ( lb.isConstant() ) { // composition between a constant and a constant-size bag
-                    Integer n = rb.cardLb();
-                    if (n != null)
-                        return ((Bag<E>)lb.clone(rb.getDomain())).scalarProd(n);
-                }
-                else { //both lb and rb are (non empty) bags, with lb other than constant
-                    ArrayList<BagExpr<E>> blist = new ArrayList<>();
-                    if ( lb.size() == 1 ) { // the left one is a singleton bag
-                        if (rb.size()> 1) // the right operand is a bag with many terms
-                           rb.asMap().forEach((key, value) -> blist.add(buildOp(lb, rb.build(value, key))));
-                        else  { // both lb and rb are elementary bags : base case!
-                            Entry<? extends E, Integer> b1 = lb.asMap().entrySet().iterator().next(),
-                                                        b2 = rb.asMap().entrySet().iterator().next();
-                            return buildScProd(buildOp(b1.getKey().cast(), b2.getKey().cast()), b1.getValue() * b2.getValue());
- 
-                        }
-                                              }
-                    else  // the left operand is a bag with many terms
-                        lb.asMap().forEach((key, value) -> blist.add(buildOp(lb.build(value, key), rb)));
-                    
-                    return buildSum(blist);
-                }
-            }
-        } else if (lx instanceof ScalarProd<E> sp) {
+
+        if (lx instanceof ScalarProd<E> sp) {
             return buildScProd(buildOp(sp.getArg(), rx), sp.k()); // to do: to check whether the composition of a bag with a scalar product can be simplified by "pushing" the scalar product down the composition tree, i.e. by applying distributivity
+        }
+        
+                 
+        if (lx instanceof Bag<E> lb) { // we can distribute the composition over the bag elements
+            ArrayList<BagExpr<E>> blist = new ArrayList<>();
+            lb.asMap().forEach((lkey, lvalue) -> 
+                blist.add(buildScProd(buildOp(lkey.cast(), rx), lvalue )));
+
+            return buildSum(blist); // efficient
+        }
+
+        if (rx instanceof Bag<E> rb) {
+            ArrayList<BagExpr<E>> blist = new ArrayList<>();
+            rb.asMap().forEach((rkey, rvalue) -> 
+                blist.add(buildScProd(buildOp(lx, rkey.cast()), rvalue)));
+                               
+           return buildSum(blist); // efficient     
         }
          
         return this;
@@ -125,25 +118,26 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
 
 
     @Override
-    public String toString() {
+    public final String toString() {
         return toStringOp();
     }
 
 
     @Override
-    public Integer cardLb() {
-        return null;
+    public final Integer cardLb() {
+        return null; // the cardinality of a composition is not known in general
     }
 
-
     @Override
-    public BagComp<E> clone(Map<Sort, Sort> split_map) {
+    public final Map<Sort, Integer> splitDelimiters() {
+        return BagExpr.super.splitDelimiters();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final BagComp<E> clone(Map<Sort, Sort> split_map) {
         return (BagComp<E>) BagExpr.super.clone(split_map);
     }
 
-    @Override
-    public Map<Sort, Integer> splitDelimiters() {
-        return BagExpr.super.splitDelimiters();
-    }
     
 }

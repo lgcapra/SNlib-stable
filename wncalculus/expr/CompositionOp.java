@@ -26,9 +26,8 @@ public interface CompositionOp<E extends ParametricExpr, F extends ParametricExp
     @Override
     default F genSimplify () {
         F res = TwoArgs.super.genSimplify();
-        if (res instanceof CompositionOp) {
+        if (res instanceof CompositionOp cop) {
             Class<E> type = left().type(); //the type of operands
-            CompositionOp<?,?> cop = (CompositionOp<?,?>) res;
             E left = type.cast(cop.left()), right = type.cast(cop.right());
             SingleArg<E,F> uop;
             if (left instanceof UnaryOp && isLeftAssociative((uop = (SingleArg) left).getClass()) ) 

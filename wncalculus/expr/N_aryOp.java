@@ -25,14 +25,14 @@ public interface N_aryOp<E extends ParametricExpr> extends MultiArgs<E,E>  {
      * */
      @Override
      default E genSimplify ( ) {
-        //System.out.println("NaryOpOp.gensimplify\n"+this.toStringDetailed());//debug*/
+        //System.out.println("NaryOpOp.gensimplify:\n"+this.toStringDetailed());//debug*/
         Collection<E> argscopy = associate();
         boolean changed = argscopy != null;
         if (! changed )      
            argscopy = Util.copy( getArgs() );
         if (Expressions.normalize(argscopy) || argscopy.size() > 1 && argscopy.removeAll(Collections.singleton(getIde()) ) )
             changed = true;
-        //System.out.println("(NaryOpOp) --->\n"+argscopy+norm);//debug*/
+        // System.out.println("(NaryOpOp simplified) --->\n"+argscopy);//debug*/
         return changed ? argscopy.isEmpty() ? getIde() : buildOp(argscopy) : cast() ;
     }
     

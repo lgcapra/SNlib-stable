@@ -2,7 +2,6 @@ package tuple;
 
 import java.util.*;
 import java.util.Map.Entry;
-
 import classfunction.*;
 import color.*;
 import expr.*;
@@ -186,7 +185,8 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     /**
      * preserves the reduce_guard flag's value of <code>this</code> (new)
      */
-    private Tuple build(Guard f, SortedMap<ColorClass, List<? extends SetFunction>> m, Guard g) {
+    @Override
+    public Tuple build(Guard f, SortedMap<ColorClass, List<? extends SetFunction>> m, Guard g) {
         Tuple t = new Tuple(f, m, g);
         t.reduce_guard = this.reduce_guard; //new!
 
@@ -228,16 +228,15 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * @param filter the possibly null tuple's f
      * @param cc a tuple's color class
      * @param list the tuple's components (assumed) of cc_low_case
-     * @param{cc_name}
      * @param guard the possibly null tuple's g
      * @return a tuple with the same (co-)domain, and with the same components
      * as <code>this</code> tuple, but for those of the specified cc_low_case,
      * that are given: <code>null</code> if @param{cc_name} doesn' appear in the
      * tuple's codomain
      */
-    private Tuple build(Guard filter, ColorClass cc, List<? extends SetFunction> list, Guard guard) {
+    private Tuple build(final Guard filter, final ColorClass cc, final List<? extends SetFunction> list, final Guard guard) {
         if (getHomSubTuple(cc) != null) {
-            SortedMap<ColorClass, List<? extends SetFunction>> map = new TreeMap<>(getHomSubTuples());
+            final SortedMap<ColorClass, List<? extends SetFunction>> map = new TreeMap<>(getHomSubTuples());
             map.put(cc, list);
 
             return build(filter, map, guard);
@@ -255,8 +254,8 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * @return a tuple with the same (co-)domain as <code>this</code> tuple
      */
     @Override
-    public Tuple build(Guard filter, Guard guard) {
-        Tuple tuple = new Tuple(filter, getHomSubTuples(), guard);
+    public Tuple build(final Guard filter, final Guard guard) {
+        final Tuple tuple = new Tuple(filter, getHomSubTuples(), guard);
         tuple.reduce_guard = this.reduce_guard; //new!
 
         return tuple;
@@ -268,7 +267,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      *
      * @param flag the flag's value
      */
-    public void setReduceGuard(boolean flag) {
+    public void setReduceGuard(final boolean flag) {
         this.reduce_guard = flag;
     }
 
@@ -348,6 +347,49 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
 
     @Override
     public FunctionTuple specSimplify() {
+        FunctionTuple res = super.specSimplify().cast();
+        //System.out.println("specSimplify("+this.toStringDetailed()+")"); //debug
+        if (! (res instanceof Tuple tres))
+            return res;
+        
+        res = tres.toEquivSimpleSum();
+        if (res != tres) //the tuple set added_g (because it contains "OR" elements)
+            return res;
+        
+        // the tuple doesn'tuple contain "OR" elements, neither in filters nor in its components
+        // no reduction/replacement carried out on the f/guard/components of this tuple
+        if (! tres.reduce_guard ) { // questa semplificazione può essere critica come efficienza
+            var g = tres.guard();
+            var equalityMap = g.equalityMap();
+            var membMap = g.membMap();    
+            res = TupleSum.factory(tres.toConstSizeSum(equalityMap, membMap), true);
+            //System.out.println("toConstSize->\n"+res); //debug
+            if (res != tres)
+                return res;
+        }
+            //forse ridondante? (fatta già in super., ma vedi commento sotto)
+        for (var args : tres.getHomSubTuples().values()) 
+            if (args.stream().anyMatch(e -> e.zeroCard())) 
+                return getFalse(); // ha senso qui e non prima perchè¨ viene dopo toConstSizeForm ...
+        
+        var f = tres.filter();
+        if (! f.isElemAndForm() ) 
+            return tres;
+        
+        var equalityMap = f.equalityMap();
+        var membMap = f.membMap();
+        res = tres.baseFilterReduction(equalityMap, membMap);
+        if (res != tres) {
+            //System.out.println("->\n"+res); //debug
+            return res;
+        }
+            
+        return tres.checkNullBound() ? getFalse() :
+               tres.reduceFilterIneqs(equalityMap);// può essere critica come efficienza
+    }
+        
+
+    public FunctionTuple specSimplifyOld() { //original version
         //System.out.println("specSimplify("+this.toStringDetailed()+")"); //debug
         if (isTrue()) {
             return getTrue(); //new
@@ -452,23 +494,8 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         return guard().isTrivial() && filter().isTrivial() && Util.checkAll(getComponents(), All.class::isInstance);
     }
 
-    @Override
-    public boolean isFalse() {
-        return guard() instanceof False || filter() instanceof False || Util.find(getComponents(), Empty.class) != null;
-    }
-
     /**
-     * @return <code>true</code> if and only if <code>this</code> tuple contains
-     * a componenent of card zero (should be invoked once the tuple set in a
-     * right-composable form)
-     */
-    public boolean zeroCard() {
-        return getComponents().stream().map(f -> f.card()).anyMatch(card -> card != null && card.ub() == 0);
-    }
-
-    /**
-     * perform the composition of a list of (left) class-functions with a right
-     * one
+     * perform the composition of a list of (left) class-functions with a right one
      *
      * @return the list of composition results
      */
@@ -526,7 +553,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     /**
      * brings this tuple (assumed normalized) to an equivalent "index-separated"
      * map of tuples, logically corresponding to a tuples' intersection-form,
-     * which each tuple contains at most one projection index (e.eg.,
+     * in which each tuple contains at most one projection index (e.eg.,
      *  <code>&lang;X_1 \cap X_2,X_2&rang; &rarr; {1, &lang;X_1,tS&rang;} , [2, &lang;X_2,X_2&rang;)}</code>;
      * possible constant factors of inner intersections are preliminarily
      * separated; intersection operands are checked to contain only single-index
@@ -631,8 +658,8 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             final ColorClass c = x.getKey();
             final SortedSet<Equality> ineq_list = eq_map.getOrDefault(c, Collections.emptyMap()).getOrDefault(false, Collections.emptySortedSet());
             final Map<Boolean, Set<Membership>> mx = me_map.getOrDefault(c, Collections.emptyMap());
-            final Map<Projection, Subcl> inmap = Membership.mapSymbolsNoRep(mx.getOrDefault(true, Collections.EMPTY_SET));
-            final Map<Projection, Set<Subcl>> notinmap = Membership.mapSymbols(mx.getOrDefault(false, Collections.EMPTY_SET));
+            final Map<Projection, Subcl> inmap = Membership.mapSymbolsNoRep(mx.getOrDefault(true, Collections.emptySet()));
+            final Map<Projection, Set<Subcl>> notinmap = Membership.mapSymbols(mx.getOrDefault(false, Collections.emptySet()));
             //if (! (ineq_list.isEmpty() && inmap.isEmpty() && notinmap.isEmpty()) ) //possible optimization
             for (SetFunction f : x.getValue()) {
                 final var set = f.toSimpleFunctions(ineq_list, inmap, notinmap, dom);
@@ -785,11 +812,11 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             if (!to_remove.isEmpty()) {
                 var new_args = new HashSet<>(And.getArgs(f));
                 new_args.removeAll(to_remove);
-                f = And.buildAndFormWithD(new_args, getCodomain());
+                f = And.buildAndFormWithDom(new_args, getCodomain());
             }
             // we add remaining sub-tuples to the_copy
             getHomSubTuples().entrySet().forEach(e -> {
-                tuple_copy.putIfAbsent(e.getKey(), (List<SetFunction>) e.getValue());
+                tuple_copy.putIfAbsent(e.getKey(), (List<SetFunction>) Util.cast(e.getValue(), SetFunction.class));
             });
             return new Tuple(f, Collections.unmodifiableSortedMap(tuple_copy), guard());
         }
@@ -840,10 +867,10 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     public FunctionTuple reduceFilterClassIneqs(final Set<? extends Equality> ineq_set, final ColorClass cc) {
         //System.out.println("reduceFilterClassIneqs:\n"+this+" , "+ineq_set); //debug
         for (Equality ineq : ineq_set) {
-            int i = ineq.firstIndex(), j, succ_diff;
+            final int i = ineq.firstIndex(), j, succ_diff;
             SetFunction f_i = getComponent(i, cc), f_j = getComponent(j = ineq.secondIndex(), cc),
                     succ_fi = f_i, succ_fj = f_j, diff;
-            Interval fi_card = f_i.card(), fj_card;
+            final Interval fi_card = f_i.card(), fj_card;
             if (fi_card != null && fi_card.lb() > 1 && (fj_card = f_j.card()) != null && fj_card.lb() > 1) {
                 if (cc.isOrdered() && (succ_diff = ineq.getArg2().getSucc() - ineq.getArg1().getSucc()) != 0) {
                     succ_fi = succ(-succ_diff, f_i); // needed for the comparison below ...
@@ -851,13 +878,13 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                 }
                 if (!f_i.equals(succ_fj)) {
                     //System.out.println("f reduction:\n"+this); //deb
-                    Guard f = filter(), newf, g = guard();
-                    Set<FunctionTuple> expansion = new HashSet<>(); // contains the result, expressed as a sum
-                    Set<Guard> newargs = new HashSet<>(And.getArgs(f));
+                    final Guard f = filter(), newf, g = guard();
+                    final Set<FunctionTuple> expansion = new HashSet<>(); // contains the result, expressed as a sum
+                    final Set<Guard> newargs = new HashSet<>(And.getArgs(f));
                     newargs.remove(ineq);
                     newf = f.andFactory(newargs);
                     if (!(diff = differ(f_i, succ_fj)).isFalse()) {
-                        List<SetFunction> t1 = new ArrayList<>(getHomSubTuple(cc));
+                        final List<SetFunction> t1 = new ArrayList<>(getHomSubTuple(cc));
                         t1.set(i - 1, diff);
                         t1.set(j - 1, f_j);
                         expansion.add(build(newf, cc, t1, g));
@@ -867,7 +894,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                         t2.set(j - 1, diff);
                         expansion.add(build(newf, cc, t2, g));
                     }
-                    List<SetFunction> t3 = new ArrayList<>(getHomSubTuple(cc)); //a copy of list'fc components
+                    final List<SetFunction> t3 = new ArrayList<>(getHomSubTuple(cc)); //a copy of list'fc components
                     t3.set(i - 1, inter(f_i, succ_fj));
                     t3.set(j - 1, inter(f_j, succ_fi));
                     expansion.add(build(filter(), cc, t3, g));
@@ -916,7 +943,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                 } //  for each one-sorted part of the tuple, either the corresponding f (if any) is absorbed or the part is expanded
                 else { //the right function's f cannot be "absorbed" : we try to reduce it by possibly "expanding" the left tuple 
                     final var hom_filters = filter.equalityMap(); //we assume that in the f there are just (in)equalities!!
-                    final Tuple right_nof = right.withoutFilter();
+                    final Tuple right_nof = (Tuple) right.withoutFilter();
                     my_parts.keySet().forEach((var col) -> { // sub-tuples with no associated guard ....
                         Map<Boolean, SortedSet<Equality>> eqmap = hom_filters.get(col);
                         if (eqmap == null) // the sub-tuple has no associated guard
@@ -948,10 +975,10 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
                 }
             } else // the (left) tuple has guard : we move it ... to the right
             {
-                return new TupleComposition(withoutGuard(), right.build(And.factory(filter, guard()), right.guard()));
+                return new TupleComposition(withoutGuard().cast(), right.build(And.factory(filter, guard()), right.guard()));
             }
         } else {
-            return FilteredTuple.factory(filter(), new TupleComposition(withoutFilter(), right));
+            return FilteredTuple.factory(filter(), new TupleComposition(withoutFilter().cast(), right));
         }
     }
 
@@ -1084,17 +1111,16 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      */
     public FunctionTuple diff(final Tuple other) {
         if (disjoined(other)) //optimization 
-        {
             return this;
-        }
-
-        if (isTrue()) {
+    
+        if (isTrue()) 
             return other.complement(); //an optimized ad hoc version set invoked
-        }
+        
         final Guard othf = other.filter(), f_and_1_2 = And.factory(filter(), othf), // the "AND" between tuples' filters
                 myg = guard(), othg = other.guard(), g_and_1_2 = And.factory(myg, othg);  // the "AND" between tuples' guards
         final List<FunctionTuple> diff_list = new ArrayList<>();
-        List<SetFunction> diff_tuple_args, head = new ArrayList<>();
+        List<SetFunction> diff_tuple_args;
+        final List<SetFunction> head = new ArrayList<>();
         SetFunction t1_i, t2_i, inter;
         final List<? extends SetFunction> comps = getComponents(), others = other.getComponents();
         for (int i = 0, tsize = comps.size(); i < tsize; i++, head.add(inter)) {
@@ -1129,13 +1155,11 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
      * ULTERIORMENTE OTTIMIZzARE
      */
     public FunctionTuple complement() {
-        if (isTrue()) {
+        if (isTrue()) 
             return getFalse();
-        }
 
-        if (isFalse()) {
+        if (isFalse()) 
             return getTrue();
-        }
 
         final Domain cd = getCodomain();
         final SortedMap<ColorClass, List<? extends SetFunction>> mS = AllTuple.toMap(cd);
@@ -1190,8 +1214,7 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         if (equal_g && myf.equals(othf)) {
             final List<? extends SetFunction> args = getComponents(), others = other.getComponents();
             int i;
-            for (i = 0; i < tsize - 1 && args.get(i).equals(others.get(i)); ++i) {
-            }
+            for (i = 0; i < tsize - 1 && args.get(i).equals(others.get(i)); ++i) { }
             final List<? extends SetFunction> tail = args.subList(i + 1, tsize);
             if (tail.equals(others.subList(i + 1, tsize))) { //in particular, set true if tail set empty
                 final List<SetFunction> newlist = new ArrayList<>(args.subList(0, i)); //the first 0..i-1 components ..
@@ -1423,8 +1446,8 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
             for (var i = 0; i < list.size(); ++i) {
                 s.append(cc_low_case).append(i + 1);
                 final var ccMembMap = guard().membMap().getOrDefault(cc, Collections.emptyMap());
-                final Set<Membership> in = ccMembMap.getOrDefault(true, Collections.EMPTY_SET),
-                        notin = ccMembMap.getOrDefault(false, Collections.EMPTY_SET);
+                final Set<Membership> in = ccMembMap.getOrDefault(true, Collections.emptySet()),
+                        notin = ccMembMap.getOrDefault(false, Collections.emptySet());
                 final var f = list.get(i);
                 switch (f) {
                     case Projection p -> {
@@ -1487,5 +1510,6 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     public final Tuple clone(final Map<Sort, Sort> split_map) {
         return new Tuple((Guard) filter().clone(split_map), super.cloneComps(split_map), (Guard) guard().clone(split_map));
     }
+
 
 }

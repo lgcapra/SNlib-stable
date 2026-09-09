@@ -73,8 +73,8 @@ public final class FilteredTuple implements FunctionTuple, GuardedExpr<FunctionT
            return new FilteredTuple(And.factory(this.filter, g_expr.filter), g_expr.expr);
         }
 
-        if (this.expr instanceof Tuple) 
-            return  ((Tuple) this.expr).joinFilter(this.filter);
+        if (this.expr instanceof Tuple t) 
+            return  t.joinFilter(this.filter).cast();
         
         return this;     
     }

@@ -63,9 +63,7 @@ public final class Subcl extends ConstantFunction {
     }
 
     /**
-     * @return the interval associated with the sublclass; if the subclass is an
-     * union, the sum of corresponding intervals if it is ordered, the fixedSize
-     * of the corresponding sub-interval
+     * @return the interval associated with the sublclass
      */
     @Override
     public Interval card() {

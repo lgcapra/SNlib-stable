@@ -24,7 +24,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
     /*
     base constructor
     */
-    private TupleJuxtaposition (List<? extends FunctionTuple> tuples, boolean check)  {
+    private TupleJuxtaposition (final List<? extends FunctionTuple> tuples, final boolean check)  {
         if (check) 
             Expressions.checkDomain(tuples);
         this.codom  =  buildCodomain( tuples );
@@ -39,7 +39,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
      * @throws IllegalDomain  if the tuple color domains are different;  many tuples of the same colour
      * or non mono-coloured tuples are present in the passed list
      */
-    public static FunctionTuple factory (List<? extends FunctionTuple> tuples, boolean check)  {
+    public static FunctionTuple factory (final List<? extends FunctionTuple> tuples, final boolean check)  {
         return tuples.size() == 1 ? tuples.get(0) : new TupleJuxtaposition (tuples, check); 
     } 
     
@@ -49,7 +49,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
      * @return the tuples' juxtaposition
      * @throws IllegalDomain  if the tuples have different domains
      */
-    public static FunctionTuple factory (List<? extends FunctionTuple> tuples)  {
+    public static FunctionTuple factory (final List<? extends FunctionTuple> tuples)  {
         return factory(tuples, false);
     }
     
@@ -59,7 +59,7 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
      * @param tuples a list of tuples to juxtapose
      * @return  the tuples' juxtaposition
      */
-    public static FunctionTuple factory (boolean check_colors, FunctionTuple ... tuples) {
+    public static FunctionTuple factory (final boolean check_colors, final FunctionTuple ... tuples) {
         return factory(Arrays.asList(tuples),  check_colors);
     }
     
@@ -69,24 +69,24 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
      * @param tuples a list of tuples to juxtapose
      * @return  the tuples' juxtaposition
      */
-    public static FunctionTuple factory (FunctionTuple ... tuples) {
+    public static FunctionTuple factory (final FunctionTuple ... tuples) {
         return factory(false, tuples);
     }
     
     @Override
-    public FunctionTuple buildOp(Collection<? extends FunctionTuple > args) {
+    public FunctionTuple buildOp(final Collection<? extends FunctionTuple > args) {
         return factory((List<? extends FunctionTuple>) args, false);
     }
     
     /** 
      *infers the juxtaposition co-domain from its argument list
      */
-    private Domain buildCodomain( List<? extends FunctionTuple> tuples) {
-        HashMap<Sort,Integer> d = new HashMap<>();
+    private Domain buildCodomain(final List<? extends FunctionTuple> tuples) {
+        final HashMap<Sort,Integer> d = new HashMap<>();
         tuples.forEach( ft -> { 
-            Map<? extends Sort, Integer> cd = ft.getCodomain().asMap();
+            final Map<? extends Sort, Integer> cd = ft.getCodomain().asMap();
             if (cd.size() == 1) {
-                Map.Entry<? extends Sort, Integer> e = cd.entrySet().iterator().next();
+                final Map.Entry<? extends Sort, Integer> e = cd.entrySet().iterator().next();
                 if (d.putIfAbsent(e.getKey(), e.getValue()) != null) 
                     throw new IllegalDomain(tuples+": many tuples of the same colour are present!");
             }
@@ -113,29 +113,10 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
     }
 
     
-    /**
-     * overrides the super-type method because the operands codomains are restrictions
-     * of <tt>this</tt> term's codomain
-     * @param newdom the new domain
-     * @param newcd  the new codomain
-     * @return a clone of <tt>this</tt> with the specified co-domains
-     */
-    /*@Override
-    public TupleJuxtaposition clone (final Domain newdom, final Domain newcd) {
-        List<FunctionTuple> cloned_tuples = new ArrayList<>();
-        this.tuples.forEach((var tuple) -> {
-            Domain old_cd = tuple.getCodomain();
-            Map.Entry<? extends Sort, Integer> e = old_cd.asMap().entrySet().iterator().next();
-            var cc = e.getKey(); //the sub-tuple is mono-coloured
-            cloned_tuples.add((FunctionTuple)tuple.clone(newdom, newcd.mult(cc) != 0 ? old_cd : new Domain(newcd.getSort(cc.name()), e.getValue()) ));
-        });
-        
-        return new TupleJuxtaposition(cloned_tuples, true);
-    }*/
     
     @Override
     public TupleJuxtaposition clone (final  Map<Sort, Sort> split_map) {
-        List<FunctionTuple> cloned_tuples = new ArrayList<>();
+        final List<FunctionTuple> cloned_tuples = new ArrayList<>();
         this.tuples.forEach((var tuple) -> { cloned_tuples.add(tuple.clone(split_map ). cast() ); });
         
         return new TupleJuxtaposition(cloned_tuples, true);
@@ -146,28 +127,28 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
     /** the simplification algorithm treats two cases; a juxtaposition formed only by 
         Tuples; a juxtaposition containing a n-ary operator*/
     public FunctionTuple specSimplify() { 
-       int t_pos;
+       final int t_pos;
        FunctionTuple res = this;
-       Domain cd = getCodomain(), d = getDomain();
+       final Domain cd = getCodomain(), d = getDomain();
        
        if ( Util.find(this.tuples, EmptyTuple.class ) != null)
           res = EmptyTuple.getInstance(cd, d); //optimization
        else if (Util.checkAll(this.tuples , (e -> e instanceof Tuple || e instanceof AllTuple) ) ) { // there are only (constant) Tuples (non extended) ..
-           List<SetFunction> t_list = new ArrayList<>();
-           Set<Guard> g = new HashSet<>(), f = new HashSet<>();
+           final List<SetFunction> t_list = new ArrayList<>();
+           final Set<Guard> g = new HashSet<>(), f = new HashSet<>();
            for (FunctionTuple x : this.tuples ) {
-               Tuple t = x instanceof AllTuple ? ((AllTuple)x).asTuple() : (Tuple) x;
+               final Tuple t = x instanceof AllTuple ? ((AllTuple)x).asTuple() : (Tuple) x;
                t_list.addAll( t.getComponents());
                f.add(t.filter().clone(cd));  // the domains of the inner filters are different from the terms's codomain...
                g.add(t.guard());
            }
-           res = new Tuple(And.factory(f), t_list, And.buildAndFormWithD(g, d));
+           res = new Tuple(And.factory(f), t_list, And.buildAndFormWithDom(g, d));
        }
        else if ((t_pos = Util.indexOf(this.tuples, TupleSum.class)) >= 0) {
-            TupleSum t_op = (TupleSum) this.tuples.get(t_pos);
-            Set<FunctionTuple> t_jxtp_list = new HashSet<>(); 
+            final TupleSum t_op = (TupleSum) this.tuples.get(t_pos);
+            final Set<FunctionTuple> t_jxtp_list = new HashSet<>(); 
             for (FunctionTuple x : t_op.getArgs() ) {
-                List<FunctionTuple> simp_list = new ArrayList<>(this.tuples);
+                final List<FunctionTuple> simp_list = new ArrayList<>(this.tuples);
                 simp_list.set(t_pos, x );
                 t_jxtp_list.add(TupleJuxtaposition.factory(simp_list,false));
             }
