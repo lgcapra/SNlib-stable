@@ -3,6 +3,7 @@ package wnbag;
 import bagexpr.BagComp;
 import bagexpr.BagExpr;
 import classfunction.ClassFunction;
+import classfunction.ElementaryFunction;
 import color.ColorClass;
 import expr.Domain;
 import expr.ParametricExpr;
@@ -38,44 +39,35 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         if (res instanceof ArcFunComp comp) {
             // caso base: composizione tra WNtuple (tuple di class-functions) dove sx contiene solo LinearCombs
             if (comp.left() instanceof WNtuple left && left.simple()){
-                // Preliminary step: we make tuples' inner component exclusively contain constant or non-constant functions
-                final List<LinearComb> leftComps = (List<LinearComb>) Util.cast(left.getComponents(), LinearComb.class); 
-                final List<List<LinearComb>> l2lb = new ArrayList<>();
-                for (LinearComb t : leftComps) {
-                    List<LinearComb> llb = (List<LinearComb>) Util.cast(t.separateConst(), LinearComb.class);                    
-                    l2lb.add(llb);
-                }
-                   
-                final Set<Collection<LinearComb>> cpr = Util.cartesianProd(l2lb); //actually a set of lists
-                if (cpr.size() > 1) { //we split the tuple so that components are homogeneous (only constants or non-constants)
-                    final Collection<WNtuple> sum = new ArrayList<>();
-                    for (Collection<LinearComb> llc : cpr) {
-                        sum.add(new  WNtuple((List<LinearComb>) llc, left.guard(), false));
-                   }
+                List<WNtuple> homogeneousTuples = splitHomogeneousTuples(left);
 
-                   return new ArcFunComp(ArcFunSum.factory(sum), comp.right().cast());
+                if (homogeneousTuples.size() > 1) {
+                    return new ArcFunComp(
+                            ArcFunSum.factory(homogeneousTuples),
+                            comp.right().cast()
+                    );
                 }
 
                 if (!(left.filter().isTrivial())) {
                     //to do
                     return res;
                 }
-               
-                if (!(comp.right() instanceof WNtuple right)) 
+
+                if (!(comp.right() instanceof WNtuple right))
                     return res;
-                
+
                 if (!right.filter().isTrivial()) { // the right tuple's filter is moved on the left
                     return new ArcFunComp(left.joinGuard(right.filter()).cast(), right.withoutFilter().cast());
                 }
-                
+
                 // left tuple, with no constant components
                 // Lemma 1
                 final Guard lg = left.guard();
                 if (! (lg.isTrivial() || lg.isElemAndForm()) )
                     return res;
-                
-                int card = 1; // the cardinality of the right-tuple components non-projected 
-                final Map<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> splitColors 
+
+                int card = 1; // the cardinality of the right-tuple components non-projected
+                final Map<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> splitColors
                       = left.splitColors();
 
                 //System.out.println("DEBUG (a):\n"+left+'\n'+splitColors+'\n'+right);
@@ -87,13 +79,20 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                    // new Property 2: we extract constant components from the left tuple, if any
                    final Map<Integer, ColorFunction> constants = Util.select(cleftComps, ColorFunction::isConstant);
                    cleftComps = Util.remove(cleftComps, constants.keySet()); // we remove (in the event) constant components from the left tuple's components
-                   final SortedSet<Integer> leftindx = new TreeSet<>(ClassFunction.indexSet(cleftComps)); 
+                   final SortedSet<Integer> leftindx = new TreeSet<>(ClassFunction.indexSet(cleftComps));
                    leftindx.addAll(Guard.indexSet(cleftG)); // includes the guard indices too
                    final ColorClass cc = cleft.getKey();
                    final List<? extends ColorFunction> rightComps = right.getHomSubTuple(cc),
                                                     redRightComps = Util.projection(rightComps, leftindx);
-                   
-                   final WNtuple rtx = new WNtuple(redRightComps, right.getDomain()); //right.guard() ?
+
+                    final List<? extends ColorFunction> scaledRedRightComps =
+                            scaleRedRightComps(redRightComps, rightComps, leftindx);
+
+                    if (scaledRedRightComps == null) {
+                        return res;
+                    }
+
+                   final WNtuple rtx = new WNtuple(scaledRedRightComps, right.getDomain()); //right.guard() ?
                    ArcFunction cc_res;
                    if (redRightComps != rightComps) { // some components of the right tuple are projected out
                         for (int i = 1; i <= rightComps.size(); i++) { // we check the cardinality of the non-projected components of the right tuple
@@ -102,17 +101,24 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                                     if (c == null)
                                         return res; // the cardinality of a non-projected component is not known, so we cannot apply Lemma 1
                                     else
-                                        card *= rightComps.get(i -1).cardLb(); 
+                                        card *= rightComps.get(i -1).cardLb();
                             }
                         }
                         // we rescale (in the event) rojection indices in the tuple sx
                         if (leftindx.last() > leftindx.size()) {
                             cleftComps = ClassFunction.scaleIndex(cleftComps, Util.scaledIndex(leftindx));
-                        } 
-                    } 
-                    
-                    WNtuple tleft = new WNtuple(cleftComps, newGuard(cleftG, rtx.getCodomain()), false); 
-                    cc_res = ArcFunExpansion.factory(tleft.baseCompose(rtx), constants); // base case of composition between tuples (possibly expanded by the constant components of the left tuple)
+                        }
+                    }
+
+                    WNtuple tleft = new WNtuple(cleftComps, newGuard(cleftG, rtx.getCodomain()), false);
+
+                    if (isRepeatedIndex(tleft)) {
+                        cc_res = new BaseComp(tleft, rtx);
+                    } else {
+                        cc_res = tleft.baseCompose(rtx);
+                    }
+
+                    cc_res = ArcFunExpansion.factory(cc_res, constants);
                     results.put(cc, cc_res);
                 } // for each color class
 
@@ -123,6 +129,92 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         }
         //System.out.println("(ArcFunComp) simplified to: " + res + ", class: " + res.getClass()); //debug
         return res;
+    }
+
+    private static boolean isRepeatedIndex(WNtuple tleft) {
+        final Map<Integer, Set<Integer>> idxPos = tleft.projectionIndexPositions();
+
+        // check repeated projection indices
+        boolean repeatedIndex = false;
+        for (Entry<Integer, Set<Integer>> e : idxPos.entrySet()) {
+            if (e.getValue().size() != 1) {
+                repeatedIndex = true;
+                break;
+            }
+        }
+        return repeatedIndex;
+    }
+
+    private List<? extends ColorFunction> scaleRedRightComps(
+            List<? extends ColorFunction> redRightComps,
+            List<? extends ColorFunction> rightComps,
+            SortedSet<Integer> leftindx) {
+
+        if (redRightComps != rightComps && leftindx.last() > leftindx.size()) {
+            final Map<Integer, Integer> scaling = Util.scaledIndex(leftindx);
+            final List<ColorFunction> tmp = new ArrayList<>();
+
+            for (ColorFunction cf : redRightComps) {
+                if (cf instanceof LinearComb lc) {
+                    final Map<ElementaryFunction, Integer> newMap = new HashMap<>();
+
+                    for (Map.Entry<? extends ElementaryFunction, Integer> e : lc.asMap().entrySet()) {
+                        final ElementaryFunction ef = e.getKey();
+                        final int mult = e.getValue();
+
+                        if (ef instanceof classfunction.Projection p) {
+                            final Integer newIdx = scaling.get(p.getIndex());
+
+                            if (newIdx == null) {
+                                return null;
+                            }
+
+                            newMap.merge(p.setIndex(newIdx), mult, Integer::sum);
+                        } else {
+                            newMap.merge(ef, mult, Integer::sum);
+                        }
+                    }
+
+                    tmp.add(new LinearComb(newMap, false));
+                } else {
+                    tmp.add(cf);
+                }
+            }
+
+            return tmp;
+        }
+
+        return redRightComps;
+    }
+
+    private List<WNtuple> splitHomogeneousTuples(WNtuple left) {
+        final List<LinearComb> leftComps =
+                (List<LinearComb>) Util.cast(left.getComponents(), LinearComb.class);
+
+        final List<List<LinearComb>> l2lb = new ArrayList<>();
+
+        for (LinearComb t : leftComps) {
+            List<LinearComb> llb =
+                    (List<LinearComb>) Util.cast(t.separateConst(), LinearComb.class);
+            l2lb.add(llb);
+        }
+
+        final Set<Collection<LinearComb>> cpr =
+                Util.cartesianProd(l2lb);
+
+        final List<WNtuple> result = new ArrayList<>();
+
+        for (Collection<LinearComb> llc : cpr) {
+            result.add(
+                    new WNtuple(
+                            (List<LinearComb>) llc,
+                            left.guard(),
+                            false
+                    )
+            );
+        }
+
+        return result;
     }
 
     private static Guard newGuard(Set<? extends ElementaryGuard> s, Domain d) {

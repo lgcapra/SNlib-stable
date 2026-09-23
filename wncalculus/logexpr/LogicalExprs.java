@@ -66,7 +66,7 @@ public class LogicalExprs {
      * @return <code>true</code> if and only if the collection's elements are normal AND forms
      */
     public static boolean isNormalAndForm(Collection<? extends LogicalExpr > c) {
-        return c.stream().allMatch(arg -> arg.isNormalAndForm() );
+        return c.stream().allMatch(LogicalExpr::isNormalAndForm);
     }
 
     /**

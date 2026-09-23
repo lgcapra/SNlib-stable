@@ -854,17 +854,22 @@ public static <E> HashSet<E> binaryProduct(final Collection<? extends E> c1, fin
    * @param map a map of positions (1-based) to elements to be inserted into the list
    * @return a new list with the elements from the map inserted at the specified positions, while preserving the order of the original list
    * If the map is empty, a copy of the original list is returned. 
-   * @param result (the copy of) the possibly expanded list
+   * @return result (the copy of) the possibly expanded list
    * @throws <code>IndexOutOfBoundsException</code> If some positions are outside the bounds of the list
   */
   public static <E>  List<? extends E> expandPositions(final List<? extends E> list, final Map<Integer, E> map) {
         if (map.isEmpty()) {
             return list; // return a copy of the original list if there are no positions to expand
         }
-        final var result = new ArrayList<E>(); 
+        final List<E> result = new ArrayList<>(list);
         for (Map.Entry<Integer, E> posEntry : map.entrySet()) {
             final int position = posEntry.getKey();
             final E func = posEntry.getValue();
+            if (position < 1 || position > result.size() + 1) {
+                throw new IndexOutOfBoundsException(
+                        "invalid expansion position " + position + " for list of size " + result.size()
+                );
+            }
             result.add(position - 1, func); // insert at the specified position (1-based index)
         }
         return result;

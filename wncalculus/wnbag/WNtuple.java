@@ -2,6 +2,8 @@ package wnbag;
 
 import java.util.*;
 import java.util.Map.Entry;
+
+import classfunction.ElementaryFunction;
 import color.ColorClass;
 import expr.*;
 import guard.And;
@@ -258,13 +260,85 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     /**
      * base composition between <code>this</code> tuple (assumed single-color, simple, and without constants inside)
      * and the <code>other</code> tuple (assumed entirely projected by <code>this</code>) 
-     * @param other
-     * @return
+     * @param other the right tuple
+     * @return the composed tuple
      */
-    ArcFunction baseCompose(WNtuple other) {
-        //dummy implementation
-        return new ArcFunComp.BaseComp(this, other);
+    public ArcFunction baseCompose(WNtuple other) {
+        final List<? extends ColorFunction> leftComps = getHomSubTuple(getSort());
+        final List<? extends ColorFunction> rightComps = other.getHomSubTuple(other.getSort());
+
+        // Build the substitution map: projection index -> right tuple component
+        final Map<Integer, ColorFunction> subst = new HashMap<>();
+        for (int i = 0; i < rightComps.size(); i++) {
+            subst.put(i + 1, rightComps.get(i));
+        }
+
+        final List<ColorFunction> resultComps = new ArrayList<>(leftComps.size());
+
+        for (ColorFunction leftCf : leftComps) {
+            if (leftCf instanceof LinearComb lc) {
+                final Map<ElementaryFunction, Integer> newMap = new HashMap<>();
+
+                for (Map.Entry<? extends ElementaryFunction, Integer> e : lc.asMap().entrySet()) {
+                    final ElementaryFunction f = e.getKey();
+                    final int mult = e.getValue();
+
+                    if (f instanceof classfunction.Projection p) {
+                        final int idx = p.getIndex();
+                        final ColorFunction replacement = subst.get(idx);
+
+                        LinearComb replLc = (LinearComb) replacement;
+
+                        for (Map.Entry<? extends ElementaryFunction, Integer> re : replLc.asMap().entrySet()) {
+                            newMap.merge(re.getKey(), mult * re.getValue(), Integer::sum);
+                        }
+                    } else {
+                        // Non-projection term: keep it unchanged
+                        newMap.merge(f, mult, Integer::sum);
+                    }
+                }
+
+                resultComps.add(new LinearComb(newMap, false));
+            }
+        }
+
+        return new WNtuple(resultComps, this.guard(), false);
     }
 
+    /**
+     * returns the positions of the tuple components grouped by projection index.
+     *
+     * The result maps each projection index to the set of positions where a
+     * component contains that index.
+     *
+     * Positions are 1-based.
+     *
+     * @return a map index -> positions of components containing that index
+     */
+    public Map<Integer, Set<Integer>> projectionIndexPositions() {
+        final ColorClass cc = getSort();
+        if (cc == null) {
+            throw new IllegalStateException("projectionIndexPositions() requires a single-color tuple");
+        }
+
+        final List<? extends ColorFunction> comps = getHomSubTuple(cc);
+        final Map<Integer, Set<Integer>> result = new TreeMap<>();
+
+        for (int pos = 0; pos < comps.size(); pos++) {
+            final ColorFunction cf = comps.get(pos);
+            final Set<Integer> idxs = cf.indexSet();
+
+            if (idxs.isEmpty()) {
+                continue;
+            }
+
+            final int oneBasedPos = pos + 1;
+            for (int idx : idxs) {
+                result.computeIfAbsent(idx, k -> new LinkedHashSet<>()).add(oneBasedPos);
+            }
+        }
+
+        return result;
+    }
 
 }

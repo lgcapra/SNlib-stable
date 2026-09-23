@@ -12,6 +12,7 @@ import tuple.*;
 import util.Pair;
 import util.Util;
 import wnbag.*;
+import wncolorfunction.ColorFunction;
 import wncolorfunction.LinearComb;
 
 /**
@@ -132,7 +133,8 @@ public class Main {
 //        //System.out.println(f2 + " implies " + f1+" intersez "+ f2 + " :" + LogicalExprs.implies(f2,f1.andFactory(f1, f2)));
 //        testIntersection(f_list, f1, f4);
 
-        // parte sui multiset -- modificata dopo ultimi cambiamenti di bag expressions
+        // parte sui m
+        // ultiset -- modificata dopo ultimi cambiamenti di bag expressions
         testMultiset();
         testLemma1();
         //testProperty2();
