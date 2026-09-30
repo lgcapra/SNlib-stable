@@ -61,7 +61,7 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
     public ArcFunction buildOp(final Collection<? extends ArcFunction > args) {
        TreeMap<ColorClass, ArcFunction> map = new TreeMap<>();
        for (ArcFunction f : args)
-         map.put((ColorClass)f.getDomain().asMap().keySet().iterator().next(), f);
+         map.put((ColorClass)f.getCodomain().asMap().keySet().iterator().next(), f);
 
        return ArcFunJuxt.factory(map, this.guard);
     }
