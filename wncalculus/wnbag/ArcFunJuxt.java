@@ -47,11 +47,13 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
         if (ctuples.size() == 1) {
             return ctuples.values().iterator().next();
         }
+//        ArcFunJuxt DEBUG = new ArcFunJuxt(ctuples, guard, check);
+//        System.out.println("ArcFunJuxt.factory: " + DEBUG);
         return new ArcFunJuxt(ctuples, guard, check);
     }
 
     public static ArcFunction factory (final Map<ColorClass, ? extends ArcFunction> ctuples, final Guard guard) {
-        return factory(ctuples, guard, false);
+        return factory(ctuples, guard, true);
     }
  
     
@@ -104,7 +106,6 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
               WNtuple tc = (WNtuple) ccomp.getValue();
               map.put(ccomp.getKey(), Collections.unmodifiableList(tc.getComponents()));
            }
-           
            return new WNtuple(map, guard);
        }
        

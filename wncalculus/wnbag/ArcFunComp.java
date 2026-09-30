@@ -206,7 +206,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                 } // for each color class
 
                 // we build the scalar product of juxtaposition of results
-                //System.out.println("DEBUG (b):\n"+results);
+                System.out.println("DEBUG (b):\n"+results);
                 res = ArcFunScalar.factory(ArcFunJuxt.factory(results, right.guard()), card); // k⋅(Tr∘TX′);
             }
         }

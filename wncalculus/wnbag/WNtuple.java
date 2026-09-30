@@ -302,7 +302,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             }
         }
 
-        return new WNtuple(resultComps, this.guard(), false);
+        return new WNtuple(resultComps, other.guard(), true);
     }
 
     /**
