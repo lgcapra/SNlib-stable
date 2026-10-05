@@ -4,9 +4,11 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import classfunction.ElementaryFunction;
+import classfunction.Projection;
 import color.ColorClass;
 import expr.*;
 import guard.And;
+import guard.Equality;
 import guard.Guard;
 import tuple.AbstractTuple;
 import util.Util;
@@ -303,6 +305,75 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         }
 
         return new WNtuple(resultComps, other.guard(), true);
+    }
+
+    public ArcFunction repetedIndexCompose(WNtuple other) {
+        // First, perform the basic composition
+        ArcFunction composed = baseCompose(other);
+
+        // If the result is not a WNtuple, return it as is
+        if (!(composed instanceof WNtuple wnTuple)) {
+            return composed;
+        }
+
+        // Get the repeated index positions from the left tuple
+        Map<Integer, Set<Integer>> indexPositions = projectionIndexPositions();
+
+        // Build the repeated index filter using the RESULT tuple's CODOMAIN (which is the filter's domain)
+        Guard repeatedIndexFilter = buildRepeatedIndexFilter(indexPositions, wnTuple.getCodomain());
+
+        // If the filter is trivial (True), return the result as is
+        if (repeatedIndexFilter.isTrivial()) {
+            return composed;
+        }
+
+        System.out.println("DEBUG repeatedIndexFilter = " + repeatedIndexFilter);
+        System.out.println("DEBUG wnTuple before build = " + wnTuple);
+
+        WNtuple out = wnTuple.build(repeatedIndexFilter, wnTuple.guard());
+        System.out.println("DEBUG built tuple = " + out);
+        return out;
+
+        // Create a new WNtuple with the new filter (replacing the old one)
+//        return wnTuple.build(repeatedIndexFilter, wnTuple.guard());
+    }
+
+    /**
+     * Builds an equality filter for repeated indices based on the position map.
+     *
+     * @param indexPositions the map returned by projectionIndexPositions()
+     * @param filterDomain the domain of the filter
+     * @return a Guard representing the equality constraints for repeated indices
+     */
+    public Guard buildRepeatedIndexFilter(Map<Integer, Set<Integer>> indexPositions, Domain filterDomain) {
+        final ColorClass cc = getSort();
+        final Collection<Guard> equalityGuards = new ArrayList<>();
+
+        // For each index that appears in multiple positions
+        for (Map.Entry<Integer, Set<Integer>> entry : indexPositions.entrySet()) {
+            final int idx = entry.getKey();
+            final Set<Integer> positions = entry.getValue();
+
+            // If index appears more than once, create equality guards
+            if (positions.size() > 1) {
+                final List<Integer> posList = new ArrayList<>(positions);
+
+                // Create equality between the first position and all other positions
+                final int firstPos = posList.get(0);
+                final Projection firstProj = Projection.builder(firstPos, cc);
+
+                for (int i = 1; i < posList.size(); i++) {
+                    final int pos = posList.get(i);
+                    final Projection otherProj = Projection.builder(pos, cc);
+
+                    // Add equality: component at firstPos == component at pos
+                    equalityGuards.add(Equality.builder(firstProj, otherProj, true, filterDomain));
+                }
+            }
+        }
+        return equalityGuards.isEmpty() ?
+                guard.True.getInstance(filterDomain) :
+                guard.And.factory(equalityGuards);
     }
 
     /**

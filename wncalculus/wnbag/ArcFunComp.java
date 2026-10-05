@@ -168,14 +168,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                    final List<? extends ColorFunction> rightComps = right.getHomSubTuple(cc),
                                                     redRightComps = Util.projection(rightComps, leftindx);
 
-                    final List<? extends ColorFunction> scaledRedRightComps = redRightComps;
-//                            scaleRedRightComps(redRightComps, rightComps, leftindx);
-//
-//                    if (scaledRedRightComps == null) {
-//                        return res;
-//                    }
-
-                   final WNtuple rtx = new WNtuple(scaledRedRightComps, right.getDomain()); //right.guard() ?
+                   final WNtuple rtx = new WNtuple(redRightComps, right.getDomain()); //right.guard() ?
                    ArcFunction cc_res;
                    if (redRightComps != rightComps) { // some components of the right tuple are projected out
                         for (int i = 1; i <= rightComps.size(); i++) { // we check the cardinality of the non-projected components of the right tuple
@@ -196,7 +189,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     WNtuple tleft = new WNtuple(cleftComps, newGuard(cleftG, rtx.getCodomain()), false);
 
                     if (isRepeatedIndex(tleft)) {
-                        cc_res = new BaseComp(tleft, rtx);
+                        cc_res = tleft.repetedIndexCompose(rtx);
                     } else {
                         cc_res = tleft.baseCompose(rtx);
                     }
@@ -206,7 +199,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                 } // for each color class
 
                 // we build the scalar product of juxtaposition of results
-                System.out.println("DEBUG (b):\n"+results);
+                // System.out.println("DEBUG (b):\n"+results);
                 res = ArcFunScalar.factory(ArcFunJuxt.factory(results, right.guard()), card); // k⋅(Tr∘TX′);
             }
         }
@@ -227,54 +220,6 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         }
         return repeatedIndex;
     }
-
-//    private List<? extends ColorFunction> scaleRedRightComps(
-//            List<? extends ColorFunction> redRightComps,
-//            List<? extends ColorFunction> rightComps,
-//            SortedSet<Integer> leftindx) {
-//
-//        if (redRightComps == rightComps) {
-//            return redRightComps;
-//        }
-//
-//        // Crea una lista di remapping per i nuovi indici
-//        // La nuova posizione i-esima avrà indice i
-//        final List<Integer> oldIndices = new ArrayList<>(leftindx);
-//        final Map<Integer, Integer> positionRemapping = new HashMap<>();
-//        for (int i = 0; i < oldIndices.size(); i++) {
-//            positionRemapping.put(oldIndices.get(i), i + 1);
-//        }
-//
-//        final List<ColorFunction> tmp = new ArrayList<>();
-//
-//        for (ColorFunction cf : redRightComps) {
-//            if (cf instanceof LinearComb lc) {
-//                final Map<ElementaryFunction, Integer> newMap = new HashMap<>();
-//
-//                for (Map.Entry<? extends ElementaryFunction, Integer> e : lc.asMap().entrySet()) {
-//                    final ElementaryFunction ef = e.getKey();
-//                    final int mult = e.getValue();
-//
-//                    if (ef instanceof classfunction.Projection p) {
-//                        final Integer newIdx = positionRemapping.get(p.getIndex());
-//                        if (newIdx != null) {
-//                            newMap.merge(p.setIndex(newIdx), mult, Integer::sum);
-//                        } else {
-//                            newMap.merge(ef, mult, Integer::sum);
-//                        }
-//                    } else {
-//                        newMap.merge(ef, mult, Integer::sum);
-//                    }
-//                }
-//
-//                tmp.add(new LinearComb(newMap, false));
-//            } else {
-//                tmp.add(cf);
-//            }
-//        }
-//
-//        return tmp;
-//    }
 
     private List<WNtuple> splitHomogeneousTuples(WNtuple left) {
         final List<LinearComb> leftComps =
