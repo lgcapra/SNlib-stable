@@ -317,7 +317,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         }
 
         // Get the repeated index positions from the left tuple
-        Map<Integer, Set<Integer>> indexPositions = projectionIndexPositions();
+        List<Set<Integer>> indexPositions = projectionIndexPositions();
 
         // Build the repeated index filter using the RESULT tuple's CODOMAIN (which is the filter's domain)
         Guard repeatedIndexFilter = buildRepeatedIndexFilter(indexPositions, wnTuple.getCodomain());
@@ -345,21 +345,19 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param filterDomain the domain of the filter
      * @return a Guard representing the equality constraints for repeated indices
      */
-    public Guard buildRepeatedIndexFilter(Map<Integer, Set<Integer>> indexPositions, Domain filterDomain) {
+    public Guard buildRepeatedIndexFilter(List<Set<Integer>> indexPositions, Domain filterDomain) {
         final ColorClass cc = getSort();
         final Collection<Guard> equalityGuards = new ArrayList<>();
 
         // For each index that appears in multiple positions
-        for (Map.Entry<Integer, Set<Integer>> entry : indexPositions.entrySet()) {
-            final int idx = entry.getKey();
-            final Set<Integer> positions = entry.getValue();
+        for (Set<Integer> positions : indexPositions) {
 
             // If index appears more than once, create equality guards
             if (positions.size() > 1) {
                 final List<Integer> posList = new ArrayList<>(positions);
 
                 // Create equality between the first position and all other positions
-                final int firstPos = posList.get(0);
+                final int firstPos = posList.getFirst();
                 final Projection firstProj = Projection.builder(firstPos, cc);
 
                 for (int i = 1; i < posList.size(); i++) {
@@ -377,35 +375,37 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     }
 
     /**
-     * returns the positions of the tuple components grouped by projection index.
-     *
-     * The result maps each projection index to the set of positions where a
-     * component contains that index.
-     *
+     * Returns the positions of the tuple components grouped by projection index.
+     * The result is a list where the element at position {@code i - 1}
+     * contains the positions of the tuple components that contain projection
+     * index {@code i}.
+     * <p>
      * Positions are 1-based.
      *
-     * @return a map index -> positions of components containing that index
+     * @return a list containing, for each projection index, the positions
+     *         of the tuple components containing that index
      */
-    public Map<Integer, Set<Integer>> projectionIndexPositions() {
+    public List<Set<Integer>> projectionIndexPositions() {
         final ColorClass cc = getSort();
         if (cc == null) {
-            throw new IllegalStateException("projectionIndexPositions() requires a single-color tuple");
+            throw new IllegalStateException(
+                    "projectionIndexPositions() requires a single-color tuple"
+            );
         }
 
         final List<? extends ColorFunction> comps = getHomSubTuple(cc);
-        final Map<Integer, Set<Integer>> result = new TreeMap<>();
+        final List<Set<Integer>> result = new ArrayList<>();
 
         for (int pos = 0; pos < comps.size(); pos++) {
             final ColorFunction cf = comps.get(pos);
             final Set<Integer> idxs = cf.indexSet();
 
-            if (idxs.isEmpty()) {
-                continue;
-            }
-
-            final int oneBasedPos = pos + 1;
             for (int idx : idxs) {
-                result.computeIfAbsent(idx, k -> new LinkedHashSet<>()).add(oneBasedPos);
+                while (result.size() < idx) {
+                    result.add(new LinkedHashSet<>());
+                }
+
+                result.get(idx - 1).add(pos + 1);
             }
         }
 

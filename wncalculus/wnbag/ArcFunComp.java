@@ -208,12 +208,12 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
     }
 
     private static boolean isRepeatedIndex(WNtuple tleft) {
-        final Map<Integer, Set<Integer>> idxPos = tleft.projectionIndexPositions();
+        final List<Set<Integer>> idxPos = tleft.projectionIndexPositions();
 
         // check repeated projection indices
         boolean repeatedIndex = false;
-        for (Entry<Integer, Set<Integer>> e : idxPos.entrySet()) {
-            if (e.getValue().size() != 1) {
+        for (Set<Integer> e : idxPos) {
+            if (e.size() != 1) {
                 repeatedIndex = true;
                 break;
             }
