@@ -5,12 +5,15 @@ import java.util.Map.Entry;
 
 import classfunction.ElementaryFunction;
 import classfunction.Projection;
+import classfunction.SetFunction;
+import classfunction.Successor;
 import color.ColorClass;
 import expr.*;
 import guard.And;
 import guard.Equality;
 import guard.Guard;
 import tuple.AbstractTuple;
+import util.Pair;
 import util.Util;
 import wncolorfunction.ColorFunction;
 import wncolorfunction.LinearComb;
@@ -285,16 +288,26 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                     final ElementaryFunction f = e.getKey();
                     final int mult = e.getValue();
 
-                    if (f instanceof classfunction.Projection p) {
+                    if (f instanceof Projection p) {
                         final int idx = p.getIndex();
                         final ColorFunction replacement = subst.get(idx);
 
-                        LinearComb replLc = (LinearComb) replacement;
+                        if (replacement instanceof LinearComb replLc) {
+                            for (Map.Entry<? extends ElementaryFunction, Integer> re : replLc.asMap().entrySet()) {
 
-                        for (Map.Entry<? extends ElementaryFunction, Integer> re : replLc.asMap().entrySet()) {
-                            newMap.merge(re.getKey(), mult * re.getValue(), Integer::sum);
+                                ElementaryFunction term = re.getKey();
+                                int replacementMult = re.getValue();
+
+                                Pair<SetFunction, Integer> composition = p.baseCompose(term);
+
+                                SetFunction composed = composition.getKey();
+
+                                if (composed instanceof ElementaryFunction elementary) {
+                                    newMap.merge(elementary, mult * replacementMult, Integer::sum);
+                                }
+                            }
                         }
-                    } else {
+                    }else {
                         // Non-projection term: keep it unchanged
                         newMap.merge(f, mult, Integer::sum);
                     }

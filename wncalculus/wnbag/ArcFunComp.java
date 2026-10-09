@@ -3,15 +3,9 @@ package wnbag;
 import bagexpr.BagComp;
 import bagexpr.BagExpr;
 import classfunction.ClassFunction;
-import classfunction.ElementaryFunction;
 import color.ColorClass;
 import expr.Domain;
-import expr.ParametricExpr;
-import guard.And;
-import guard.ElementaryGuard;
-import guard.Guard;
-import guard.NaryGuardOperator;
-import guard.True;
+import guard.*;
 import util.Pair;
 import util.Util;
 import wncolorfunction.ColorFunction;
@@ -36,89 +30,6 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
     public ArcFunction specSimplify() {
         ArcFunction res = (ArcFunction) super.specSimplify();
 
-//         if (res instanceof ArcFunComp comp) {
-//             if (comp.left() instanceof WNtuple left && left.simple()) {
-//                 System.out.println("DEBUG: entered specSimplify with WNtuple left");
-//
-//                 List<WNtuple> homogeneousTuples = splitHomogeneousTuples(left);
-//
-//                 if (homogeneousTuples.size() > 1) {
-//                     System.out.println("DEBUG: splitting homogeneous tuples");
-//                     return new ArcFunComp(
-//                             ArcFunSum.factory(homogeneousTuples),
-//                             comp.right().cast()
-//                     );
-//                 }
-//
-//                 if (!(left.filter().isTrivial())) {
-//                     System.out.println("DEBUG: left filter not trivial");
-//                     return res;
-//                 }
-//
-//                 if (!(comp.right() instanceof WNtuple right)) {
-//                     System.out.println("DEBUG: right is not WNtuple");
-//                     return res;
-//                 }
-//
-//                 if (!right.filter().isTrivial()) {
-//                     System.out.println("DEBUG: right filter not trivial");
-//                     return new ArcFunComp(left.joinGuard(right.filter()).cast(), right.withoutFilter().cast());
-//                 }
-//
-//                 final Guard lg = left.guard();
-//                 if (!(lg.isTrivial() || lg.isElemAndForm())) {
-//                     System.out.println("DEBUG: left guard not acceptable: " + lg);
-//                     return res;
-//                 }
-//
-//                 System.out.println("DEBUG: proceeding with composition");
-//
-//                 int card = 1;
-//                 final Map<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> splitColors
-//                         = left.splitColors();
-//
-//                 System.out.println("DEBUG: splitColors = " + splitColors);
-//                 final Map<ColorClass, ArcFunction> results = new HashMap<>();
-//
-//                 for (Entry<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> cleft : splitColors.entrySet()) {
-//                     System.out.println("DEBUG: processing color class " + cleft.getKey());
-//
-//                     final Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>> pair = cleft.getValue();
-//                     List<? extends ColorFunction> cleftComps = pair.getKey();
-//                     final Set<? extends ElementaryGuard> cleftG = pair.getValue();
-//
-//                     System.out.println("DEBUG: cleftComps before = " + cleftComps);
-//
-//                     final Map<Integer, ColorFunction> constants = Util.select(cleftComps, ColorFunction::isConstant);
-//                     System.out.println("DEBUG: constants = " + constants);
-//
-//                     cleftComps = Util.remove(cleftComps, constants.keySet());
-//                     System.out.println("DEBUG: cleftComps after remove = " + cleftComps);
-//
-//                     final SortedSet<Integer> leftindx = new TreeSet<>(ClassFunction.indexSet(cleftComps));
-//                     leftindx.addAll(Guard.indexSet(cleftG));
-//                     System.out.println("DEBUG: leftindx = " + leftindx);
-//
-//                     final ColorClass cc = cleft.getKey();
-//                     final List<? extends ColorFunction> rightComps = right.getHomSubTuple(cc);
-//                     System.out.println("DEBUG: rightComps = " + rightComps);
-//
-//                     final List<? extends ColorFunction> redRightComps = Util.projection(rightComps, leftindx);
-//                     System.out.println("DEBUG: redRightComps = " + redRightComps);
-//
-//                     final List<? extends ColorFunction> scaledRedRightComps =
-//                             scaleRedRightComps(redRightComps, rightComps, leftindx);
-//                     System.out.println("DEBUG: scaledRedRightComps = " + scaledRedRightComps);
-//
-//                     if (scaledRedRightComps == null) {
-//                         System.out.println("DEBUG: scaledRedRightComps is null, returning res");
-//                         return res;
-//                     }
-//                 }
-//             }
-//         }
-
-                 //System.out.println("\nArcFunComp.specSimplify of:\n" + res+':'+getClass()); //debug
         if (res instanceof ArcFunComp comp) {
             // caso base: composizione tra WNtuple (tuple di class-functions) dove sx contiene solo LinearCombs
             if (comp.left() instanceof WNtuple left && left.simple()){
@@ -170,6 +81,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
 
                    final WNtuple rtx = new WNtuple(redRightComps, right.getDomain()); //right.guard() ?
                    ArcFunction cc_res;
+                   Guard leftGuard = newGuard(cleftG, rtx.getCodomain());
                    if (redRightComps != rightComps) { // some components of the right tuple are projected out
                         for (int i = 1; i <= rightComps.size(); i++) { // we check the cardinality of the non-projected components of the right tuple
                             if (! leftindx.contains(i) ) {
@@ -181,12 +93,14 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                             }
                         }
                         // we rescale (in the event) rojection indices in the tuple sx
-                        if (leftindx.last() > leftindx.size()) {
-                            cleftComps = ClassFunction.scaleIndex(cleftComps, Util.scaledIndex(leftindx));
-                        }
+                       Map<Integer, Integer> scaled = Util.scaledIndex(leftindx);
+                       if (leftindx.last() > leftindx.size()) {
+                           cleftComps = ClassFunction.scaleIndex(cleftComps, scaled);
+                           leftGuard = scaleGuardIndex(leftGuard, scaled);
+                       }
                     }
 
-                    WNtuple tleft = new WNtuple(cleftComps, newGuard(cleftG, rtx.getCodomain()), false);
+                    WNtuple tleft = new WNtuple(cleftComps, leftGuard, false);
 
                     if (isRepeatedIndex(tleft)) {
                         cc_res = tleft.repetedIndexCompose(rtx);
@@ -251,6 +165,60 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         return result;
     }
 
+    private static Guard scaleGuardIndex(Guard g, Map<Integer, Integer> m) {
+        if (g == null || g.isTrivial() || m.isEmpty()) {
+            return g;
+        }
+
+        switch (g) {
+            case Equality eq -> {
+                var p1 = eq.getArg1();
+                var p2 = eq.getArg2();
+
+                Integer n1 = m.get(p1.getIndex());
+                Integer n2 = m.get(p2.getIndex());
+
+                if (n1 != null) {
+                    p1 = p1.setIndex(n1);
+                }
+                if (n2 != null) {
+                    p2 = p2.setIndex(n2);
+                }
+
+                return Equality.builder(p1, p2, eq.sign(), g.getDomain());
+            }
+            case And and -> {
+                Set<Guard> args = new HashSet<>();
+                for (Guard a : And.getArgs(g)) {
+                    args.add(scaleGuardIndex(a, m));
+                }
+                return And.factory(args);
+            }
+            case Or or -> {
+                Set<Guard> args = new HashSet<>();
+                for (Guard a : or.getArgs()) {
+                    args.add(scaleGuardIndex(a, m));
+                }
+                return Or.factory(args, or.disjoined());
+            }
+            case Neg neg -> {
+                return Neg.factory(scaleGuardIndex(neg.getArg(), m));
+            }
+            case Membership mem -> {
+                var p = mem.getArg1();
+                Integer ni = m.get(p.getIndex());
+                if (ni != null) {
+                    p = p.setIndex(ni);
+                }
+                return Membership.build(p, mem.getArg2(), mem.sign(), mem.getDomain());
+            }
+            default -> {
+            }
+        }
+
+        return g;
+    }
+
     private static Guard newGuard(Set<? extends ElementaryGuard> s, Domain d) {
         if (s.isEmpty())
             return True.getInstance(d);
@@ -258,56 +226,56 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         return And.factory(NaryGuardOperator.cloneArgs(s, d));
     }
 
-    // this inner class is used temporarily for debugging purposes, to skip the normalization loop in the simplification of a composition between two tuples
-    // it represents the base case of composition between two tuples, where the left tuple is a simple one 
-    // (i.e. it contains only linear combinations of class-functions without constant components) and single-colour 
-    // and the associated guard --of the same color-- is trivial or an elementary conjunction
-    // in addition all the components of the right tuple are projected by the left tuple
-    // better to replace it with a suitable method in WNtuple (?), but for the moment it is used only for debugging purposes
-    final static class BaseComp implements ArcFunction { 
-        private final WNtuple l, r;
-
-        public BaseComp(WNtuple l, WNtuple r) {
-         this.l = l;
-         this.r = r;
-        }
-
-        public String toString() {
-            return "baseComp("+l+" , "+r+')';  
-        }
-
-        @Override
-        public ParametricExpr clone(Domain newdom) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'clone'");
-        }
-
-        @Override
-        public Integer cardLb() {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'cardLb'");
-        }
-
-        @Override
-        public boolean simplified() {
-            return true;
-        }
-
-        @Override
-        public void setSimplified(boolean simplified) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'setSimplified'");
-        }
-
-        @Override
-        public Domain getDomain() {
-            return r.getDomain();
-        }
-
-        @Override
-        public Domain getCodomain() {
-            return l.getCodomain();
-        }
-
-    }
+//    // this inner class is used temporarily for debugging purposes, to skip the normalization loop in the simplification of a composition between two tuples
+//    // it represents the base case of composition between two tuples, where the left tuple is a simple one
+//    // (i.e. it contains only linear combinations of class-functions without constant components) and single-colour
+//    // and the associated guard --of the same color-- is trivial or an elementary conjunction
+//    // in addition all the components of the right tuple are projected by the left tuple
+//    // better to replace it with a suitable method in WNtuple (?), but for the moment it is used only for debugging purposes
+//    final static class BaseComp implements ArcFunction {
+//        private final WNtuple l, r;
+//
+//        public BaseComp(WNtuple l, WNtuple r) {
+//         this.l = l;
+//         this.r = r;
+//        }
+//
+//        public String toString() {
+//            return "baseComp("+l+" , "+r+')';
+//        }
+//
+//        @Override
+//        public ParametricExpr clone(Domain newdom) {
+//            // TODO Auto-generated method stub
+//            throw new UnsupportedOperationException("Unimplemented method 'clone'");
+//        }
+//
+//        @Override
+//        public Integer cardLb() {
+//            // TODO Auto-generated method stub
+//            throw new UnsupportedOperationException("Unimplemented method 'cardLb'");
+//        }
+//
+//        @Override
+//        public boolean simplified() {
+//            return true;
+//        }
+//
+//        @Override
+//        public void setSimplified(boolean simplified) {
+//            // TODO Auto-generated method stub
+//            throw new UnsupportedOperationException("Unimplemented method 'setSimplified'");
+//        }
+//
+//        @Override
+//        public Domain getDomain() {
+//            return r.getDomain();
+//        }
+//
+//        @Override
+//        public Domain getCodomain() {
+//            return l.getCodomain();
+//        }
+//
+//    }
 }
