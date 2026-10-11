@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import color.Sort;
 import expr.*;
 import color.ColorClass;
+import guard.And;
 import guard.Guard;
 import util.Util;
 import wncolorfunction.ColorFunction;
@@ -96,17 +97,38 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
         Tuples; a juxtaposition containing a n-ary operator*/
     public ArcFunction specSimplify() { 
        final var components = this.ccomponents.values(); 
-       if ( Util.checkAny(components, comp -> comp instanceof TupleBag cbag && cbag.size() == 0) )
+       if ( Util.checkAny(components, comp -> comp instanceof TupleBag cbag && cbag.isEmpty()) )
           return build(); //optimization
        
        if ( Util.checkAll(components, comp -> comp instanceof WNtuple) ) 
         { // there are only tuples ..
-           final SortedMap<ColorClass, List <? extends ColorFunction>> map = new TreeMap<>();
-           for (Entry<ColorClass, ArcFunction> ccomp : this.ccomponents.entrySet()) {
-              WNtuple tc = (WNtuple) ccomp.getValue();
-              map.put(ccomp.getKey(), Collections.unmodifiableList(tc.getComponents()));
-           }
-           return new WNtuple(map, guard);
+            final SortedMap<ColorClass, List<? extends ColorFunction>> map = new TreeMap<>();
+            final List<Guard> filters = new ArrayList<>();
+            final List<Guard> guards = new ArrayList<>();
+
+            for (Entry<ColorClass, ArcFunction> ccomp : this.ccomponents.entrySet()) {
+                WNtuple tc = (WNtuple) ccomp.getValue();
+
+                // Store the tuple components associated with their color class.
+                map.put(ccomp.getKey(), tc.getComponents());
+
+                // Clone each filter onto the combined codomain so that all filters
+                // have the same domain and can be combined with a logical AND.
+                filters.add(tc.filter().clone(this.codom));
+
+                // Collect the tuple guards, which are defined over the input domain.
+                guards.add(tc.guard());
+            }
+
+            // Include the guard associated with the whole juxtaposition.
+            guards.add(this.guard);
+
+            // Combine all filters into a single filter using logical AND.
+            final Guard combinedFilter = And.factory(filters);
+            // Combine all tuple guards and the juxtaposition guard using logical AND.
+            final Guard combinedGuard = And.factory(guards);
+
+            return new WNtuple(combinedFilter, map, combinedGuard);
        }
        
        //completare

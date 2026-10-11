@@ -340,12 +340,8 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             return composed;
         }
 
-        System.out.println("DEBUG repeatedIndexFilter = " + repeatedIndexFilter);
-        System.out.println("DEBUG wnTuple before build = " + wnTuple);
-
-        WNtuple out = wnTuple.build(repeatedIndexFilter, wnTuple.guard());
-        System.out.println("DEBUG built tuple = " + out);
-        return out;
+        //WNtuple out = wnTuple.build(repeatedIndexFilter, wnTuple.guard());
+        return wnTuple.joinFilter(repeatedIndexFilter).<WNtuple>cast();
 
         // Create a new WNtuple with the new filter (replacing the old one)
 //        return wnTuple.build(repeatedIndexFilter, wnTuple.guard());
