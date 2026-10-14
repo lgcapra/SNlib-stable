@@ -2,20 +2,11 @@ package wnbag;
 
 import bagexpr.BagExpr;
 import bagexpr.ScalarProd;
+import util.Util;
 
 public final class ArcFunScalar extends ScalarProd<WNtuple> implements ArcFunction {
 
-    public static ArcFunction factory(ArcFunction f, int coeff) {
-        if (coeff == 0)
-            return f.build();
-        
-        if (coeff == 1)
-            return f;
-
-        return new ArcFunScalar(f, coeff);
-    }
-
-    private ArcFunScalar(ArcFunction f, int coeff) {
+    public ArcFunScalar(ArcFunction f, int coeff) {
         super(f, coeff);
      }
 
@@ -25,4 +16,13 @@ public final class ArcFunScalar extends ScalarProd<WNtuple> implements ArcFuncti
         return new ArcFunScalar(arg.cast(), this.k);
     }  
 
+    public ArcFunction specSimplify() {
+        ArcFunction x = super.specSimplify().cast();
+        if (x instanceof ArcFunScalar sprod) {
+            if (sprod.getArg() instanceof WNtuple res) {
+                return new TupleBag(Util.singleMap(res, sprod.k()));
+            }
+        }
+        return x;
+    }
 }

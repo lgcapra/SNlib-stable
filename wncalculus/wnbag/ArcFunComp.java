@@ -14,6 +14,9 @@ import wncolorfunction.LinearComb;
 import java.util.*;
 import java.util.Map.Entry;
 
+import static util.Util.scaleGuardIndex;
+import static util.Util.splitSum;
+
 
 public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
        
@@ -80,7 +83,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                                                     redRightComps = Util.projection(rightComps, leftindx);
 
                    final WNtuple rtx = new WNtuple(redRightComps, right.getDomain()); //right.guard() ?
-                   ArcFunction cc_res;
+                   ArcFunction cc_res = null;
                    Guard leftGuard = newGuard(cleftG, rtx.getCodomain());
                    if (redRightComps != rightComps) { // some components of the right tuple are projected out
                         for (int i = 1; i <= rightComps.size(); i++) { // we check the cardinality of the non-projected components of the right tuple
@@ -103,18 +106,50 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     WNtuple tleft = new WNtuple(cleftComps, leftGuard, false);
 
                     if (isRepeatedIndex(tleft)) {
-                        cc_res = tleft.repetedIndexCompose(rtx);
+                        boolean hasSum = false;
+                        List<Set<Integer>> idxPos = tleft.projectionIndexPositions();
+
+                        search:
+                        for (Set<Integer> idxPo : idxPos) {
+                            if (idxPo.size() <= 1) {
+                                continue;
+                            }
+
+                            for (Integer i : idxPo) {
+                                LinearComb component = tleft.getComponent(i, tleft.getSort()).cast();
+                                if (component.asMap().size() > 1) {
+                                    hasSum = true;
+
+                                    List<LinearComb> tupleComps = (List<LinearComb>) Util.cast(tleft.getComponents(), LinearComb.class);
+
+                                    for (List<LinearComb> splitComps : splitSum(tupleComps, i)) {
+
+                                        WNtuple newTleft = new WNtuple(splitComps, tleft.guard(), false);
+
+                                        ArcFunction newRes = new ArcFunComp(newTleft, rtx);
+
+                                        cc_res = cc_res == null ? newRes : ArcFunSum.factory(cc_res, newRes);
+                                    }
+                                    break search;
+                                }
+                            }
+                        }
+
+                        if (!hasSum) {
+                            cc_res = tleft.repetedIndexCompose(rtx);
+                        }
                     } else {
                         cc_res = tleft.baseCompose(rtx);
                     }
 
                     cc_res = ArcFunExpansion.factory(cc_res, constants);
+                    //System.out.println("DEBUG (c):\n"+cc_res);
                     results.put(cc, cc_res);
                 } // for each color class
 
                 // we build the scalar product of juxtaposition of results
                 // System.out.println("DEBUG (b):\n"+results);
-                res = ArcFunScalar.factory(ArcFunJuxt.factory(results, right.guard()), card); // k⋅(Tr∘TX′);
+                res = new ArcFunScalar(ArcFunJuxt.factory(results, right.guard()), card); // k⋅(Tr∘TX′);
             }
         }
         //System.out.println("(ArcFunComp) simplified to: " + res + ", class: " + res.getClass()); //debug
@@ -165,64 +200,10 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         return result;
     }
 
-    private static Guard scaleGuardIndex(Guard g, Map<Integer, Integer> m) {
-        if (g == null || g.isTrivial() || m.isEmpty()) {
-            return g;
-        }
-
-        switch (g) {
-            case Equality eq -> {
-                var p1 = eq.getArg1();
-                var p2 = eq.getArg2();
-
-                Integer n1 = m.get(p1.getIndex());
-                Integer n2 = m.get(p2.getIndex());
-
-                if (n1 != null) {
-                    p1 = p1.setIndex(n1);
-                }
-                if (n2 != null) {
-                    p2 = p2.setIndex(n2);
-                }
-
-                return Equality.builder(p1, p2, eq.sign(), g.getDomain());
-            }
-            case And and -> {
-                Set<Guard> args = new HashSet<>();
-                for (Guard a : And.getArgs(g)) {
-                    args.add(scaleGuardIndex(a, m));
-                }
-                return And.factory(args);
-            }
-            case Or or -> {
-                Set<Guard> args = new HashSet<>();
-                for (Guard a : or.getArgs()) {
-                    args.add(scaleGuardIndex(a, m));
-                }
-                return Or.factory(args, or.disjoined());
-            }
-            case Neg neg -> {
-                return Neg.factory(scaleGuardIndex(neg.getArg(), m));
-            }
-            case Membership mem -> {
-                var p = mem.getArg1();
-                Integer ni = m.get(p.getIndex());
-                if (ni != null) {
-                    p = p.setIndex(ni);
-                }
-                return Membership.build(p, mem.getArg2(), mem.sign(), mem.getDomain());
-            }
-            default -> {
-            }
-        }
-
-        return g;
-    }
-
     private static Guard newGuard(Set<? extends ElementaryGuard> s, Domain d) {
         if (s.isEmpty())
             return True.getInstance(d);
-        
+
         return And.factory(NaryGuardOperator.cloneArgs(s, d));
     }
 

@@ -2,12 +2,16 @@ package wnbag;
 
 import java.util.*;
 import java.util.Map.Entry;
+
 import bagexpr.BagExpr;
 import bagexpr.UnaryBagOp;
 import color.ColorClass;
 import expr.Domain;
+import guard.Guard;
 import util.Util;
 import wncolorfunction.ColorFunction;
+
+import static util.Util.scaleGuardIndex;
 
 /**
  * This class represents an expansion of an arc function (bag of WNtuple) based on specified positions of color functions to be expanded.
@@ -54,27 +58,70 @@ public final class ArcFunExpansion extends UnaryBagOp<WNtuple> implements  ArcFu
         final var arg = getArg(); 
         
         if (arg instanceof WNtuple tuple) {
-             ColorClass cc = tuple.getSort();
-             List<? extends ColorFunction> copy = tuple.getHomSubTuple(cc);
-             final List<? extends ColorFunction> expanded = Util.expandPositions(copy, this.mapExpand); // expand the positions in the copy of the homogenous sub-tuples
-             return new WNtuple(Util.singleSortedMap(cc, expanded), tuple.guard()); // return a new WNtuple with the expanded positions
+            ColorClass cc = tuple.getSort();
+            List<? extends ColorFunction> copy = tuple.getHomSubTuple(cc);
+            List<? extends ColorFunction> expanded = Util.expandPositions(copy, this.mapExpand); // expand the positions in the copy of the homogenous sub-tuples
+
+            // Build a mapping from the original indices to their new positions after the additional components have been inserted.
+            Map<Integer, Integer> map = buildIndexMap(copy.size(), this.mapExpand);
+            // Create the updated domain using the number of components in the expanded tuple.
+            Domain newDomain = new Domain(cc, expanded.size());
+            // If the original filter is non-trivial, update its projection indices and domain to match the expanded tuple.
+            // Otherwise, no filter needs to be preserved.
+            Guard newFilter = tuple.filter().isTrivial() ? null : scaleGuardIndex(tuple.filter(), map, newDomain);
+
+            return new WNtuple(newFilter, Util.singleSortedMap(cc, expanded), tuple.guard()); // return a new WNtuple with the expanded positions
         }
 
         if (arg instanceof TupleBag tb) {
             final List<ArcFunction> expandedTuples = new ArrayList<>();
             for (Entry<? extends WNtuple, Integer> entry : tb.asMap().entrySet()) {
-                ArcFunction scalar = ArcFunScalar.factory(new ArcFunExpansion(entry.getKey(), this.mapExpand), entry.getValue());
+                ArcFunction scalar = new ArcFunScalar(new ArcFunExpansion(entry.getKey(), this.mapExpand), entry.getValue());
                 expandedTuples.add(scalar);
             }            
             return ArcFunSum.factory(expandedTuples);
         }
            
         if (arg instanceof ArcFunScalar sc) { // mettiamo fuori il coefficiente
-            return ArcFunScalar.factory(new ArcFunExpansion(sc.getArg().cast(), this.mapExpand), sc.k());
+            return new ArcFunScalar(new ArcFunExpansion(sc.getArg().cast(), this.mapExpand), sc.k());
+        }
+
+        if (arg instanceof ArcFunSum sum){
+            final List<ArcFunction> expandedTuples = new ArrayList<>();
+            // Apply the expansion separately to each term of the sum.
+            for (BagExpr<WNtuple> entry : sum.getArgs()) {
+                ArcFunction scalar = new ArcFunExpansion(entry.cast(), this.mapExpand);
+                expandedTuples.add(scalar);
+            }
+            // Rebuild the sum from the expanded terms.
+            return ArcFunSum.factory(expandedTuples);
         }
 
         return this; // otherwise, no simplification is performed
     }
+
+
+    private Map<Integer, Integer> buildIndexMap(
+            int originalSize,
+            Map<Integer, ColorFunction> mapExpand) {
+
+        Map<Integer, Integer> map = new HashMap<>();
+
+        for (int oldIndex = 1; oldIndex <= originalSize; oldIndex++) {
+            int newIndex = oldIndex;
+
+            for (Integer insertedPosition : mapExpand.keySet()) {
+                if (insertedPosition <= newIndex) {
+                    newIndex++;
+                }
+            }
+
+            map.put(oldIndex, newIndex);
+        }
+
+        return map;
+    }
+
 
     public boolean equals(Object obj) {
         if (this == obj) {

@@ -5,7 +5,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.*;
 import java.util.*;
+
+import classfunction.ElementaryFunction;
+import expr.Domain;
 import expr.Expression;
+import guard.*;
+import wncolorfunction.LinearComb;
 
 /**
  * this class collects utility methods for expressions manipulation
@@ -874,5 +879,81 @@ public static <E> HashSet<E> binaryProduct(final Collection<? extends E> c1, fin
         }
         return result;
   }
-  
+
+  public static Set<List<LinearComb>> splitSum(List<LinearComb> list, int p1) {
+      Set<List<LinearComb>> result = new HashSet<>();
+      var lc = list.get(p1-1);
+      for ( Map.Entry<? extends ElementaryFunction, Integer> l : lc.asMap().entrySet()) {
+            var newList = new ArrayList<>(list);
+          newList.set(p1 - 1, new LinearComb(l.getKey(), l.getValue()));
+            result.add(newList);
+      }
+      return result;
+  }
+
+
+    public static Guard scaleGuardIndex(
+            Guard g, Map<Integer, Integer> m) {
+        return scaleGuardIndex(g, m, g.getDomain());
+    }
+
+    public static Guard scaleGuardIndex(
+            Guard g, Map<Integer, Integer> m, Domain newDomain) {
+
+        if (g == null || g.isTrivial() || m.isEmpty()) {
+            return g;
+        }
+
+        switch (g) {
+            case Equality eq -> {
+                var p1 = eq.getArg1();
+                var p2 = eq.getArg2();
+
+                Integer n1 = m.get(p1.getIndex());
+                Integer n2 = m.get(p2.getIndex());
+
+                if (n1 != null) p1 = p1.setIndex(n1);
+                if (n2 != null) p2 = p2.setIndex(n2);
+
+                return Equality.builder(p1, p2, eq.sign(), newDomain);
+            }
+
+            case And and -> {
+                Set<Guard> args = new HashSet<>();
+                for (Guard a : And.getArgs(g)) {
+                    args.add(scaleGuardIndex(a, m, newDomain));
+                }
+                return And.factory(args);
+            }
+
+            case Or or -> {
+                Set<Guard> args = new HashSet<>();
+                for (Guard a : or.getArgs()) {
+                    args.add(scaleGuardIndex(a, m, newDomain));
+                }
+                return Or.factory(args, or.disjoined());
+            }
+
+            case Neg neg -> {
+                return Neg.factory(
+                        scaleGuardIndex(neg.getArg(), m, newDomain));
+            }
+
+            case Membership mem -> {
+                var p = mem.getArg1();
+                Integer ni = m.get(p.getIndex());
+
+                if (ni != null) p = p.setIndex(ni);
+
+                return Membership.build(
+                        p, mem.getArg2(), mem.sign(), newDomain);
+            }
+
+            default -> {
+                return g;
+            }
+        }
+    }
+
+
 }

@@ -52,7 +52,7 @@ public interface ArcFunction extends BagExpr<WNtuple> {
 
      @Override
      default ArcFunction buildScProd(BagExpr<WNtuple> arg, int coeff) {
-        return ArcFunScalar.factory((ArcFunction) arg, coeff);
+        return new ArcFunScalar((ArcFunction) arg, coeff);
      }
 
     @SuppressWarnings("unchecked")

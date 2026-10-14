@@ -321,6 +321,8 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     }
 
     public ArcFunction repetedIndexCompose(WNtuple other) {
+
+        //System.out.println(this + " " + other);
         // First, perform the basic composition
         ArcFunction composed = baseCompose(other);
 

@@ -276,6 +276,5 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
      @Override
     public Guard buildTransp() {
         throw new UnsupportedOperationException("Unimplemented method 'buildTransp' for Guard");
-    }    
-    
+    }
 }
