@@ -3,6 +3,7 @@ package wnbag;
 import java.util.*;
 import java.util.Map.Entry;
 
+import bagexpr.BagExpr;
 import color.Sort;
 import expr.*;
 import color.ColorClass;
@@ -130,6 +131,55 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
 
             return new WNtuple(combinedFilter, map, combinedGuard);
        }
+
+         // Distribute juxtaposition over a TupleBag, if present.
+         for (Entry<ColorClass, ArcFunction> ccomp : this.ccomponents.entrySet()) {
+             if (ccomp.getValue() instanceof TupleBag bag) {
+                 final List<ArcFunction> distributedTerms = new ArrayList<>();
+
+                 // Process each tuple and its multiplicity in the bag.
+                 for (Entry<? extends WNtuple, Integer> term : bag.asMap().entrySet()) {
+                     // Copy the current components to preserve the other color classes.
+                     final Map<ColorClass, ArcFunction> newComponents = new TreeMap<>(this.ccomponents);
+
+                     // Replace the TupleBag with the current tuple.
+                     newComponents.put(ccomp.getKey(), term.getKey());
+
+                     // Build the juxtaposition corresponding to the current tuple.
+                     ArcFunction distributed = ArcFunJuxt.factory(newComponents, this.guard, false);
+
+                     // Preserve the tuple's multiplicity, if greater than one.
+                     if (term.getValue() != 1) {
+                         distributed = new ArcFunScalar(distributed, term.getValue());
+                     }
+
+                     // Add the resulting term to the distributed sum.
+                     distributedTerms.add(distributed);
+                 }
+
+                 return ArcFunSum.factory(distributedTerms);
+             }
+         }
+
+         // Distribute the juxtaposition over a sum, if present.
+         for (Entry<ColorClass, ArcFunction> ccomp : this.ccomponents.entrySet()) {
+             if (ccomp.getValue() instanceof ArcFunSum sum) {
+                 final List<ArcFunction> distributedTerms = new ArrayList<>();
+
+                 // Replace the sum with each of its terms in turn.
+                 for (BagExpr<WNtuple> term : sum.getArgs()) {
+                     final Map<ColorClass, ArcFunction> newComponents = new TreeMap<>(this.ccomponents);
+
+                     newComponents.put(ccomp.getKey(), term.cast());
+
+                     // Build a juxtaposition for the current term, preserving the original guard.
+                     distributedTerms.add(ArcFunJuxt.factory(newComponents, this.guard, false));
+                 }
+
+                 // Combine the distributed terms into a single sum.
+                 return ArcFunSum.factory(distributedTerms);
+             }
+         }
        
        //completare
        /*final int t_pos;
