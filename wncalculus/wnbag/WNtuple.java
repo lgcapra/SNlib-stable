@@ -79,6 +79,10 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         this(Arrays.asList(comps), dom);
     }
 
+    public WNtuple(final Guard g, ColorFunction ... comps) {
+        this(Arrays.asList(comps), g, false);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public WNtuple build(Guard filter, Guard guard) {

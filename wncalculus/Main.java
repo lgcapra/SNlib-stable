@@ -135,6 +135,7 @@ public class Main {
 
         // parte sui m
         // ultiset -- modificata dopo ultimi cambiamenti di bag expressions
+        testSplitSumInRightTupleGuard();
         testMultiset();
         testLemma1();
         //testProperty2();
@@ -1039,6 +1040,36 @@ public class Main {
 
         TupleComposition c = new TupleComposition(left, right);
 
+        System.out.println("normalizzo\n" + c);
+        System.out.println(c.normalize());
+    }
+
+    public static void testSplitSumInRightTupleGuard() {
+        Projection pr1 = Projection.builder(1, fc2);
+        Projection pr2 = Projection.builder(2, fc2);
+
+        Domain domain = new Domain(fc2, fc2, fc2);
+
+        // Guardia [c1 = c2]
+        Guard guard = Equality.builder(pr1, pr2, true, domain);
+
+        // <c1, c1, c2> [c1 = c2]
+        WNtuple wnt1 = new WNtuple(
+                guard,
+                new LinearComb(pr1),
+                new LinearComb(pr1),
+                new LinearComb(pr2)
+        );
+
+        // <All+c1, c2, All>
+        WNtuple wnt2 = new WNtuple(
+                domain,
+                new LinearComb(All.getInstance(fc2), pr1),
+                new LinearComb(pr2),
+                new LinearComb(All.getInstance(fc2))
+        );
+
+        ArcFunComp c = new ArcFunComp(wnt1, wnt2);
         System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
     }

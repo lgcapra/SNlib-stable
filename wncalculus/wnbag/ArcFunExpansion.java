@@ -7,6 +7,7 @@ import bagexpr.BagExpr;
 import bagexpr.UnaryBagOp;
 import color.ColorClass;
 import expr.Domain;
+import guard.And;
 import guard.Guard;
 import util.Util;
 import wncolorfunction.ColorFunction;

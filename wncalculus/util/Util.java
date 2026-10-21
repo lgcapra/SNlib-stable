@@ -7,6 +7,7 @@ import java.util.function.*;
 import java.util.*;
 
 import classfunction.ElementaryFunction;
+import classfunction.Projection;
 import expr.Domain;
 import expr.Expression;
 import guard.*;
@@ -891,68 +892,47 @@ public static <E> HashSet<E> binaryProduct(final Collection<? extends E> c1, fin
       return result;
   }
 
+    public static Guard scaleGuardIndex(Guard g, Map<Integer, Integer> m, Domain newDomain) {
+      Set<? extends ElementaryGuard> r;
+      if(g instanceof ElementaryGuard e){
+          r = Collections.singleton(e);
+      } else {
+          And c = (And) g;
+          r = (Set<ElementaryGuard>) Util.cast(c.getArgs(), ElementaryGuard.class);
+      }
+      r=scaleGuardIndex(r, m, newDomain);
+      return And.factory(r);
+  }
 
-    public static Guard scaleGuardIndex(
-            Guard g, Map<Integer, Integer> m) {
-        return scaleGuardIndex(g, m, g.getDomain());
-    }
+    public static Set<? extends ElementaryGuard> scaleGuardIndex(Set<? extends ElementaryGuard> g, Map<Integer, Integer> m, Domain newDomain) {
 
-    public static Guard scaleGuardIndex(
-            Guard g, Map<Integer, Integer> m, Domain newDomain) {
-
-        if (g == null || g.isTrivial() || m.isEmpty()) {
+        if (m.isEmpty()) {
             return g;
         }
-
-        switch (g) {
-            case Equality eq -> {
+        Set<ElementaryGuard> newGuard = new HashSet<>();
+        for (ElementaryGuard elementaryGuard : g) {
+            if(elementaryGuard instanceof Equality eq){
                 var p1 = eq.getArg1();
                 var p2 = eq.getArg2();
 
-                Integer n1 = m.get(p1.getIndex());
-                Integer n2 = m.get(p2.getIndex());
+                int n1 = m.get(p1.getIndex());
+                int n2 = m.get(p2.getIndex());
 
-                if (n1 != null) p1 = p1.setIndex(n1);
-                if (n2 != null) p2 = p2.setIndex(n2);
+                p1 = p1.setIndex(n1);
+                p2 = p2.setIndex(n2);
 
-                return Equality.builder(p1, p2, eq.sign(), newDomain);
-            }
-
-            case And and -> {
-                Set<Guard> args = new HashSet<>();
-                for (Guard a : And.getArgs(g)) {
-                    args.add(scaleGuardIndex(a, m, newDomain));
-                }
-                return And.factory(args);
-            }
-
-            case Or or -> {
-                Set<Guard> args = new HashSet<>();
-                for (Guard a : or.getArgs()) {
-                    args.add(scaleGuardIndex(a, m, newDomain));
-                }
-                return Or.factory(args, or.disjoined());
-            }
-
-            case Neg neg -> {
-                return Neg.factory(
-                        scaleGuardIndex(neg.getArg(), m, newDomain));
-            }
-
-            case Membership mem -> {
+                newGuard.add(Equality.builder(p1, p2, eq.sign(), newDomain).cast());
+            } else {
+                var mem= (Membership) elementaryGuard;
                 var p = mem.getArg1();
                 Integer ni = m.get(p.getIndex());
 
                 if (ni != null) p = p.setIndex(ni);
 
-                return Membership.build(
-                        p, mem.getArg2(), mem.sign(), newDomain);
-            }
-
-            default -> {
-                return g;
+                newGuard.add(Membership.build(p, mem.getArg2(), mem.sign(), newDomain));
             }
         }
+        return newGuard;
     }
 
 
