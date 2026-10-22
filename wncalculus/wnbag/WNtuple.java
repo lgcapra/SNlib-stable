@@ -273,6 +273,10 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return the composed tuple
      */
     public ArcFunction baseCompose(WNtuple other) {
+        // TODO: Gestire guardie
+
+
+        //System.out.println(this + " . " + other);
         final List<? extends ColorFunction> leftComps = getHomSubTuple(getSort());
         final List<? extends ColorFunction> rightComps = other.getHomSubTuple(other.getSort());
 

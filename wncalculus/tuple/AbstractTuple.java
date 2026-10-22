@@ -437,17 +437,17 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      * NOTE only colors in the tuple's domain are considered
      * @throws ClassCastException if the tuple's guard is neither elementary nor simple
     */
-    public final Map<ColorClass, Pair<List<? extends E>, Set<? extends ElementaryGuard>> > splitColors() {
+    public final Map<ColorClass, Pair<List<? extends E>, Set<? extends ElementaryGuard>> > splitColors(Guard rf) {
         
         final Map<ColorClass, Pair<List<? extends E>, Set<? extends ElementaryGuard>> > splitMap = new HashMap<>();
         final Set<ColorClass> scc = (Set<ColorClass>) Util.cast(getDomain().asMap().keySet(), ColorClass.class);
         final Map<ColorClass, Set<ElementaryGuard>> gMap;
-        if (guard.isTrivial()) 
+        if (rf.isTrivial())
           gMap = Collections.emptyMap();
-        else if (guard instanceof ElementaryGuard eg) 
+        else if (rf instanceof ElementaryGuard eg)
           gMap = Util.singleMap(eg.getSort(), Collections.singleton(eg));
         else 
-            gMap = ((And)guard).splitColors();
+            gMap = ((And)rf).splitColors();
 
         for (var cc : scc) {
             List<? extends E> lf = this.getHomSubTuple(cc); 

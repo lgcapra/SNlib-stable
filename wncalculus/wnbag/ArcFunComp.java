@@ -10,7 +10,6 @@ import util.Pair;
 import util.Util;
 import wncolorfunction.ColorFunction;
 import wncolorfunction.LinearComb;
-import wncolorfunction.LinearCombSum;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -54,38 +53,35 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                 if (!(comp.right() instanceof WNtuple right))
                     return res;
 
-                if (!right.filter().isTrivial()) { // the right tuple's filter is moved on the left
-                    return new ArcFunComp(left.joinGuard(right.filter()).cast(), right.withoutFilter().cast());
+                if (!left.guard().isTrivial()) { // the left tuple's guard is moved on the right
+                    return new ArcFunComp(left.withoutGuard().cast(), right.joinFilter(left.guard()).cast());
                 }
 
                 // left tuple, with no constant components
                 // Lemma 1
-                final Guard lg = left.guard();
-                if (! (lg.isTrivial() || lg.isElemAndForm()) )
+                final Guard rf = right.filter();
+                if (! (rf.isTrivial() || rf.isElemAndForm()) )
                     return res;
 
                 int card = 1; // the cardinality of the right-tuple components non-projected
                 final Map<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> splitColors
-                      = left.splitColors();
-
+                      = left.splitColors(rf);
                 //System.out.println("DEBUG (a):\n"+left+'\n'+splitColors+'\n'+right);
                 final Map<ColorClass, ArcFunction> results = new HashMap<>(); // the divided-by color outcomes
                 for (Entry<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> cleft : splitColors.entrySet()) {
                    final Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>> pair = cleft.getValue();
                    List<? extends ColorFunction> cleftComps = pair.getKey();
-                   Set<? extends ElementaryGuard> cleftG=  pair.getValue();
+                   Set<? extends ElementaryGuard> crightF=  pair.getValue();
                    // new Property 2: we extract constant components from the left tuple, if any
                    final Map<Integer, ColorFunction> constants = Util.select(cleftComps, ColorFunction::isConstant);
                    cleftComps = Util.remove(cleftComps, constants.keySet()); // we remove (in the event) constant components from the left tuple's components
                    final SortedSet<Integer> leftindx = new TreeSet<>(ClassFunction.indexSet(cleftComps));
-                   leftindx.addAll(Guard.indexSet(cleftG)); // includes the guard indices too
+                   leftindx.addAll(Guard.indexSet(crightF)); // includes the guard indices too
                    final ColorClass cc = cleft.getKey();
                    final List<? extends ColorFunction> rightComps = right.getHomSubTuple(cc),
                                                     redRightComps = Util.projection(rightComps, leftindx);
-
-                   final WNtuple rtx = new WNtuple(redRightComps, right.getDomain()); //right.guard() ?
                    ArcFunction cc_res = null;
-                   //Guard leftGuard = newGuard(cleftG, rtx.getCodomain());
+                   //Guard rightFilter = newGuard(crightF, rtx.getCodomain());
                    if (redRightComps != rightComps) { // some components of the right tuple are projected out
                         for (int i = 1; i <= rightComps.size(); i++) { // we check the cardinality of the non-projected components of the right tuple
                             if (! leftindx.contains(i) ) {
@@ -100,28 +96,32 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                        Map<Integer, Integer> scaled = Util.scaledIndex(leftindx);
                        if (leftindx.last() > leftindx.size()) {
                            cleftComps = ClassFunction.scaleIndex(cleftComps, scaled);
-                           cleftG = scaleGuardIndex(cleftG, scaled, lg.getDomain());
+                           crightF = scaleGuardIndex(crightF, scaled, rf.getDomain());
                        }
                     }
 
-                    Guard leftGuard = newGuard(cleftG, rtx.getCodomain());
-                    WNtuple tleft = new WNtuple(cleftComps, leftGuard, false);
 
-                   // analizzare le guardie della tupla sinistra (leftGuard)
+                    WNtuple rtx = new WNtuple(redRightComps, right.getDomain());
+                    Guard rightFilter = newGuard(crightF, rtx.getCodomain());
+                    WNtuple tleft = new WNtuple(cleftComps, rightFilter.getDomain());
+                    rtx.joinFilter(rightFilter);
+
+                   // analizzare i filtri della tupla destra (rightFilter)
                     // verificare se per ognuna uno dei due membri
-                    // della guardia fa riferimento a una "somma" (linear comb di più elementi)
+                    // del filtro fa riferimento a una "somma" (linear comb di più elementi)
                     // nella tupla destra, in questo caso si spezza la somma
-
-                    for (ElementaryGuard elementaryGuard : cleftG) {
-                        var i = elementaryGuard.getArg1().getIndex();
-                        if(redRightComps.get(i-1) instanceof LinearComb rc){
-                            if(rc.size() > 1){
-                                cc_res = splitAndCompose(tleft, rtx, i, false);
+                    if(rightFilter.isElemAndForm()){
+                        for (ElementaryGuard elementaryGuard : crightF) {
+                            var i = elementaryGuard.getArg1().getIndex();
+                            if (redRightComps.get(i - 1) instanceof LinearComb rc) {
+                                if (rc.size() > 1) {
+                                    cc_res = splitAndCompose(tleft, rtx, i, false);
+                                    //System.out.println("DEBUG: " + cc_res);
+                                    return cc_res;
+                                }
                             }
                         }
                     }
-
-                    System.out.println("DEBUG: " + cc_res);
 
                     if (isRepeatedIndex(tleft)) {
                         boolean hasSum = false;
@@ -177,7 +177,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         ArcFunction result = null;
 
         for (List<LinearComb> splitComps : splitSum(tupleComps, i)) {
-            WNtuple newTuple = new WNtuple(splitComps, tupleToSplit.guard(), false);
+            WNtuple newTuple = new WNtuple(tupleToSplit.filter(), splitComps, tupleToSplit.guard(), false);
             ArcFunction newRes;
             if (splitLeft)
                 newRes = new ArcFunComp(newTuple, right);
