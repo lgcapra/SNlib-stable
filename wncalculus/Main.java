@@ -1004,6 +1004,7 @@ public class Main {
         ArcFunComp c = new ArcFunComp(wnt1, wnt2);
         System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
+         Util.getChar();
 
         //Esempio2 (gli indici nella tupla sx sono contigui)
         wnt1 = new WNtuple(npd2 , new LinearComb(pr2), new LinearComb(pr1));
@@ -1011,12 +1012,14 @@ public class Main {
         c = new ArcFunComp(wnt1, wnt2);
         System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
+         Util.getChar();
 
         wnt1 = new WNtuple(npd2 , new LinearComb(All.getInstance(fc2)), new LinearComb(pr1), new LinearComb(All.getInstance(fc2),All.getInstance(fc2)), new LinearComb(pr2));
         System.out.println("tupla 1 con costanti: " + wnt1);
         c = new ArcFunComp(wnt1, wnt2);
         System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
+         Util.getChar();
    }
 
     /**
@@ -1047,11 +1050,16 @@ public class Main {
     public static void testSplitSumInRightTupleGuard() {
         Projection pr1 = Projection.builder(1, fc2);
         Projection pr2 = Projection.builder(2, fc2);
+        Projection pr3 = Projection.builder(3, fc2);
 
         Domain domain = new Domain(fc2, fc2, fc2);
 
         // Guardia [c1 = c2]
-        Guard guard = Equality.builder(pr1, pr2, true, domain);
+        Guard guard1 = Equality.builder(pr1, pr2, true, domain);
+        // Guardia [c1 != c3]
+        Guard guard2 = Equality.builder(pr1, pr3, false, domain);
+
+        Guard guard = And.factory(guard1,guard2);
 
         // <c1, c1, c2> [c1 = c2]
         WNtuple wnt1 = new WNtuple(
@@ -1072,6 +1080,7 @@ public class Main {
         ArcFunComp c = new ArcFunComp(wnt1, wnt2);
         System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
+        Util.getChar();
     }
 
 }

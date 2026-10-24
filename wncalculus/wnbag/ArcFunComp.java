@@ -76,7 +76,15 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                    final Map<Integer, ColorFunction> constants = Util.select(cleftComps, ColorFunction::isConstant);
                    cleftComps = Util.remove(cleftComps, constants.keySet()); // we remove (in the event) constant components from the left tuple's components
                    final SortedSet<Integer> leftindx = new TreeSet<>(ClassFunction.indexSet(cleftComps));
-                   leftindx.addAll(Guard.indexSet(crightF)); // includes the guard indices too
+                   //leftindx.addAll(Guard.indexSet(crightF)); // includes the guard indices too
+                   //Property 15
+                   Set<ElementaryGuard> newCrightF= new HashSet<>();
+                   for (ElementaryGuard elementaryGuard : crightF) {
+                       if(!elementaryGuard.isEquality()){
+                            newCrightF.add(elementaryGuard);
+                       }
+                   }
+                   leftindx.addAll(Guard.indexSet(newCrightF));
                    final ColorClass cc = cleft.getKey();
                    final List<? extends ColorFunction> rightComps = right.getHomSubTuple(cc),
                                                     redRightComps = Util.projection(rightComps, leftindx);
@@ -96,27 +104,28 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                        Map<Integer, Integer> scaled = Util.scaledIndex(leftindx);
                        if (leftindx.last() > leftindx.size()) {
                            cleftComps = ClassFunction.scaleIndex(cleftComps, scaled);
-                           crightF = scaleGuardIndex(crightF, scaled, rf.getDomain());
+                           //noinspection unchecked
+                           newCrightF = (Set<ElementaryGuard>) scaleGuardIndex(newCrightF, scaled, rf.getDomain());
                        }
                     }
 
-
                     WNtuple rtx = new WNtuple(redRightComps, right.getDomain());
-                    Guard rightFilter = newGuard(crightF, rtx.getCodomain());
+                    Guard rightFilter = newGuard(newCrightF, rtx.getCodomain());
                     WNtuple tleft = new WNtuple(cleftComps, rightFilter.getDomain());
-                    rtx.joinFilter(rightFilter);
+                    rtx = (WNtuple) rtx.joinFilter(rightFilter);
+                    //System.out.println(rtx);
 
                    // analizzare i filtri della tupla destra (rightFilter)
                     // verificare se per ognuna uno dei due membri
                     // del filtro fa riferimento a una "somma" (linear comb di più elementi)
                     // nella tupla destra, in questo caso si spezza la somma
                     if(rightFilter.isElemAndForm()){
-                        for (ElementaryGuard elementaryGuard : crightF) {
+                        for (ElementaryGuard elementaryGuard : newCrightF) {
                             var i = elementaryGuard.getArg1().getIndex();
                             if (redRightComps.get(i - 1) instanceof LinearComb rc) {
-                                if (rc.size() > 1) {
+                                if (rc.size() > 1) { //linear comb di più elementi (es somma)
                                     cc_res = splitAndCompose(tleft, rtx, i, false);
-                                    //System.out.println("DEBUG: " + cc_res);
+                                    System.out.println("DEBUG: " + cc_res);
                                     return cc_res;
                                 }
                             }
@@ -167,26 +176,15 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
     }
 
     private ArcFunction splitAndCompose(WNtuple left, WNtuple right, int i, boolean splitLeft) {
-        WNtuple tupleToSplit;
-        if (splitLeft)
-            tupleToSplit = left;
-        else
-            tupleToSplit = right;
+        WNtuple tupleToSplit = splitLeft ? left : right;
 
         List<LinearComb> tupleComps = (List<LinearComb>) Util.cast(tupleToSplit.getComponents(), LinearComb.class);
         ArcFunction result = null;
 
         for (List<LinearComb> splitComps : splitSum(tupleComps, i)) {
             WNtuple newTuple = new WNtuple(tupleToSplit.filter(), splitComps, tupleToSplit.guard(), false);
-            ArcFunction newRes;
-            if (splitLeft)
-                newRes = new ArcFunComp(newTuple, right);
-            else
-                newRes = new ArcFunComp(left, newTuple);
-            if (result == null)
-                result = newRes;
-            else
-                result = ArcFunSum.factory(result, newRes);
+            ArcFunction newRes = splitLeft ? new ArcFunComp(newTuple, right) : new ArcFunComp(left, newTuple);
+            result = result == null ? newRes : ArcFunSum.factory(result, newRes);
         }
 
         return result;
