@@ -3,6 +3,7 @@ package wnbag;
 import bagexpr.BagComp;
 import bagexpr.BagExpr;
 import classfunction.ClassFunction;
+import classfunction.Projection;
 import color.ColorClass;
 import expr.Domain;
 import guard.*;
@@ -77,7 +78,20 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                    cleftComps = Util.remove(cleftComps, constants.keySet()); // we remove (in the event) constant components from the left tuple's components
                    final SortedSet<Integer> leftindx = new TreeSet<>(ClassFunction.indexSet(cleftComps));
                    //leftindx.addAll(Guard.indexSet(crightF)); // includes the guard indices too
-                   //Property 15
+                   //Property 15 (tieni conto delle classi di equivalenza per il calcolo del coefficiente k)
+                    for (ElementaryGuard elementaryGuard : crightF) {
+                        if(elementaryGuard.isMembership()){
+                            return res;
+                        }else {
+                            Equality eq = (Equality) elementaryGuard;
+                            int arg1 = eq.getArg1().getIndex();
+                            int arg2 = eq.getArg2().getIndex();
+                            var rc = right.getComponent(arg1, right.getSort());
+                            if(!((rc.equals(right.getComponent(arg2, right.getSort()))) && rc.cardLb()>1)){
+                                return res;
+                            }
+                        }
+                    }
                    Set<ElementaryGuard> newCrightF= new HashSet<>();
                    for (ElementaryGuard elementaryGuard : crightF) {
                        if(!elementaryGuard.isEquality()){
