@@ -77,28 +77,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                    final Map<Integer, ColorFunction> constants = Util.select(cleftComps, ColorFunction::isConstant);
                    cleftComps = Util.remove(cleftComps, constants.keySet()); // we remove (in the event) constant components from the left tuple's components
                    final SortedSet<Integer> leftindx = new TreeSet<>(ClassFunction.indexSet(cleftComps));
-                   //leftindx.addAll(Guard.indexSet(crightF)); // includes the guard indices too
-                   //Property 15 (tieni conto delle classi di equivalenza per il calcolo del coefficiente k)
-                    for (ElementaryGuard elementaryGuard : crightF) {
-                        if(elementaryGuard.isMembership()){
-                            return res;
-                        }else {
-                            Equality eq = (Equality) elementaryGuard;
-                            int arg1 = eq.getArg1().getIndex();
-                            int arg2 = eq.getArg2().getIndex();
-                            var rc = right.getComponent(arg1, right.getSort());
-                            if(!((rc.equals(right.getComponent(arg2, right.getSort()))) && rc.cardLb()>1)){
-                                return res;
-                            }
-                        }
-                    }
-                   Set<ElementaryGuard> newCrightF= new HashSet<>();
-                   for (ElementaryGuard elementaryGuard : crightF) {
-                       if(!elementaryGuard.isEquality()){
-                            newCrightF.add(elementaryGuard);
-                       }
-                   }
-                   leftindx.addAll(Guard.indexSet(newCrightF));
+                   leftindx.addAll(Guard.indexSet(crightF)); // includes the guard indices too
                    final ColorClass cc = cleft.getKey();
                    final List<? extends ColorFunction> rightComps = right.getHomSubTuple(cc),
                                                     redRightComps = Util.projection(rightComps, leftindx);
@@ -118,23 +97,53 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                        Map<Integer, Integer> scaled = Util.scaledIndex(leftindx);
                        if (leftindx.last() > leftindx.size()) {
                            cleftComps = ClassFunction.scaleIndex(cleftComps, scaled);
-                           //noinspection unchecked
-                           newCrightF = (Set<ElementaryGuard>) scaleGuardIndex(newCrightF, scaled, rf.getDomain());
+                           crightF = scaleGuardIndex(crightF, scaled, rf.getDomain());
                        }
                     }
 
                     WNtuple rtx = new WNtuple(redRightComps, right.getDomain());
-                    Guard rightFilter = newGuard(newCrightF, rtx.getCodomain());
+                    Guard rightFilter = newGuard(crightF, rtx.getCodomain());
                     WNtuple tleft = new WNtuple(cleftComps, rightFilter.getDomain());
                     rtx = (WNtuple) rtx.joinFilter(rightFilter);
                     //System.out.println(rtx);
+
+                   //Property 15 (tieni conto delle classi di equivalenza per il calcolo del coefficiente k)
+                   for (ElementaryGuard elementaryGuard : crightF) {
+                        if(elementaryGuard.isMembership()){
+                           return res;
+                        }else {
+                           Equality eq = (Equality) elementaryGuard;
+                           int arg1 = eq.getArg1().getIndex();
+                           int arg2 = eq.getArg2().getIndex();
+                           var rc = right.getComponent(arg1, right.getSort());
+                           if(!((rc.equals(right.getComponent(arg2, right.getSort()))) && rc.cardLb()>1)){
+                               return res;
+                           }
+                       }
+                   }
+                   final SortedSet<Integer> lidx = new TreeSet<>(ClassFunction.indexSet(cleftComps));
+                   final Set<Set<Integer>> eqClass= new HashSet<>();
+                    final Set<Equality> equalities = new HashSet<>();
+                   Set<ElementaryGuard> newCrightF= new HashSet<>();
+                   for (ElementaryGuard elementaryGuard : crightF) {
+                       if(!elementaryGuard.isEquality()){
+                            newCrightF.add(elementaryGuard);
+                       }else{
+                           equalities.add((Equality) elementaryGuard);
+                       }
+                   }
+                   eqClass.addAll(equivalenceClasses(equalities));
+                   System.out.println(eqClass);
+                   leftindx.addAll(Guard.indexSet(newCrightF));
+                   ////////////////////////////////////////////////////////
+
 
                    // analizzare i filtri della tupla destra (rightFilter)
                     // verificare se per ognuna uno dei due membri
                     // del filtro fa riferimento a una "somma" (linear comb di più elementi)
                     // nella tupla destra, in questo caso si spezza la somma
                     if(rightFilter.isElemAndForm()){
-                        for (ElementaryGuard elementaryGuard : newCrightF) {
+                        for (ElementaryGuard elementaryGuard : crightF) {
                             var i = elementaryGuard.getArg1().getIndex();
                             if (redRightComps.get(i - 1) instanceof LinearComb rc) {
                                 if (rc.size() > 1) { //linear comb di più elementi (es somma)
@@ -187,6 +196,58 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         }
         //System.out.println("(ArcFunComp) simplified to: " + res + ", class: " + res.getClass()); //debug
         return res;
+    }
+
+    private static Set<Set<Integer>> equivalenceClasses(Set<Equality> equalities) {
+
+        Map<Integer, Integer> parent = new HashMap<>();
+
+        for (Equality eq : equalities) {
+            int i = eq.firstIndex();
+            int j = eq.secondIndex();
+
+            parent.putIfAbsent(i, i);
+            parent.putIfAbsent(j, j);
+
+            union(parent, i, j);
+        }
+
+        Set<Set<Integer>> classes = new HashSet<>();
+
+        Map<Integer, Set<Integer>> groups = new HashMap<>();
+
+        for (Integer index : parent.keySet()) {
+            int root = find(parent, index);
+
+            groups.computeIfAbsent(root, k -> new HashSet<>())
+                    .add(index);
+        }
+
+        classes.addAll(groups.values());
+
+        return classes;
+    }
+
+    private static int find(Map<Integer, Integer> parent, int index) {
+
+        int p = parent.get(index);
+
+        if (p != index) {
+            p = find(parent, p);
+            parent.put(index, p);
+        }
+
+        return p;
+    }
+
+    private static void union(Map<Integer, Integer> parent, int a, int b) {
+
+        int rootA = find(parent, a);
+        int rootB = find(parent, b);
+
+        if (rootA != rootB) {
+            parent.put(rootA, rootB);
+        }
     }
 
     private ArcFunction splitAndCompose(WNtuple left, WNtuple right, int i, boolean splitLeft) {
