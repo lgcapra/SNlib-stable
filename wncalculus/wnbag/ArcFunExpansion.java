@@ -7,12 +7,9 @@ import bagexpr.BagExpr;
 import bagexpr.UnaryBagOp;
 import color.ColorClass;
 import expr.Domain;
-import guard.And;
 import guard.Guard;
 import util.Util;
 import wncolorfunction.ColorFunction;
-
-import static util.Util.scaleGuardIndex;
 
 /**
  * This class represents an expansion of an arc function (bag of WNtuple) based on specified positions of color functions to be expanded.
@@ -69,7 +66,7 @@ public final class ArcFunExpansion extends UnaryBagOp<WNtuple> implements  ArcFu
             Domain newDomain = new Domain(cc, expanded.size());
             // If the original filter is non-trivial, update its projection indices and domain to match the expanded tuple.
             // Otherwise, no filter needs to be preserved.
-            Guard newFilter = tuple.filter().isTrivial() ? null : scaleGuardIndex(tuple.filter(), map, newDomain);
+            Guard newFilter = tuple.filter().isTrivial() ? null : tuple.filter().scaleGuardIndex(map, newDomain);
 
             return new WNtuple(newFilter, Util.singleSortedMap(cc, expanded), tuple.guard()); // return a new WNtuple with the expanded positions
         }

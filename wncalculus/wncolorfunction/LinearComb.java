@@ -215,5 +215,16 @@ import java.util.Map.Entry;
             throw new IllegalArgumentException();                   
         }
 
+        public static Set<List<LinearComb>> splitSum(List<LinearComb> list, int p1) {
+            Set<List<LinearComb>> result = new HashSet<>();
+            var lc = list.get(p1-1);
+            for ( Map.Entry<? extends ElementaryFunction, Integer> l : lc.asMap().entrySet()) {
+                var newList = new ArrayList<>(list);
+                newList.set(p1 - 1, new LinearComb(l.getKey(), l.getValue()));
+                result.add(newList);
+            }
+            return result;
+        }
+
         
     }

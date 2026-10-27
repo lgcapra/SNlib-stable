@@ -855,60 +855,6 @@ public static <E> HashSet<E> binaryProduct(final Collection<? extends E> c1, fin
         return result;
   }
 
-  public static Set<List<LinearComb>> splitSum(List<LinearComb> list, int p1) {
-      Set<List<LinearComb>> result = new HashSet<>();
-      var lc = list.get(p1-1);
-      for ( Map.Entry<? extends ElementaryFunction, Integer> l : lc.asMap().entrySet()) {
-            var newList = new ArrayList<>(list);
-          newList.set(p1 - 1, new LinearComb(l.getKey(), l.getValue()));
-            result.add(newList);
-      }
-      return result;
-  }
-
-    public static Guard scaleGuardIndex(Guard g, Map<Integer, Integer> m, Domain newDomain) {
-      Set<? extends ElementaryGuard> r;
-      if(g instanceof ElementaryGuard e){
-          r = Collections.singleton(e);
-      } else {
-          And c = (And) g;
-          r = (Set<ElementaryGuard>) Util.cast(c.getArgs(), ElementaryGuard.class);
-      }
-      r=scaleGuardIndex(r, m, newDomain);
-      return And.factory(r);
-  }
-
-    public static Set<? extends ElementaryGuard> scaleGuardIndex(Set<? extends ElementaryGuard> g, Map<Integer, Integer> m, Domain newDomain) {
-
-        if (m.isEmpty()) {
-            return g;
-        }
-        Set<ElementaryGuard> newGuard = new HashSet<>();
-        for (ElementaryGuard elementaryGuard : g) {
-            if(elementaryGuard instanceof Equality eq){
-                var p1 = eq.getArg1();
-                var p2 = eq.getArg2();
-
-                int n1 = m.get(p1.getIndex());
-                int n2 = m.get(p2.getIndex());
-
-                p1 = p1.setIndex(n1);
-                p2 = p2.setIndex(n2);
-
-                newGuard.add(Equality.builder(p1, p2, eq.sign(), newDomain).cast());
-            } else {
-                var mem= (Membership) elementaryGuard;
-                var p = mem.getArg1();
-                Integer ni = m.get(p.getIndex());
-
-                if (ni != null) p = p.setIndex(ni);
-
-                newGuard.add(Membership.build(p, mem.getArg2(), mem.sign(), newDomain));
-            }
-        }
-        return newGuard;
-    }
-
     /**
      * merges two sorted collections into a single sorted list, using the provided comparator to determine the order of elements.
      * assumes that there are no null elements in the collections

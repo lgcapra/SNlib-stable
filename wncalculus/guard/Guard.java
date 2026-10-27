@@ -266,6 +266,49 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
         
         return null;
     }
+
+    public Guard scaleGuardIndex(Map<Integer, Integer> m, Domain newDomain) {
+        Set<? extends ElementaryGuard> r;
+        if(this instanceof ElementaryGuard e){
+            r = Collections.singleton(e);
+        } else {
+            And c = (And) this;
+            r = (Set<ElementaryGuard>) Util.cast(c.getArgs(), ElementaryGuard.class);
+        }
+        r=scaleGuardIndex(r, m, newDomain);
+        return And.factory(r);
+    }
+
+    public static Set<? extends ElementaryGuard> scaleGuardIndex(Set<? extends ElementaryGuard> g, Map<Integer, Integer> m, Domain newDomain) {
+
+        if (m.isEmpty()) {
+            return g;
+        }
+        Set<ElementaryGuard> newGuard = new HashSet<>();
+        for (ElementaryGuard elementaryGuard : g) {
+            if(elementaryGuard instanceof Equality eq){
+                var p1 = eq.getArg1();
+                var p2 = eq.getArg2();
+
+                int n1 = m.get(p1.getIndex());
+                int n2 = m.get(p2.getIndex());
+
+                p1 = p1.setIndex(n1);
+                p2 = p2.setIndex(n2);
+
+                newGuard.add(Equality.builder(p1, p2, eq.sign(), newDomain).cast());
+            } else {
+                var mem= (Membership) elementaryGuard;
+                var p = mem.getArg1();
+                Integer ni = m.get(p.getIndex());
+
+                if (ni != null) p = p.setIndex(ni);
+
+                newGuard.add(Membership.build(p, mem.getArg2(), mem.sign(), newDomain));
+            }
+        }
+        return newGuard;
+    }
      
      public final Integer cardLb() {
         return null;
