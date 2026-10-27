@@ -9,7 +9,6 @@ import java.util.*;
 import classfunction.ElementaryFunction;
 import classfunction.Projection;
 import expr.Domain;
-import expr.Expression;
 import guard.*;
 import wncolorfunction.LinearComb;
 
@@ -788,31 +787,6 @@ public static <E> HashSet<E> binaryProduct(final Collection<? extends E> c1, fin
     }
     
     
-//debugging methods
-    
-    private static final HashSet<String> VALUES = new HashSet<>();
-    
-    /**
-     * Debug method
-     * @param <E>
-     * @param e
-     * @param m
-     */
-    static  <E extends Expression> void checkBuilderOneStep (E e, Map<ComplexKey,E> m ) {
-        String descr = e.toStringDetailed();
-        if ( !VALUES.add(descr) ) {
-            System.out.println("WARNING!\nFOUND DUPLICATE ITEMS (SAME TEXT REPESENTATIONS) IN THE HASHMAP:");
-            for (Map.Entry<ComplexKey, E> x : m.entrySet()) {
-                if (descr.equals(x.getValue().toStringDetailed()))
-                    System.out.println(x.getKey() + "("+x.getKey().hashCodes()+") -> "+x.getValue());
-            }
-            
-            throw new RuntimeException("building failed\n");
-        }
-    }    
-
-  public static int count;
-
   /**
    * searches the input list for elements satisfying the given predicate 
    * and returns a map of positions to selected elements. The positions are 1-based indices.
@@ -935,5 +909,126 @@ public static <E> HashSet<E> binaryProduct(final Collection<? extends E> c1, fin
         return newGuard;
     }
 
+    /**
+     * merges two sorted collections into a single sorted list, using the provided comparator to determine the order of elements.
+     * assumes that there are no null elements in the collections
+     * @param <T> the type of elements in the collections
+     * @param first the first sorted collection
+     * @param second  the second sorted collection      
+     * @param comparator the comparator used to compare elements of the collections
+     * @return  a new list containing all elements from both collections, sorted according to the provided comparator
+     * @throws NullPointerException if either collection or the comparator is null
+     */
+public static <T> List<T> merge( Collection<? extends T> first,Collection<? extends T> second,
+        Comparator<? super T> comparator) {
+
+    var left = first.iterator();
+    var right = second.iterator();
+    List<T> result = new ArrayList<>(first.size() + second.size());
+
+    T a = left.hasNext() ? left.next() : null;
+    T b = right.hasNext() ? right.next() : null;
+    boolean hasA = a != null || left.hasNext();
+    boolean hasB = b != null || right.hasNext();
+
+    while (hasA && hasB) {
+        if (comparator.compare(a, b) <= 0) {
+            result.add(a);
+            hasA = left.hasNext();
+            a = hasA ? left.next() : null;
+        } else {
+            result.add(b);
+            hasB = right.hasNext();
+            b = hasB ? right.next() : null;
+        }
+    }
+
+    if (hasA) result.add(a);
+    while (left.hasNext()) result.add(left.next());
+
+    if (hasB) result.add(b);
+    while (right.hasNext()) result.add(right.next());
+
+    return result;
+}
+
+
+ 
+/**
+ * groups adjacent elements of a collection based on a given predicate that determines whether two elements belong together.
+ * @param <T> the type of elements in the list
+ * @param items the input list of elements to be grouped
+ * @param belongTogether a BiPredicate that takes two elements and returns true if they should be grouped together, false otherwise
+ * @return a list of lists, where each inner list contains adjacent elements from the input list that satisfy the belongTogether predicate
+ * @throws NullPointerException if either items or belongTogether is null
+ */
+public static <T> List<List<T>> groupAdjacent( Collection<? extends T> items,
+    BiPredicate<? super T, ? super T> belongTogether) {
+
+    List<List<T>> groups = new ArrayList<>();
+    var iterator = items.iterator();
+
+    if (!iterator.hasNext()) {
+        return groups;
+    }
+
+    List<T> group = new ArrayList<>();
+    T previous = iterator.next();
+    group.add(previous);
+
+    while (iterator.hasNext()) {
+        T current = iterator.next();
+
+        if (!belongTogether.test(previous, current)) {
+            groups.add(group);
+            group = new ArrayList<>();
+        }
+
+        group.add(current);
+        previous = current;
+    }
+
+    groups.add(group);
+    return groups;
+}
+
+
+/**
+ * computes the greatest common divisor (GCD) of a collection of integers using the Euclidean algorithm.
+ * the integers are assumed to be non-zero.
+ * the absolute values of the integers are considered, and the GCD is always non-negative.
+ * if the collection is empty, the method returns 0.
+ * @param numbers a collection of integers for which the GCD is to be computed
+ * @return the greatest common divisor of the integers in the collection; returns 0 if the collection is empty
+ */
+public static long gcd(Collection<Integer> numbers) {
+    long result = 0;
+
+    for (Integer number : numbers) {
+        
+        long value = Math.abs((long) number);
+
+        if (result == 1) {
+            return 1;
+        }
+
+        if (result % value == 0) {
+            result = value;
+            continue;
+        }
+
+        if (value % result == 0) {
+            continue;
+        }
+
+        while (value != 0) {
+            long remainder = result % value;
+            result = value;
+            value = remainder;
+        }
+    }
+
+    return result;
+}
 
 }

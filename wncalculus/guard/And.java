@@ -543,6 +543,13 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
         //return simple();//equivalent
     }
 
+     /**
+     * @return the guard's color-class, assuming that the guard is single-sort, and simple
+     */
+    public ColorClass getSort() {
+        return ((ElementaryGuard)getArgs().iterator().next()).getSort();
+      }
+
     
     /**
      * spits <code>this</code> <code>And</code>, assumed simple, into separate color components  
@@ -554,32 +561,29 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
         
         return Util.mapFeature(lg, g -> getSort());
     }
-    
-    /* 
-     * @return the partition of the variable indices into independent parts
-     * should be invoked on single-color guards 
-     * assume that the guard has been simplified, in particular, symbol replacement
-     * has been carried out 
+
+    /**
+     * splits the set of equalities in <code>this</code> <code>And</code>, assumed simple and monochromatic,
+     * into independent (that is variable-unrelated) sets
+     * @return a list of lists of equalities, each list containing independent equalities
+     * if there are no equalities, an empty list is returned
      */
-    /*public Set<HashSet<Integer>> independentSets () {
-    	final ColorClass cc = getSort();
-        if (cc != null && simple()) {
-            final SortedSet<Equality> es = equality(cc, true);
-            final Set<HashSet<Integer>> connectedIndices = igraph().get(cc).connectedIndices(); //independent inequalities
-            if (es.isEmpty())
-                return connectedIndices;
-            
-            final Map<Integer,Set<Integer>> indep_m = new HashMap<>(); //partition of equalities based on their first index (see the assumption)
-            es.forEach(e -> { Util.addElem(e.firstIndex(), e.secondIndex(), indep_m); });
-            for (Map.Entry<Integer, Set<Integer>> x : indep_m.entrySet())
-                for (Iterator<HashSet<Integer>> ite = connectedIndices.iterator() ; ite.hasNext(); ite.remove()) {
-                    final var iset = ite.next();
-                    if (iset.contains(x.getKey()))  // logicamente : aggiungi a iset tutte le uguaglianze corrispondenti a x
-                            iset.addAll(x.getValue());
-                }
+    public List<List<Equality>> separateIndependentEqualities() {
+        var eq = equality(getSort(), true);
+        var ineq = equality(getSort(), false);
+        if (eq.isEmpty() && ineq.isEmpty())
+            return Collections.emptyList();
+
+        Collection<Equality> merge;
+        if (!(eq.isEmpty() || ineq.isEmpty())) {
+            merge = Util.merge(eq, ineq, Equality::compareTo);
+        } else {
+            merge = eq.isEmpty() ? ineq : eq;
         }
 
-    	return cc == null ? Collections.emptySet() : igraph().get(cc).connectedIndices();
-    }*/
-    
+        return Util.groupAdjacent(merge, (e1, e2) -> e1.firstIndex() == e2.firstIndex()
+                || e1.secondIndex() == e2.firstIndex()
+                || e1.secondIndex() == e2.secondIndex());
+    }
+
 }

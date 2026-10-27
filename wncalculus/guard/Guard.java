@@ -5,7 +5,6 @@ import java.util.*;
 import classfunction.SetFunction;
 import color.ColorClass;
 import expr.Domain;
-import expr.ParametricExpr;
 import util.Util;
 
 /**
@@ -64,7 +63,6 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
     public final Domain getCodomain() {
          return getDomain(); 
     }
-    
     
     /** static version of indexSet working on a collection
      * @param c a given collection of guards

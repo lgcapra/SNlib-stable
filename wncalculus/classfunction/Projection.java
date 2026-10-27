@@ -55,7 +55,6 @@ public final class Projection extends ProjectionBased {
             Projection p;
             if ((p = VALUES.get(k)) == null) {
                 VALUES.put(k, p = new Projection(index, succ, cc));
-                //Util.checkBuilderOneStep(p, VALUES); //debug
             }
             return p;
         }

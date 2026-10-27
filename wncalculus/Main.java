@@ -12,7 +12,6 @@ import tuple.*;
 import util.Pair;
 import util.Util;
 import wnbag.*;
-import wncolorfunction.ColorFunction;
 import wncolorfunction.LinearComb;
 
 /**
@@ -63,6 +62,7 @@ public class Main {
      * @param args command line arguments (not used)
      */
     public static void main(String[] args) {
+        testSeparateIndependentEqualities();
 //        /*try {
 //           Runtime.getRuntime().exec(new String[] { "java", "-jar", "E:\\lorenzo\\CLISVN\\SNexpressions\\SNexCLI.jar" });
 //           return;
@@ -571,6 +571,29 @@ public class Main {
         g12 = (Guard) g2.andFactory(g11, g9);
         System.out.println("ecco g12\n" + g12.toStringDetailed());
         System.out.println("ecco g12 semplificato\n\n" + Expressions.toStringDetailed(g12.simplify()));
+    }
+
+    public static void testSeparateIndependentEqualities() {
+        Domain domain = new Domain(c1, c1, c1, c1, c1);
+        Projection p1 = Projection.builder(1, c1);
+        Projection p2 = Projection.builder(2, c1);
+        Projection p3 = Projection.builder(3, c1);
+        Projection p4 = Projection.builder(4, c1);
+        Projection p5 = Projection.builder(5, c1);
+
+        Equality eq12 = (Equality) Equality.builder(p1, p2, true, domain);
+        Equality eq23 = (Equality) Equality.builder(p2, p3, false, domain);
+        Equality neq45 = (Equality) Equality.builder(p4, p5, true, domain);
+        And conjunction = (And) And.factory(eq12, eq23, neq45);
+        System.out.println("Initial guard: " + conjunction);
+        List<List<Equality>> groups = conjunction.separateIndependentEqualities();
+        System.out.println("Independent equality groups: " + groups);
+
+        if (!groups.equals(Arrays.asList(Arrays.asList(eq12, eq23), Collections.singletonList(neq45)))) {
+            throw new AssertionError("Expected connected equalities [1=2, 2=3] and independent equality [4!=5], got " + groups);
+        }
+
+        System.out.println("testSeparateIndependentEqualities passed");
     }
 
     /**

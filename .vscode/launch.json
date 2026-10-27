@@ -9,7 +9,8 @@
             "name": "Main",
             "request": "launch",
             "mainClass": "Main",
-            "projectName": "SNlib-stable_998e9b61"
+            "projectName": "SNlib-stable_998e9b61",
+            "console": "integratedTerminal"
         },
         {
             "type": "java",

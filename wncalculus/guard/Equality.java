@@ -77,7 +77,6 @@ private Map<ColorClass, Map<Boolean, SortedSet<Equality>>> eqMap;
         ComplexKey k = new ComplexKey(p1, p2, op, dom);
         if ( (eq = VALUES.get(k)) == null) {
             VALUES.put(k,  eq = new Equality(p1, p2, op, dom)) ;
-            //Util.checkBuilderOneStep(eq, VALUES); //debug
         }
         
         return eq;

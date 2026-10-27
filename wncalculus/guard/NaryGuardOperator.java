@@ -407,22 +407,5 @@ public abstract class NaryGuardOperator extends Guard implements N_aryOp<Guard> 
         return this.simple;
     }    
     
-    /**
-     * @return the guard's color-class, if the guard is single-sort, and all predicates
-     * are either (in)equalities or memberships; <code>null</code> in all the other cases
-     */
-    public final ColorClass getSort() {
-        final Map<ColorClass, Map<Boolean, SortedSet<Equality>>> c_e = equalityMap();
-		final Map<ColorClass, Map<Boolean, Set<Membership>>> c_m = membMap();
-        final int n1 = c_e.size(), n2 = c_m.size(), s;
-        
-        if (n1 < 2 && n2 < 2 && (s = n1 + n2) > 0 && (s < 2 || c_e.keySet().equals(c_m.keySet())) )  {
-	        final ColorClass cc = n1 == 1 ? c_e.keySet().iterator().next() : c_m.keySet().iterator().next();
-	        if (equality(cc,true).size() + equality(cc,false).size() + membership(cc,true).size() + membership(cc,false).size() == this.args.size())
-	        	return cc ;
-        }
-
-        return null;
-      }
     
 }
