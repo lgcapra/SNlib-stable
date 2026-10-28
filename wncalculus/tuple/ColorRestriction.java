@@ -79,10 +79,11 @@ public final class ColorRestriction implements FunctionTuple, UnaryOp<FunctionTu
         this.simplified = true;
     }
 
+    /* 
     @Override
     public Class<? extends FunctionTuple> type() {
         return ColorRestriction.class;
-    }
+    }*/
 
     @Override
     public FunctionTuple getArg() {

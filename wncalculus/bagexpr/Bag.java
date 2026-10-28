@@ -94,10 +94,10 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
         return support().stream().allMatch(e -> e.isConstant());
     }
     
-    @Override
+    /*@Override
     public final Class<E> bagType() {
-        return support().iterator().next().type();
-    }
+        return support().iterator().next().getClass();
+    }*/
     
     @Override
     public final String toString( ) {

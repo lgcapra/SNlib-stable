@@ -136,10 +136,10 @@ public abstract class SetFunction implements ClassFunction, SetExpr {
         return null;
     }
 
-    @Override
-    public final Class<SetFunction> type() {
+    /*@Override
+    public Class<SetFunction> type() {
         return SetFunction.class;
-    }
+    }*/
 
     /**
      * puts a funaction to an equivalent set (sum) of simple (guarded)

@@ -21,9 +21,9 @@ public class Expressions {
     public static <E extends Expression> boolean normalize(List<E> arglist) {
         //System.out.println("normalize "+iset + " -> "); //debug
         boolean changed = false;
-        Class<E> type = arglist.get(0).type();
+        //Class<E> type = arglist.get(0).type();
         for (ListIterator<E> ite = arglist.listIterator() ; ite.hasNext(); ) {
-            E e = ite.next(), normal = type.cast( e.normalize() );
+            E e = ite.next(), normal = e.normalize().cast();
             if ( ! e.equals(normal) ) { 
                 ite.set( normal );
                 changed = true;

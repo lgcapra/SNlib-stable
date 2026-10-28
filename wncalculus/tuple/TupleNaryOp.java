@@ -68,9 +68,9 @@ public abstract class TupleNaryOp  implements FunctionTuple , N_aryOp<FunctionTu
         return N_aryOp.super.toStringOp();
     }
     
-    @Override
+    /*@Override
     public final Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
-    }
+    }*/
 
 }

@@ -1491,10 +1491,11 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
         return s.toString();
     }
 
+    /* 
     @Override
     public Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
-    }
+    }*/
 
     @Override
     public Tuple asTuple() {
@@ -1509,6 +1510,11 @@ public final class Tuple extends AbstractTuple<SetFunction> implements FunctionT
     @Override
     public final Tuple clone(final Map<Sort, Sort> split_map) {
         return new Tuple((Guard) filter().clone(split_map), super.cloneComps(split_map), (Guard) guard().clone(split_map));
+    }
+
+    @Override
+    public EmptyTuple getEmpty() {
+        return getFalse();
     }
 
 

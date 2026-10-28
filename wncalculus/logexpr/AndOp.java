@@ -36,9 +36,8 @@ public interface AndOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E> {
   
     @Override
     default E getIde() {
-       Class<E> type = type();
-       
-       return type.cast(getTrue());
+       //Class<E> type = type();
+       return getTrue().cast();
     }
     
      /**
@@ -76,7 +75,7 @@ public interface AndOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E> {
             E False = getFalse().cast();
             AndOp<E> aop = (AndOp<E>) res;
             Collection<? extends E> args = aop.getArgs();
-            if ( args. contains(False) || ! type().equals( FunctionTuple.class) && checkComplementary(args))
+            if ( args. contains(False) || ! FunctionTuple.class.isAssignableFrom(getClass()) && checkComplementary(args)) // why?
                 return False;
             
             /*OrOp<E> nested =  (OrOp<E>) Util.find(args, OrOp.class);

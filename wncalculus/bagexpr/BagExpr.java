@@ -3,7 +3,6 @@ package bagexpr;
 
 import color.Sort;
 import expr.*;
-
 import java.util.Collection;
 import java.util.Map;
 
@@ -19,7 +18,8 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
     /**
      * @return the bag's elements type 
      */
-    Class<E> bagType();
+    //Class<E> bagType();
+
 
     /**
      * @param c a collection of bag-expressions
@@ -47,10 +47,10 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
      * invokes the normalization algorithn just performing a cast
      * @return a normalized bag equivalent to <code>this</code> 
      */
-    @Override
+    /*@Override
     default BagExpr<E> normalize() {
         return ParametricExpr.super.normalize().cast();
-    }
+    }*/
 
     @Override
     default Map<Sort,Integer> splitDelimiters (){
@@ -60,11 +60,6 @@ public interface BagExpr<E extends ParametricExpr> extends ParametricExpr, BagBu
     @Override
     default ParametricExpr clone(Map<Sort, Sort> split_map) {
             throw new UnsupportedOperationException("clone with split_map is not supported for multisets");
-    }
-
-    @Override
-    default Bag<E> getNull() {
-        return build();
     }
 
     default boolean zeroCard() {

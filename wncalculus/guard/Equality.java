@@ -273,5 +273,4 @@ private Map<ColorClass, Map<Boolean, SortedSet<Equality>>> eqMap;
         return this.eqMap;
     }
 
-
 }

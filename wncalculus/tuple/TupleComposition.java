@@ -116,9 +116,9 @@ public final class TupleComposition implements FunctionTuple, LogComposition<Fun
     }
     
     //overriden because muutipple inherited
-    @Override
+    /*@Override
     public Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
-    }
+    }*/
     
 }

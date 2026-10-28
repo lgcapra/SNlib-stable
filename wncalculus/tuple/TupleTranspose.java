@@ -123,9 +123,9 @@ public final class TupleTranspose implements FunctionTuple, UnaryOp<FunctionTupl
     }
     
     
-    @Override
+    /*@Override
     public Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
     }
-    
+    */    
 }

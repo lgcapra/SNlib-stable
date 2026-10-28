@@ -32,12 +32,12 @@ public interface MultiArgs<E extends ParametricExpr, F extends ParametricExpr> e
      
     @Override
     default F clone (final Domain newdom) {
-         return buildOp(clone(getArgs(), newdom, type()));
+         return buildOp(clone(getArgs(), newdom));
     }
     
      @Override
     default F clone (final  Map<Sort, Sort> split_map) {
-        return buildOp(clone(getArgs(), split_map, type()));
+        return buildOp(clone(getArgs(), split_map));
     }
     
     /**
@@ -50,15 +50,15 @@ public interface MultiArgs<E extends ParametricExpr, F extends ParametricExpr> e
      * @param cd the expressions' new codomain
      * @return a copy of the passed list of expressions with the specified new sorts and co-domains
      */
-    public static <E extends ParametricExpr> Collection<E> clone(Collection<? extends E> arglist, Domain dom, Class<E> type) {
+    public static <E extends ParametricExpr> Collection<E> clone(Collection<? extends E> arglist, Domain dom) {
         Collection<E> res = arglist instanceof List ? new ArrayList<>() : new HashSet<>();
-        arglist.forEach((var f) -> { res.add(type.cast(f.clone(dom))); });
+        arglist.forEach((var f) -> { res.add(f.clone(dom).cast()); });
         return res;
     }
     
-    public static <E extends ParametricExpr> Collection<E> clone(Collection<? extends E> arglist, final  Map<Sort, Sort> split_map, Class<E> type) {
+    public static <E extends ParametricExpr> Collection<E> clone(Collection<? extends E> arglist, final  Map<Sort, Sort> split_map) {
         Collection<E> res = arglist instanceof List ? new ArrayList<>() : new HashSet<>();
-        arglist.forEach((var f) -> { res.add(type.cast(f.clone(split_map))); });
+        arglist.forEach((var f) -> { res.add(f.clone(split_map).cast()); });
         return res;
     }
     

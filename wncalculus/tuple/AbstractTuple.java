@@ -217,6 +217,11 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
      */
     public abstract AbstractTuple<E> build (final Guard filter, SortedMap<ColorClass, List<? extends E>> m, final Guard guard);    
 
+
+    /**
+     * @return the null expression, which varies depending on the actual type of <tt>this</tt> tuple
+     */
+    public abstract ParametricExpr getEmpty();
     
     /**
      *
@@ -479,11 +484,11 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
         
         final Guard simp_f, simp_g;
         if ((simp_f = (Guard) filter().normalize()).isFalse()) {
-            return getNull().cast();
+            return getEmpty();
         }
 
         if ((simp_g = (Guard) guard().normalize()).isFalse()) {
-            return getNull().cast();
+            return getEmpty();
         } else {
             var changed = false;
             final var equalityMap = simp_g.equalityMap();
@@ -495,7 +500,7 @@ public abstract class AbstractTuple<E extends ClassFunction> implements Parametr
                     changed = true;
                 }
                 if (Util.checkAny(args_c, f -> f.zeroCard())) {
-                    return getNull().cast();
+                    return getEmpty();
                 }
                 for (var eq : equalityMap.getOrDefault(c, Collections.emptyMap()).getOrDefault(true, Collections.emptySortedSet())) {
                     if (ClassFunction.replace(args_c, eq)) {

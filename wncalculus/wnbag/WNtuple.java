@@ -17,6 +17,7 @@ import util.Pair;
 import util.Util;
 import wncolorfunction.ColorFunction;
 import wncolorfunction.LinearComb;
+import wncolorfunction.LinearCombScalar;
 
 /**
  * this class defines generic SN function-tuples, composed of linear combinations of elementary SN class-functions
@@ -256,8 +257,33 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         ArcFunction res = super.specSimplify().cast();
         if (! (res instanceof WNtuple tres))
             return res;
-        // complete!
-        return tres;
+        // for each color class, simplify the corresponding subtuple
+        SortedMap<ColorClass, List<? extends ColorFunction>> subtuples = new TreeMap<>();
+        int coeff = 1;
+        var modified = false;
+        for (Map.Entry<ColorClass, List<? extends ColorFunction>> entry : this.getHomSubTuples().entrySet()) {
+            final ColorClass cc = entry.getKey();
+            final List<? extends ColorFunction> subtuple = entry.getValue();
+            final List<ColorFunction> simplifiedSubtuple = new ArrayList<>();
+            for (ColorFunction cf : subtuple) {
+                if (cf instanceof LinearComb lc && lc.size() == 1) {
+                        ColorFunction simplifiedCf = lc.asMap().keySet().iterator().next().cast();
+                        coeff *= lc.asMap().values().iterator().next();
+                        simplifiedSubtuple.add(simplifiedCf);
+                        modified = true;
+                    } else if (cf instanceof LinearCombScalar sc) {
+                        coeff *= sc.k();
+                        simplifiedSubtuple.add(sc.getArg().cast());
+                        modified = true;
+                    }
+                    else {
+                        simplifiedSubtuple.add(cf);
+                    }
+                } 
+                subtuples.put(cc, simplifiedSubtuple);
+            }
+            
+        return coeff == 1 || !modified ? tres : new ArcFunScalar(new WNtuple(tres.filter(), subtuples, tres.guard()), coeff);
     }
 
     @Override
@@ -429,6 +455,11 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         }
 
         return result;
+    }
+
+    @Override
+    public TupleBag getEmpty() {
+      return build();
     }
 
 }

@@ -7,8 +7,6 @@ import classfunction.ElementaryFunction;
 import color.ColorClass;
 import color.Sort;
 import expr.Domain;
-import expr.Expression;
-
 import java.util.Map;
 
 public final class LinearCombScalar extends ScalarProd<ElementaryFunction> implements ColorFunction {
@@ -46,6 +44,7 @@ public final class LinearCombScalar extends ScalarProd<ElementaryFunction> imple
     public ColorClass getSort() {
        return ((ClassFunction) getArg()).getSort();
     }
+
 
     @Override
     public <E extends ClassFunction> E copy(ColorClass newcc) {

@@ -320,14 +320,15 @@ public class Graph<E> {
      * @return a (deep clone of <code>this</code> graph
      */ 
     @Override
+    @SuppressWarnings("unchecked")
     public  Graph<E> clone () {
-        Class<? extends Graph> gtype = getClass();
+        Class<? extends Graph<E>> gtype = (Class<? extends Graph<E>>) getClass();
         try {
-            Graph<E> clone = gtype.newInstance();
+            Graph<E> clone = gtype.getConstructor().newInstance();
             this.adjlist.entrySet().forEach( e -> { clone.adjlist.put(e.getKey(), new HashSet<>(e.getValue())); });
             return clone;
         } 
-        catch (InstantiationException | IllegalAccessException ex) {
+        catch (ReflectiveOperationException ex) {
             throw new Error("class "+ gtype + " doesn not have a public default constructor");
         }
      }

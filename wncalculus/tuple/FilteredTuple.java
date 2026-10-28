@@ -176,9 +176,9 @@ public final class FilteredTuple implements FunctionTuple, GuardedExpr<FunctionT
         this.simplified = simplified;
     }
     
-    @Override
+    /*@Override
     public final Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
-    }
+    }*/
     
 }

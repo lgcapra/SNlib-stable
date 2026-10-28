@@ -111,10 +111,11 @@ public abstract class BagComp<E extends ParametricExpr> implements BagExpr<E>, C
         return this;
     }
     
+    /* 
     @Override
     public final Class<E> bagType() {
         return left().bagType();
-    }
+    }*/
 
 
     @Override

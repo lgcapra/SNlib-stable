@@ -57,8 +57,8 @@ public interface OrOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E>  {
     
     @Override
     default E getIde() {
-        Class<E> type = type();
-        return type.cast(getFalse());
+        //Class<E> type = type();
+        return getFalse().cast();
     }
     
     @Override
@@ -89,10 +89,9 @@ public interface OrOp<E extends LogicalExpr> extends LogicalExpr, N_aryOp<E>  {
         if (res instanceof OrOp ) {
             E True = getTrue().cast();
             @SuppressWarnings("unchecked")
-            final
-            var orop = (OrOp<E>) res;
+            final var orop = (OrOp<E>) res;
             Collection<? extends E> args = orop. getArgs(); 
-            if ( args. contains(True) || ! type().equals( FunctionTuple.class) && checkComplementary(args) )
+            if ( args. contains(True) || ! FunctionTuple.class.isAssignableFrom(getClass()) && checkComplementary(args) ) // why?
                 return True ;
             //new
             if (!orop.disjoined() && Util.checkAll(args, Expression::terminal)) //forse meglio elementare che terminal

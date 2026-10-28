@@ -57,8 +57,8 @@ public abstract class ConstantTuple implements FunctionTuple {
         return '<'+symbol()+">_"+ getCodomain().names();//"<\u2297S>";
     }
     
-     @Override
+    /*  @Override
     public final Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
-    }
+    }*/
 }
