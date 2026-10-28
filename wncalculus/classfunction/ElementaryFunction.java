@@ -3,6 +3,7 @@ package classfunction;
 import java.util.Map;
 import color.ColorClass;
 import color.Sort;
+import wncolorfunction.ColorFunction;
 
 /**
  * this abstract class is the super type of elementary SN functions (including the empty function);
@@ -12,7 +13,7 @@ import color.Sort;
  * <code>Object.equals</code> and <code>Object.hashCode</code>
  * @author lorenzo capra
  */
-public abstract class ElementaryFunction extends SetFunction  {  
+public abstract class ElementaryFunction extends SetFunction  implements ColorFunction {  
     
     private final ColorClass cc;  
     

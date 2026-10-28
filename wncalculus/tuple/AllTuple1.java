@@ -103,10 +103,10 @@ public final class AllTuple1  implements FunctionTuple {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    @Override
+    /*@Override
     public final Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
-    }
+    }*/
 
     @Override
     public boolean simplified() {

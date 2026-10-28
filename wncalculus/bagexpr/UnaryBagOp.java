@@ -38,10 +38,10 @@ public abstract class UnaryBagOp<E extends ParametricExpr> implements UnaryOp<Ba
     public final void setSimplified(boolean simplified) {
     }
 
-    @Override
+    /*@Override
     public final Class<E> bagType() {
         return this.bexpr.bagType();
-    }
+    }*/
     
     @Override
     public int hashCode() {

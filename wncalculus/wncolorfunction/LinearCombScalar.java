@@ -7,8 +7,6 @@ import classfunction.ElementaryFunction;
 import color.ColorClass;
 import color.Sort;
 import expr.Domain;
-import expr.Expression;
-
 import java.util.Map;
 
 public final class LinearCombScalar extends ScalarProd<ElementaryFunction> implements ColorFunction {
@@ -27,15 +25,6 @@ public final class LinearCombScalar extends ScalarProd<ElementaryFunction> imple
         return new LinearCombScalar((LinearComb) arg, coeff);
     }
 
-    @Override
-    public LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-        return new LinearComb(m);
-    }
-
-    @Override
-    public LinearComb buildEmpty(Domain dom, Domain codom) {
-        return new LinearComb((ColorClass) dom.support().iterator().next());
-    }
 
     @Override
      public Map<Sort, Integer> splitDelimiters() {
@@ -46,6 +35,7 @@ public final class LinearCombScalar extends ScalarProd<ElementaryFunction> imple
     public ColorClass getSort() {
        return ((ClassFunction) getArg()).getSort();
     }
+
 
     @Override
     public <E extends ClassFunction> E copy(ColorClass newcc) {

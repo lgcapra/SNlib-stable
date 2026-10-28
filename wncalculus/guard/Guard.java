@@ -64,14 +64,14 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
          return getDomain(); 
     }
     
-    /** static version of indexSet working on a collection
+    /** static version of indexSet working on a collection.
+     * assumes that the collection is homogeneous in color
      * @param c a given collection of guards
      * @return  the set of projection indices in <code>c</code>
      */
     public static Set<Integer> indexSet(Collection<? extends Guard> c) {
         Set<Integer> idxset = new HashSet<>();
         c.forEach( f -> { idxset.addAll(f.indexSet()); });
-        
         return idxset;
     } 
     
@@ -194,10 +194,10 @@ public abstract class Guard implements LogicalExpr/*, ComparableStep<Guard>*/ {
         return false;
     }
     
-    @Override
+    /*@Override
     public final Class<? extends Guard> type() {
         return Guard.class;
-    }
+    }*/
     
     //convenience method (to be redefined)
     

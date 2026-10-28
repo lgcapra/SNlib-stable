@@ -44,8 +44,8 @@ public interface TwoArgs<E extends ParametricExpr, F extends ParametricExpr> ext
      */
     @Override
     default F genSimplify () {
-        Class<E> type = left().type();
-        E left  = type.cast(left().normalize( )), right = type.cast(right().normalize( ));
+        //Class<E> type = left().type();
+        E left  = left().normalize().cast(), right = right().normalize().cast();
         
         return left.equals(left()) && right.equals(right()) ? cast() : buildOp(left, right);
     }

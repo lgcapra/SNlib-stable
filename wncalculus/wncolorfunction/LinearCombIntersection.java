@@ -7,7 +7,6 @@ import color.ColorClass;
 import expr.Domain;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Concrete intersection operator for color-function bags (linear combinations).
@@ -16,16 +15,6 @@ public final class LinearCombIntersection extends BagIntersection<ElementaryFunc
 
     public LinearCombIntersection(Collection<? extends LinearComb> terms) {
         super(terms, true);
-    }
-
-    @Override
-    public LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-        return new LinearComb(m);
-    }
-
-    @Override
-    public LinearComb buildEmpty(Domain dom, Domain codom) {
-        return new LinearComb((ColorClass) dom.support().iterator().next());
     }
 
     @Override

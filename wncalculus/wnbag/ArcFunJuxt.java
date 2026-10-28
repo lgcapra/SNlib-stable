@@ -250,10 +250,11 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
     }
     
     
-    @Override
+    /*@Override
     public Class<ArcFunction> type() {
         return ArcFunction.class;
     }
+    */
 
     @Override
     public Integer cardLb() {

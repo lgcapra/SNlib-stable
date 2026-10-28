@@ -29,9 +29,9 @@ public abstract class BagTranspose<E extends ParametricExpr> extends UnaryBagOp<
         if (bag.isEmpty()) 
             return build(); //should be right!
         
-        Class<E> type = bagType();
+        //Class<E> type = bagType();
         Map<E,Integer> trmap = new HashMap<>();
-        bag.asMap().entrySet().forEach( e -> { trmap.put( type.cast(e.getKey().buildTransp()) , e.getValue() ); });
+        bag.asMap().entrySet().forEach( e -> { trmap.put(e.getKey().buildTransp().cast() , e.getValue() ); });
         
         return bag.build(trmap); 
     }

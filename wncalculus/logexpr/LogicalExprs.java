@@ -43,7 +43,7 @@ public class LogicalExprs {
      * @return <code>true</code> if and only if t is contained in the list
      */
     public static <E extends LogicalExpr> boolean contained (E t, List<? extends E> list) {
-        if ((t = (E) t.normalize()). isFalse())
+        if ((t = t.normalize().cast()). isFalse())
             return true; //new
         
         boolean included = false;
@@ -127,7 +127,7 @@ public class LogicalExprs {
      */
     private static <E extends LogicalExpr> Boolean subtractFrom(List<E> tail , E head)  {
         Boolean changed = false, not_included = true;
-        Class<E> type = head.type();
+        //Class<E> type = head.type();
         for (ListIterator<E> it = tail.listIterator(); it.hasNext() ; ) {
             E curr = it.next();
             LogicalExpr in = head.andFactory(head, curr).normalize();
@@ -138,7 +138,7 @@ public class LogicalExprs {
                 else if ( head.equals( in ) )  // head included in curr
                     not_included = false; 
                 else 
-                    it.set(type.cast(curr.diff(head).normalize()) );
+                    it.set(curr.diff(head).normalize().cast() );
             }
         }
         if (! not_included )

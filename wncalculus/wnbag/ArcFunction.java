@@ -24,15 +24,15 @@ public interface ArcFunction extends BagExpr<WNtuple> {
         return null;
     }   
 
-    @Override
+    /*@Override
     default Class<WNtuple> bagType() {
         return WNtuple.class;
-    }
+    }*/
 
-    @Override
+    /*@Override
     public default Class<ArcFunction> type() {
         return ArcFunction.class;
-    }
+    }*/
 
     @Override
     default Bag<WNtuple> buildEmpty(Domain dom, Domain codom) {
@@ -69,6 +69,11 @@ public interface ArcFunction extends BagExpr<WNtuple> {
     @Override
      public default ArcFunction buildTransp() {
         return new ArcFunTransp(this);
+     }
+
+     @Override
+     public default ArcFunction normalize() {
+        return (ArcFunction) BagExpr.super.normalize();
      }
 
 }

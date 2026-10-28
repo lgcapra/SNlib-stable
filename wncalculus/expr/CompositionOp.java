@@ -27,8 +27,8 @@ public interface CompositionOp<E extends ParametricExpr, F extends ParametricExp
     default F genSimplify () {
         F res = TwoArgs.super.genSimplify();
         if (res instanceof CompositionOp cop) {
-            Class<E> type = left().type(); //the type of operands
-            E left = type.cast(cop.left()), right = type.cast(cop.right());
+            //Class<E> type = left().type(); //the type of operands
+            E left = cop.left().cast(), right = cop.right().cast();
             SingleArg<E,F> uop;
             if (left instanceof UnaryOp && isLeftAssociative((uop = (SingleArg) left).getClass()) ) 
                 return  uop.buildOp( buildOp( uop.getArg(), right).cast());
@@ -63,36 +63,7 @@ public interface CompositionOp<E extends ParametricExpr, F extends ParametricExp
     default Domain getCodomain() {
         return left().getCodomain();
     }
-    
-    /**
-     * overrides the ancestor method, taking into account the fact that the
-     * left operands' domain has to match the right operand's codomain
-     * @return a clone of <code>this</code> composition with the new co-domains
-     */
-    /*@Override
-    default F clone (final Domain newdom, final Domain newcd) {
-        E left = left(), right = right();
-        Domain left_dom = left.getDomain(); // the left operands' domain = right operand's codom
-        if (left.getCodomain().equals(left_dom)) //optimization
-            left_dom = newcd;
-        else if (left_dom.equals(right.getDomain()))
-            left_dom = newdom;
-        else { //we re-build the left's domain
-            HashMap<Sort,Integer > copy = new HashMap<>();
-            left_dom.asMap().entrySet().forEach (e -> {
-                Sort s = e.getKey(), ns;
-                boolean not_found = newdom.mult(s) == 0 && newcd.mult(s) == 0; // the old getSort of the left's domain is not present in the new (co-)domain
-                if (not_found && ( (ns = newdom.getSort(s.name() )) != null || (ns = newcd.getSort(s.name() )) != null) ) // in the new (co-)domain there is a getSort with that name
-                    s = ns;
-                copy.put(s, e.getValue());
-            });
-
-            left_dom  =  new Domain(copy);
-        }
         
-        return buildOp(left().clone(left_dom, newcd). cast(), right().clone(newdom, left_dom). cast());
-    }*/
-    
     
     @Override
     default String symb() {

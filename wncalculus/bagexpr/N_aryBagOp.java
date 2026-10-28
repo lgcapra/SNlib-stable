@@ -78,10 +78,10 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
         // Do nothing, as simplified is always false
     }
 
-    @Override
+    /*@Override
     public final Class<E> bagType() {
         return this.args.iterator().next().bagType();
-    }
+    }*/
     
     @Override
     public final boolean equals(Object o) {

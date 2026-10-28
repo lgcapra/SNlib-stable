@@ -176,15 +176,21 @@ public interface Expression {
       * @param <E> the expression's type
       * @return the expression's type 
       */
-     <E extends Expression> Class<E> type();
+     //<E extends Expression> Class<E> type();
     
     /**
      * performs a cast of <code>this</code> expression to a given type
      * @param <E> the type to cast
      * @return <code>this</code>
      */
+    @SuppressWarnings("unchecked")
     default <E extends Expression> E cast() {
-        Class<E> x = type();
+        /**Class<E> x = type();
+        return x.cast(this);**/
+        return (E) this;
+     }
+
+     default <E extends Expression> E cast( Class<E> x) {
         return x.cast(this);
      }
          
@@ -203,6 +209,6 @@ public interface Expression {
      * 
      * @return the <code>null</code> value for <code>this</code> expression
     */
-    abstract Expression getNull() ;
+    //abstract Expression getNull() ;
     
 }

@@ -29,11 +29,7 @@ import java.util.Map.Entry;
          */
         public LinearComb(Map<? extends ElementaryFunction, Integer> m, boolean check) {
             super(m);
-            if (m.isEmpty()) {
-                throw new IllegalArgumentException("Empty linear combination");
-            }
-            ElementaryFunction first = m.keySet().iterator().next();
-            this.cc = first.getSort();    
+            this.cc = m.keySet().iterator().next().getSort();    
             if (check) {
                 for (ElementaryFunction elementaryFunction : m.keySet()) {
                     if (!elementaryFunction.getSort().equals(this.cc)) {
@@ -183,16 +179,6 @@ import java.util.Map.Entry;
 
 
         @Override
-        public  LinearComb buildEmpty(Domain dom, Domain codom) {
-            return new LinearComb(asMap(), false);
-        }
-
-        @Override
-        public  LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-            return new LinearComb (m, false);
-        }
-
-        @Override
         public Map<Sort, Integer> splitDelimiters() {
             return super.splitDelimiters();
         }
@@ -213,6 +199,33 @@ import java.util.Map.Entry;
             }
 
             throw new IllegalArgumentException();                   
+        }
+        
+        @Override
+        public ColorFunction specSimplify() {
+            ColorFunction res = super.specSimplify().cast();
+            if (! (res instanceof LinearComb lc) ) {
+                return res;
+            }
+            // calculate the GCD of the multiplicities 
+            var coefficients = lc.asMap().values();
+            if (coefficients.size() == 1) {
+                if (coefficients.iterator().next() == 1) {  // 1 c1 => c1
+                    return lc.asMap().keySet().iterator().next().cast();
+                }
+
+                return res;
+            }
+            // calculate the GCD of the multiplicities and divide all multiplicities by it
+            long gcd = Util.gcd(coefficients);
+            if (gcd > 1) {
+                final Integer q = gcd > Integer.MAX_VALUE ? null : (int) gcd; // safe because of the check above
+                HashMap<ElementaryFunction, Integer> newmap = new HashMap<>();
+                lc.asMap().forEach((key, value) -> newmap.put(key, value / q));
+                return new LinearCombScalar(new LinearComb(newmap, false), q);
+            }
+
+            return res;
         }
 
         public static Set<List<LinearComb>> splitSum(List<LinearComb> list, int p1) {

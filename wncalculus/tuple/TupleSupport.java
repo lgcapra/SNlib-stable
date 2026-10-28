@@ -94,11 +94,11 @@ public final class TupleSupport implements FunctionTuple, SingleArg<ArcFunction,
         this.simplified = simplified;
     }
     
-    @Override
+    /*@Override
     public final Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
     }
-
+*/
    
     @Override
     public TupleSupport buildOp(ArcFunction arg) {

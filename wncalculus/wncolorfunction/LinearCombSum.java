@@ -1,6 +1,5 @@
 package wncolorfunction;
 import java.util.Collection;
-import java.util.Map;
 import bagexpr.BagExpr;
 import bagexpr.BagSum;
 import classfunction.ClassFunction;
@@ -12,16 +11,6 @@ public final class LinearCombSum extends BagSum<ElementaryFunction> implements C
 
     public LinearCombSum(Collection<? extends LinearComb> terms) {
         super(terms, true);
-    }
-
-    @Override
-    public LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-        return new LinearComb(m,true);
-    }
-
-    @Override
-    public LinearComb buildEmpty(Domain dom, Domain codom) {
-        return new LinearComb((ColorClass) dom.support().iterator().next());
     }
 
     @Override

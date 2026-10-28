@@ -209,9 +209,9 @@ public final class TupleJuxtaposition  implements FunctionTuple, N_aryOp<Functio
     }
     
     
-    @Override
+    /*@Override
     public Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
-    }
+    }*/
     
 }

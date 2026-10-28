@@ -277,9 +277,10 @@ public final class TupleProjection implements FunctionTuple, UnaryOp<FunctionTup
         this.simplified = simplified;
     }
 
+    /* 
     @Override
     public final Class<? extends FunctionTuple> type() {
         return FunctionTuple.class;
-    }
+    }*/
 
 }
