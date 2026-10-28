@@ -6,7 +6,6 @@ import java.util.Map.Entry;
 import classfunction.ElementaryFunction;
 import classfunction.Projection;
 import classfunction.SetFunction;
-import classfunction.Successor;
 import color.ColorClass;
 import expr.*;
 import guard.And;
@@ -273,9 +272,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return the composed tuple
      */
     public ArcFunction baseCompose(WNtuple other) {
-        // TODO: Gestire guardie
-
-
         //System.out.println(this + " . " + other);
         final List<? extends ColorFunction> leftComps = getHomSubTuple(getSort());
         final List<? extends ColorFunction> rightComps = other.getHomSubTuple(other.getSort());

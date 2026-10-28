@@ -1,6 +1,7 @@
 package guard;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import color.Sort;
 import graph.InequalityGraph;
@@ -46,7 +47,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      */
     public static Guard factory(final Collection<?  extends Guard> arglist, final boolean check) {
         Set<? extends Guard> asSet = Util.asSet(arglist);
-        return asSet.size() < 2 ?  asSet.iterator().next() : new And (asSet, check);
+        return asSet.size() < 2 ?  asSet.iterator().next() : new And (asSet, check).genSimplify();
     }
     
     /**
@@ -66,7 +67,7 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
      * @return the newly built guard
      */
     public static Guard factory (final boolean check, final Guard ... args)  {
-        return factory(Arrays.asList(args), check); 
+        return factory(Arrays.asList(args), check);
     }
     
     /**
@@ -581,9 +582,9 @@ public final class And  extends NaryGuardOperator implements AndOp<Guard>  {
             merge = eq.isEmpty() ? ineq : eq;
         }
 
-        return Util.groupAdjacent(merge, (e1, e2) -> e1.firstIndex() == e2.firstIndex()
-                || e1.secondIndex() == e2.firstIndex()
-                || e1.secondIndex() == e2.secondIndex());
+        return Util.groupAdjacent(merge, (e1, e2) -> e1.firstIndex().equals(e2.firstIndex())
+                || e1.secondIndex().equals(e2.firstIndex())
+                || e1.secondIndex().equals(e2.secondIndex()));
     }
 
 }
