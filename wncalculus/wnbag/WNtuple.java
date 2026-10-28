@@ -261,7 +261,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         SortedMap<ColorClass, List<? extends ColorFunction>> subtuples = new TreeMap<>();
         int coeff = 1;
         var modified = false;
-        for (Map.Entry<ColorClass, List<? extends ColorFunction>> entry : this.getHomSubTuples().entrySet()) {
+        for (Map.Entry<ColorClass, List<? extends ColorFunction>> entry : tres.getHomSubTuples().entrySet()) {
             final ColorClass cc = entry.getKey();
             final List<? extends ColorFunction> subtuple = entry.getValue();
             final List<ColorFunction> simplifiedSubtuple = new ArrayList<>();

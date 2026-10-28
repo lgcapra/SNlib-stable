@@ -177,15 +177,6 @@ import java.util.Map.Entry;
 
         }
 
-        @Override
-        public  LinearComb buildEmpty(Domain dom, Domain codom) {
-            return new LinearComb(asMap(), false);
-        }
-
-        @Override
-        public  LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-            return new LinearComb (m, false);
-        }
 
         @Override
         public Map<Sort, Integer> splitDelimiters() {

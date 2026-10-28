@@ -25,15 +25,6 @@ public final class LinearCombScalar extends ScalarProd<ElementaryFunction> imple
         return new LinearCombScalar((LinearComb) arg, coeff);
     }
 
-    @Override
-    public LinearComb build(Map<? extends ElementaryFunction, Integer> m) {
-        return new LinearComb(m);
-    }
-
-    @Override
-    public LinearComb buildEmpty(Domain dom, Domain codom) {
-        return new LinearComb((ColorClass) dom.support().iterator().next());
-    }
 
     @Override
      public Map<Sort, Integer> splitDelimiters() {
