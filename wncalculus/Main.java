@@ -1078,15 +1078,38 @@ public class Main {
         Domain domain = new Domain(fc2, fc2, fc2);
 
         // Guardia [c1 = c2]
-        Guard guard1 = Equality.builder(pr1, pr2, true, domain);
+        Guard eq1 = Equality.builder(pr1, pr2, true, domain);
         // Guardia [c1 != c3]
-        Guard guard2 = Equality.builder(pr1, pr3, false, domain);
+        Guard eq2 = Equality.builder(pr1, pr3, false, domain);
 
-        Guard guard = And.factory(guard1,guard2);
+        // Guardia [c1 != c2]
+        Guard eq3 = Equality.builder(pr1, pr2, false, domain);
+        // Guardia [c1 = c3]
+        Guard eq4 = Equality.builder(pr1, pr3, true, domain);
+
+        Guard guard = And.factory(eq1,eq2);
+
+        Guard guard2 = And.factory(eq1,eq4);
+
+        Guard guard3 = And.factory(eq2,eq3);
 
         // <c1, c1, c2> [c1 = c2]
         WNtuple wnt1 = new WNtuple(
                 guard,
+                new LinearComb(pr1),
+                new LinearComb(pr1),
+                new LinearComb(pr2)
+        );
+
+        WNtuple wnteq = new WNtuple(
+                guard2,
+                new LinearComb(pr1),
+                new LinearComb(pr1),
+                new LinearComb(pr2)
+        );
+
+        WNtuple wntineq = new WNtuple(
+                guard3,
                 new LinearComb(pr1),
                 new LinearComb(pr1),
                 new LinearComb(pr2)
@@ -1100,9 +1123,25 @@ public class Main {
                 new LinearComb(All.getInstance(fc2))
         );
 
+        WNtuple wnt3 = new WNtuple(
+                domain,
+                new LinearComb(All.getInstance(fc2)),
+                new LinearComb(All.getInstance(fc2)),
+                new LinearComb(All.getInstance(fc2))
+        );
+
         ArcFunComp c = new ArcFunComp(wnt1, wnt2);
+        ArcFunComp d = new ArcFunComp(wnt1, wnt3);
+        ArcFunComp e = new ArcFunComp(wnteq, wnt3);
+        ArcFunComp f = new ArcFunComp(wntineq, wnt3);
         System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
+        System.out.println("normalizzo\n" + d);
+        System.out.println(d.normalize());
+        System.out.println("normalizzo\n" + e);
+        System.out.println(e.normalize());
+        System.out.println("normalizzo\n" + f);
+        System.out.println(f.normalize());
         Util.getChar();
     }
 
