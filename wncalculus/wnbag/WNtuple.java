@@ -317,11 +317,10 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return the composed tuple
      */
     public ArcFunction baseCompose(WNtuple other) {
-        //System.out.println(this + " . " + other);
         final List<? extends ColorFunction> leftComps = getHomSubTuple(getSort());
         final List<? extends ColorFunction> rightComps = other.getHomSubTuple(other.getSort());
 
-        // Build the substitution map: projection index -> right tuple component
+        // Projection index -> component of the right tuple
         final Map<Integer, ColorFunction> subst = new HashMap<>();
         for (int i = 0; i < rightComps.size(); i++) {
             subst.put(i + 1, rightComps.get(i));
@@ -330,43 +329,80 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         final List<ColorFunction> resultComps = new ArrayList<>(leftComps.size());
 
         for (ColorFunction leftCf : leftComps) {
-            if (leftCf instanceof LinearComb lc) {
-                final Map<ElementaryFunction, Integer> newMap = new HashMap<>();
+            final Map<ElementaryFunction, Integer> newMap = new HashMap<>();
 
+            if (leftCf instanceof LinearComb lc) {
                 for (Map.Entry<? extends ElementaryFunction, Integer> e : lc.asMap().entrySet()) {
                     final ElementaryFunction f = e.getKey();
                     final int mult = e.getValue();
 
                     if (f instanceof Projection p) {
-                        final int idx = p.getIndex();
-                        final ColorFunction replacement = subst.get(idx);
-
-                        if (replacement instanceof LinearComb replLc) {
-                            for (Map.Entry<? extends ElementaryFunction, Integer> re : replLc.asMap().entrySet()) {
-
-                                ElementaryFunction term = re.getKey();
-                                int replacementMult = re.getValue();
-
-                                Pair<SetFunction, Integer> composition = p.baseCompose(term);
-
-                                SetFunction composed = composition.getKey();
-
-                                if (composed instanceof ElementaryFunction elementary) {
-                                    newMap.merge(elementary, mult * replacementMult, Integer::sum);
-                                }
-                            }
-                        }
-                    }else {
-                        // Non-projection term: keep it unchanged
+                        composeProjection(p, subst, newMap, mult);
+                    } else {
                         newMap.merge(f, mult, Integer::sum);
                     }
                 }
 
-                resultComps.add(new LinearComb(newMap, false));
+                if (newMap.isEmpty()) {
+                    resultComps.add(new LinearComb(lc.getSort()));
+                } else {
+                    resultComps.add(new LinearComb(newMap, false));
+                }
+
+            } else if (leftCf instanceof Projection p) {
+                composeProjection(p, subst, newMap, 1);
+
+                if (newMap.isEmpty()) {
+                    resultComps.add(new LinearComb(p.getSort()));
+                } else if (newMap.size() == 1 && newMap.values().iterator().next() == 1) {
+                    resultComps.add(newMap.keySet().iterator().next());
+                } else {
+                    resultComps.add(new LinearComb(newMap, false));
+                }
+
+            } else {
+                throw new IllegalStateException("Unsupported component in baseCompose: " + leftCf.getClass().getName() + " -> " + leftCf);
             }
         }
 
         return new WNtuple(resultComps, other.guard(), true);
+    }
+
+
+    private void composeProjection(Projection p, Map<Integer, ColorFunction> subst, Map<ElementaryFunction, Integer> result, int multiplicity) {
+
+        ColorFunction replacement = subst.get(p.getIndex());
+
+        switch (replacement) {
+            case null -> throw new IllegalStateException("Missing substitution for projection " + p);
+            case LinearComb lc -> {
+                for (var entry : lc.asMap().entrySet()) {
+                    Pair<SetFunction, Integer> composition =
+                            p.baseCompose(entry.getKey());
+
+                    SetFunction composed = composition.getKey();
+
+                    if (!(composed instanceof ElementaryFunction elementary)) {
+                        throw new IllegalStateException("Composition did not produce an ElementaryFunction: " + composed);
+                    }
+
+                    result.merge(elementary, multiplicity * entry.getValue(), Integer::sum);
+                }
+            }
+            case ElementaryFunction elementary -> {
+                Pair<SetFunction, Integer> composition = p.baseCompose(elementary);
+
+                SetFunction composed = composition.getKey();
+
+                if (!(composed instanceof ElementaryFunction composedElementary)) {
+                    throw new IllegalStateException("Composition did not produce an ElementaryFunction: " + composed);
+                }
+
+                result.merge(composedElementary, multiplicity, Integer::sum);
+            }
+            default -> throw new IllegalStateException("Unsupported replacement for projection " + p + ": " + replacement.getClass().getName());
+        }
+
     }
 
     public ArcFunction repetedIndexCompose(WNtuple other) {

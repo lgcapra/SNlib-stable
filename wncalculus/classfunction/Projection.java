@@ -22,7 +22,7 @@ public final class Projection extends ProjectionBased {
     /**
      * basic constructor creates a projection with an associated color constraint;
      * @param index the projection index
-     * @param exp the successor exponent
+     * @param succ the successor exponent
      * @param cc the projection color class
      */
     private Projection(final int index, final int succ, final ColorClass cc) {
@@ -41,7 +41,7 @@ public final class Projection extends ProjectionBased {
      * @param cc the specified color
      * @return a projection (successor) of the specified color class
      */
-    public static final Projection builder(final int index, int succ, final ColorClass cc) {
+    public static Projection builder(final int index, int succ, final ColorClass cc) {
         if (index < 1) {
             throw new IndexOutOfBoundsException("cannot create a projection with index < 1");
         }
@@ -66,17 +66,17 @@ public final class Projection extends ProjectionBased {
      * @param cc the specified color
      * @return a projection of the specified color class
      */
-    public static final Projection builder(final int index, final ColorClass cc) {
+    public static Projection builder(final int index, final ColorClass cc) {
         return Projection.builder(index, 0, cc);
     }
 
     @Override
-    public final int getIndex() {
+    public int getIndex() {
         return this.index;
     }
 
     @Override
-    public final int getSucc() {
+    public int getSucc() {
         return this.succ;
     }
 

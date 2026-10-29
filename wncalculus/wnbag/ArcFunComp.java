@@ -1,8 +1,11 @@
 package wnbag;
 
+import bagexpr.Bag;
 import bagexpr.BagComp;
 import bagexpr.BagExpr;
+import classfunction.All;
 import classfunction.ClassFunction;
+import classfunction.Projection;
 import color.ColorClass;
 import expr.Domain;
 import graph.InequalityGraph;
@@ -465,35 +468,41 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
 
 
     private static boolean isRepeatedIndex(WNtuple tleft) {
-        final List<Set<Integer>> idxPos = tleft.projectionIndexPositions();
-
-        // check repeated projection indices
-        boolean repeatedIndex = false;
-        for (Set<Integer> e : idxPos) {
-            if (e.size() != 1) {
-                repeatedIndex = true;
-                break;
+        for (Set<Integer> positions : tleft.projectionIndexPositions()) {
+            if (positions.size() > 1) {
+                return true;
             }
         }
-        return repeatedIndex;
+        return false;
     }
 
     private List<WNtuple> splitHomogeneousTuples(WNtuple left) {
-        final List<LinearComb> leftComps = Util.copyAndCast(left.getComponents(), LinearComb.class);
+        final List<List<ColorFunction>> alternatives = new ArrayList<>();
 
-        final List<List<LinearComb>> l2lb = new ArrayList<>();
+        for (ColorFunction component : left.getComponents()) {
+            if (component instanceof LinearComb lc) {
+                final List<ColorFunction> separated = new ArrayList<>();
 
-        for (LinearComb t : leftComps) {
-            List<LinearComb> llb = Util.copyAndCast(t.separateConst(), LinearComb.class);
-            l2lb.add(llb);
+                for (Bag<?> bag : lc.separateConst()) {
+                    separated.add((ColorFunction) bag);
+                }
+
+                alternatives.add(separated);
+
+            } else if (component instanceof Projection || component instanceof All) {
+                alternatives.add(List.of(component));
+
+            } else {
+                throw new IllegalArgumentException("Unsupported component type: " + component.getClass());
+            }
         }
 
-        final Set<Collection<LinearComb>> cpr = Util.cartesianProd(l2lb);
+        final Set<Collection<ColorFunction>> combinations = Util.cartesianProd(alternatives);
 
         final List<WNtuple> result = new ArrayList<>();
 
-        for (Collection<LinearComb> llc : cpr) {
-            result.add(new WNtuple(Util.copyAndCast(llc, LinearComb.class), left.guard(), false));
+        for (Collection<ColorFunction> combination : combinations) {
+            result.add(new WNtuple(new ArrayList<>(combination), left.guard(), false));
         }
 
         return result;
@@ -515,9 +524,9 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
             }
 
             for (Integer i : idxPo) {
-                LinearComb component = tleft.getComponent(i, tleft.getSort()).cast();
+                ColorFunction component = tleft.getComponent(i, tleft.getSort());
 
-                if (component.asMap().size() > 1) {
+                if (component instanceof LinearComb lc && lc.asMap().size() > 1) {
                     return splitAndCompose(tleft, rtx, i, true);
                 }
             }
