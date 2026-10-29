@@ -27,8 +27,10 @@ import wncolorfunction.LinearCombScalar;
 public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcFunction {
     
     //cache fields
-    private Boolean simple = null;
+    private Boolean simple = null, 
+                    elementary = null;
     private Integer card = null;
+  
 
     /**
      * base constructor: creates a <tt>WNtuple</tt> from a list of linear comb. of class-functions
@@ -92,14 +94,31 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
     /**
      * 
-     * @return <code>true</code> if and only if this tuple is built of <code>LinearComb</code>s
+     * @return <code>true</code> if and only if each component is a <code>LinearComb</code> or
+     *         an <code>ElementaryFunction</code>
      */
     public boolean simple() {
-        if (simple == null)
-          simple = Util.checkAll(getComponents(), LinearComb.class::isInstance);
-
+        if (elementaryTuple()) {
+            return true;
+        }
+        if (simple == null) {
+          simple = Util.checkAll(getComponents(), c ->
+                  LinearComb.class.isInstance(c) || ElementaryFunction.class.isInstance(c));
+        }
         return simple;
     }
+
+    /**   
+     * @return <code>true</code> if and only if each component is an <code>ElementaryFunction</code>
+     */
+    public boolean elementaryTuple() {
+        if (elementary == null) {
+          elementary = Util.checkAll(getComponents(), c -> ElementaryFunction.class.isInstance(c));
+        }
+
+        return elementary;
+    }
+
 
     @Override
     public Integer cardLb() {
