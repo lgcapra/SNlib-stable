@@ -5,6 +5,8 @@ import expr.Expressions;
 import expr.N_aryOp;
 import expr.ParametricExpr;
 import util.Util;
+import wnbag.TupleBag;
+import wnbag.WNtuple;
 
 import java.util.*;
 
@@ -28,22 +30,33 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
         
         this.args = Collections.unmodifiableCollection(c);
     }
-    
 
-    //maps (if possible) the sum to the bag's sum
+
     @Override
     public BagExpr<E> specSimplify() {
-      if ( Util.checkAll(this.args, Bag.class::isInstance) ) {
-        Iterator<? extends BagExpr<E>> iterator = this.args.iterator();
-        Bag<E> bres = iterator.next().cast();
-        while (iterator.hasNext()) {
-            Bag<E> bag = iterator.next().cast(); // next bag-operand
-            bres = Op(bres, bag);
+        List<Bag<E>> bags = new ArrayList<>();
+        for (BagExpr<E> arg : this.args) {
+            BagExpr<E> n = (BagExpr<E>) arg.normalize();
+            if (n instanceof Bag<?> b) {
+                bags.add((Bag<E>) b);
+            } else if (n != null) {
+                // cast da singola tupla/elemento a singleton bag
+                if (n instanceof WNtuple t) {
+                    bags.add((Bag<E>) new TupleBag(Collections.singletonMap(t, 1)));
+                } else {
+                    return this;
+                }
+            } else {
+                return this;
+            }
         }
-        return bres;
-      }
 
-      return this;
+        Iterator<Bag<E>> it = bags.iterator();
+        Bag<E> res = it.next();
+        while (it.hasNext()) {
+            res = Op(res, it.next());
+        }
+        return res;
     }
 
     abstract Bag<E> Op(Bag<E> b1, Bag<E> b2);

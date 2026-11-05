@@ -3,14 +3,10 @@ package wnbag;
 import java.util.*;
 import java.util.Map.Entry;
 
-import classfunction.ElementaryFunction;
-import classfunction.Projection;
-import classfunction.SetFunction;
+import classfunction.*;
 import color.ColorClass;
 import expr.*;
-import guard.And;
-import guard.Equality;
-import guard.Guard;
+import guard.*;
 import tuple.AbstractTuple;
 import util.Pair;
 import util.Util;
@@ -273,8 +269,38 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     public ArcFunction specSimplify() {
         //System.out.println("specSimplify("+this.toStringDetailed()+")"); //debug
         ArcFunction res = super.specSimplify().cast();
+        //System.out.println("specSimplify: "+this.toStringDetailed()+" -> "+res.toStringDetailed()); //debug
         if (! (res instanceof WNtuple tres))
             return res;
+
+        // if the tuple can be split into a sum of tuples, do it
+        ArcFunction split = tres.toEquivSimpleSum();
+        if (split != tres) {
+            return split;
+        }
+
+        // Filter reduction: if the filter is non-trivial, we can try to reduce the tuple by applying the filter's equalities and memberships
+        if (tres.filter().isElemAndForm()) {
+            final var equalityMap = tres.filter().equalityMap();
+            final var membMap = tres.filter().membMap();
+            final ArcFunction reduced = tres.baseFilterReduction(equalityMap, membMap);
+            if (reduced != tres) {
+//                System.out.println("specSimplify: "+tres.toStringDetailed()); //debug
+//                System.out.println("specSimplify: reduced by filter to "+reduced.toStringDetailed());
+                return reduced;
+            }
+        }
+
+        // Guard reduction: if the guard is non-trivial, we can try to switch some guard clauses to the filter if all variables involved in the guard clauses are projected in the tuple's components
+        if (tres.guard().isElemAndForm()) {
+            final ArcFunction reduced = tres.baseGuardReduction();
+            if (reduced != tres) {
+//                System.out.println("specSimplify: "+tres.toStringDetailed()); //debug
+//                System.out.println("specSimplify: reduced by guard to "+reduced.toStringDetailed());
+                return reduced;
+            }
+        }
+
         // for each color class, simplify the corresponding subtuple
         SortedMap<ColorClass, List<? extends ColorFunction>> subtuples = new TreeMap<>();
         int coeff = 1;
@@ -300,8 +326,481 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                 } 
                 subtuples.put(cc, simplifiedSubtuple);
             }
-            
         return coeff == 1 || !modified ? tres : new ArcFunScalar(new WNtuple(tres.filter(), subtuples, tres.guard()), coeff);
+    }
+
+    /**
+     * Expands each component that is a non-trivial LinearComb into a sum of tuples.
+     * This is the multiset analogue of Tuple.toEquivSimpleSum().
+     *
+     * If a component is a LinearComb with support size > 1, the tuple is rewritten
+     * as a sum of tuples, each selecting one term of the LinearComb.
+     */
+    public ArcFunction toEquivSimpleSum() {
+        final ColorClass cc = getSort();
+        if (cc == null) {
+            return this; // this is not a 1-sorted tuple: this global expansion cannot be performed
+        }
+        final List<? extends ColorFunction> comps = getComponents();
+        final List<List<Map.Entry<ColorFunction, Integer>>> choices = new ArrayList<>();
+        boolean expandable = false;
+
+        for (ColorFunction cf : comps) {
+            if (cf instanceof LinearComb lc && lc.size() > 1) {
+                final List<Map.Entry<ColorFunction, Integer>> c = new ArrayList<>();
+                lc.asMap().forEach((f, k) -> c.add(new AbstractMap.SimpleEntry<>(new LinearComb(f), k)));
+                choices.add(c);
+                expandable = true;
+            } else {
+                final List<Map.Entry<ColorFunction, Integer>> c = new ArrayList<>();
+                c.add(new AbstractMap.SimpleEntry<>(cf, 1));
+                choices.add(c);
+            }
+        }
+
+        if (!expandable) {
+            return this;
+        }
+
+        final Map<WNtuple, Integer> result = new HashMap<>();
+
+        for (Collection<Map.Entry<ColorFunction, Integer>> prod : Util.cartesianProd(choices)) {
+            final List<ColorFunction> newComps = new ArrayList<>(comps.size());
+            int mult = 1;
+
+            for (Map.Entry<ColorFunction, Integer> choice : prod) {
+                newComps.add(choice.getKey());
+                mult *= choice.getValue();
+            }
+
+            final WNtuple t = new WNtuple(Util.singleSortedMap(getSort(), newComps), guard());
+            result.merge(t, mult, Integer::sum);
+        }
+
+        return new TupleBag(result);
+    }
+
+    /**
+     * Sposta le clausole della guardia (Guard) come filtro (Filter) della tupla
+     * se tutte le variabili coinvolte nelle clausole compaiono come proiezioni
+     * all'interno delle componenti della tupla.
+     *
+     * @return una nuova WNtuple con il filtro aggiornato e la guardia ridotta,
+     *         oppure 'this' se non è stata applicata alcuna trasformazione.
+     */
+    public WNtuple baseGuardReduction() {
+        Guard currentGuard = guard();
+
+        // Se la guardia è banale (True), non c'è nulla da spostare
+        if (currentGuard.isTrivial()) {
+            return this;
+        }
+
+        // Mappa degli indici di proiezione presenti nella tupla verso le loro posizioni (1-based)
+        // Es: <c1, c3, c2> -> {1: pos 1, 3: pos 2, 2: pos 3}
+        final ColorClass cc = getSort();
+        if (cc == null) {
+            return this; // Operiamo su tuple omogenee/single-color
+        }
+
+        final List<? extends ColorFunction> comps = getHomSubTuple(cc);
+        final Map<Integer, Integer> projToPosMap = new HashMap<>();
+
+        for (int pos = 0; pos < comps.size(); pos++) {
+            ColorFunction cf = comps.get(pos);
+            if (cf instanceof Projection p) {
+                projToPosMap.put(p.getIndex(), pos + 1);
+            } else if (cf instanceof LinearComb lc && lc.size() == 1) {
+                ElementaryFunction ef = lc.asMap().keySet().iterator().next();
+                if (ef instanceof Projection p) {
+                    projToPosMap.put(p.getIndex(), pos + 1);
+                }
+            }
+        }
+
+        // Estraiamo le clausole della guardia (And)
+        final Collection<Guard> guardClauses = (Collection<Guard>) And.getArgs(currentGuard);
+        final Collection<Guard> clausesToMoveToFilter = new LinkedList<>();
+        final Collection<Guard> newFilterClauses = new LinkedList<>();
+
+        for (Guard clause : guardClauses) {
+            if (clause instanceof Equality eq) {
+                int idx1 = eq.getArg1().getIndex();
+                int idx2 = eq.getArg2().getIndex();
+
+                // Verifichiamo se entrambi gli indici delle variabili compaiono nella tupla
+                Integer pos1 = projToPosMap.get(idx1);
+                Integer pos2 = projToPosMap.get(idx2);
+
+                if (pos1 != null && pos2 != null) {
+                    // Creiamo la corrispondente clausola per il Filtro usando le posizioni della tupla!
+                    Projection filterProj1 = Projection.builder(pos1, cc);
+                    Projection filterProj2 = Projection.builder(pos2, cc);
+
+                    Equality filterEq = (Equality) Equality.builder(filterProj1, filterProj2, eq.isEquality(), getCodomain());
+
+                    clausesToMoveToFilter.add(eq);
+                    newFilterClauses.add(filterEq);
+                }
+            }
+        }
+
+        // Se nessuna clausola è stata spostata, restituisce la tupla inalterata
+        if (clausesToMoveToFilter.isEmpty()) {
+            return this;
+        }
+
+        // Ricostruzione del nuovo Filtro
+        Guard newFilter = filter();
+        if (!newFilterClauses.isEmpty()) {
+            final Set<Guard> args = new LinkedHashSet<>();
+
+            if (newFilter.isTrivial()) {
+                // niente da aggiungere: il filtro era true
+            } else if (newFilter instanceof ElementaryGuard || newFilter instanceof And) {
+                args.addAll(And.getArgs(newFilter));
+            } else {
+                args.add(newFilter);
+            }
+
+            args.addAll(newFilterClauses);
+            newFilter = args.size() == 1 ? args.iterator().next()
+                       : And.buildAndFormWithDom(args, getCodomain());
+        }
+
+        // Ricostruzione della nuova Guardia (rimuovendo le clausole spostate)
+        Guard newGuard;
+        final Set<Guard> remainingGuardArgs = new LinkedHashSet<>(guardClauses);
+        clausesToMoveToFilter.forEach(remainingGuardArgs::remove);
+
+        if (remainingGuardArgs.isEmpty()) {
+            newGuard = guard.True.getInstance(getDomain());
+        } else if (remainingGuardArgs.size() == 1) {
+            newGuard = remainingGuardArgs.iterator().next();
+        } else {
+            newGuard = And.buildAndFormWithDom(remainingGuardArgs, getDomain());
+        }
+
+        return new WNtuple(newFilter, getHomSubTuples(), newGuard);
+    }
+
+    /**
+     * Performs the tuple's filter reduction for WNtuple, following the same logic
+     * as Tuple.baseFilterReduction(...), but using multiset operations instead of
+     * set operations.
+     *
+     * @param equalityMap the filter's precomputed equality map
+     * @param membMap    the filter's precomputed membership map
+     * @return an equivalent reduced tuple, or this if no reduction happened
+     */
+    public WNtuple baseFilterReduction(Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap, Map<ColorClass, Map<Boolean, Set<Membership>>> membMap) {
+
+        final Collection<Guard> to_remove = new LinkedList<>();
+        final SortedMap<ColorClass, List<? extends ColorFunction>> tuple_copy = new TreeMap<>();
+        var reduced = false;
+        ColorClass cc;
+        int i;
+        List<ColorFunction> h_tuple;
+
+        // Riduzione per Membership
+        for (var mx : membMap.entrySet()) {
+            h_tuple = new ArrayList<>(getHomSubTuple(cc = mx.getKey()));
+            for (var my : mx.getValue().entrySet()) {
+                for (var m : my.getValue()) {
+                    i = m.firstIndex() - 1;
+                    if (i >= 0 && i < h_tuple.size()) {
+                        ColorFunction oldCf = h_tuple.get(i);
+                        ColorFunction constraint = multisetConstraint(m);
+                        ColorFunction newCf = my.getKey() ? interMulti(oldCf, constraint) : differMulti(oldCf, constraint);
+
+                        if (!newCf.equals(oldCf)) {
+                            h_tuple.set(i, newCf);
+                            reduced = true;
+                        }
+                        to_remove.add(m);
+                    }
+                }
+            }
+            tuple_copy.put(cc, h_tuple);
+        }
+
+        // Riduzione per Uguaglianze (=) e Disuguaglianze (!=)
+        for (var ex : equalityMap.entrySet()) {
+            if ((h_tuple = (List<ColorFunction>) tuple_copy.get(cc = ex.getKey())) == null) {
+                h_tuple = new ArrayList<>(getHomSubTuple(cc));
+            }
+
+            for (var ey : ex.getValue().entrySet()) {
+                final boolean op = ey.getKey(); // true = '=', false = '!='
+
+                for (var eq : ey.getValue()) {
+                    i = eq.firstIndex() - 1;
+                    int j = eq.secondIndex() - 1;
+
+                    if (i < 0 || j < 0 || i >= h_tuple.size() || j >= h_tuple.size()) {
+                        continue;
+                    }
+
+                    final ColorFunction f_i = h_tuple.get(i);
+                    final ColorFunction f_j = h_tuple.get(j);
+
+                    ColorFunction succ_fi = f_i;
+                    ColorFunction succ_fj = f_j;
+
+                    int exp_diff = eq.getArg2().getSucc() - eq.getArg1().getSucc();
+                    if (cc.isOrdered() && exp_diff != 0) {
+                        succ_fi = succMulti(-exp_diff, f_i);
+                        succ_fj = succMulti(exp_diff, f_j);
+                    }
+
+                    if (op) {
+                        // UGUAGLIANZA (=)
+                        final boolean fi_card_leq_1 = cardLeq1(f_i);
+                        final boolean fj_card_leq_1 = cardLeq1(f_j);
+
+                        if (fi_card_leq_1 || fj_card_leq_1) {
+                            if (fi_card_leq_1 && isSetFunction(f_j)) {
+                                // S_C2 alla posizione j ristretto alla proiezione puntuale f_i
+                                h_tuple.set(j, succ_fi);
+                                to_remove.add(eq);
+                                reduced = true;
+                            } else if (fj_card_leq_1 && isSetFunction(f_i)) {
+                                // S_C2 alla posizione i ristretto alla proiezione puntuale f_j
+                                h_tuple.set(i, succ_fj);
+                                to_remove.add(eq);
+                                reduced = true;
+                            } else if (fi_card_leq_1 && fj_card_leq_1) {
+                                // Entrambe proiezioni puntuali: sostituzione simbolica diretta
+                                if (f_i instanceof Projection p1 && f_j instanceof Projection p2 && p1.getIndex() != p2.getIndex()) {
+                                    final Projection target = Projection.builder(p1.getIndex(), cc);
+                                    for (int k = 0; k < h_tuple.size(); k++) {
+                                        h_tuple.set(k, substituteProjection(h_tuple.get(k), p2.getIndex(), target));
+                                    }
+                                    to_remove.add(eq);
+                                    reduced = true;
+                                } else if (f_i.equals(succ_fj)) {
+                                    to_remove.add(eq); // Tautologia c_i = c_i
+                                    reduced = true;
+                                }
+                            }
+                        }
+                    } else {
+                        // DISUGUAGLIANZA (!=)
+                        if (f_i.equals(f_j) && cardLeq1(f_i)) {
+                            // Incompatibilità c_i != c_i su elemento singolo -> tupla vuota
+                            return build().cast();
+                        }
+
+                        // Se una componente è un supporto globale S_C e l'altra è una proiezione puntuale c:
+                        if (isSetFunction(f_i) && cardLeq1(f_j)) {
+                            ColorFunction restricted = differMulti(f_i, succ_fj);
+                            if (!restricted.equals(f_i)) {
+                                h_tuple.set(i, restricted);
+                                to_remove.add(eq); // Clausola assorbita nella componente come S_C - c
+                                reduced = true;
+                            }
+                        } else if (isSetFunction(f_j) && cardLeq1(f_i)) {
+                            ColorFunction restricted = differMulti(f_j, succ_fi);
+                            if (!restricted.equals(f_j)) {
+                                h_tuple.set(j, restricted);
+                                to_remove.add(eq); // Clausola assorbita nella componente come S_C - c
+                                reduced = true;
+                            }
+                        }
+                    }
+                }
+            }
+            tuple_copy.put(cc, h_tuple);
+        }
+
+        if (!reduced) {
+            return this;
+        }
+
+        // Ricostruzione del filtro pulito
+        var f = filter();
+        if (!to_remove.isEmpty()) {
+            var args = new HashSet<>(And.getArgs(f));
+            to_remove.forEach(args::remove);
+
+            if (args.isEmpty()) {
+                f = guard.True.getInstance(getCodomain());
+            } else if (args.size() == 1) {
+                f = args.iterator().next();
+            } else {
+                f = And.buildAndFormWithDom(args, getCodomain());
+            }
+        }
+
+        final SortedMap<ColorClass, List<? extends ColorFunction>> rebuilt = new TreeMap<>();
+        for (var e : getHomSubTuples().entrySet()) {
+            rebuilt.putIfAbsent(e.getKey(), new ArrayList<>(e.getValue()));
+        }
+        rebuilt.putAll(tuple_copy);
+
+        return new WNtuple(f, rebuilt, guard());
+    }
+
+    // Helper for identifying set functions S_C
+    private static boolean isSetFunction(ColorFunction cf) {
+        return switch (cf) {
+            case null -> false;
+            case SetFunction setFunction -> true;
+            case LinearComb lc -> lc.asMap().keySet().stream().anyMatch(Objects::nonNull);
+            default -> false;
+        };
+    }
+
+    /**
+     * Sostituisce ricorsivamente un indice di proiezione target con la nuova proiezione all'interno di una ColorFunction.
+     */
+    private static ColorFunction substituteProjection(ColorFunction cf, int targetIndex, Projection replacement) {
+        if (cf instanceof Projection p) {
+            if (p.getIndex() == targetIndex) {
+                return replacement;
+            }
+            return p;
+        }
+        if (cf instanceof LinearComb lc) {
+            final Map<ElementaryFunction, Integer> newMap = new LinkedHashMap<>();
+            boolean changed = false;
+            for (var entry : lc.asMap().entrySet()) {
+                ElementaryFunction elem = entry.getKey();
+                if (elem instanceof Projection p && p.getIndex() == targetIndex) {
+                    newMap.put(replacement, entry.getValue());
+                    changed = true;
+                } else {
+                    newMap.put(elem, entry.getValue());
+                }
+            }
+            return changed ? new LinearComb(newMap, false) : lc;
+        }
+        return cf;
+    }
+
+    /**
+     * For a membership clause m = X_i in S (or !in S), the corresponding multiset
+     * restriction is just the intersection with the subclass support.
+     */
+    private static ColorFunction multisetConstraint(Membership m) {
+        // In this library a Membership is a guard on a projection; for a multiset
+        // component the effect is just a restriction of the support.
+        // We keep it conservative and return the component unchanged when the
+        // restriction is not explicit at this level.
+        return new LinearComb(m.getSort());
+    }
+
+
+    private static ColorFunction interMulti(ColorFunction f1, ColorFunction f2) {
+        if (f1.equals(f2)) {
+            return f1;
+        }
+
+        // Convertiamo f1 e f2 in LinearComb per poter accedere alla mappa (ElementaryFunction -> Coefficiente)
+        LinearComb lc1 = toLinearComb(f1);
+        LinearComb lc2 = toLinearComb(f2);
+
+        // Scorriamo ciascun termine del primo multiset
+        final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>();
+        for (var entry : lc1.asMap().entrySet()) {
+            final ElementaryFunction key = entry.getKey();
+            final Integer v2 = lc2.asMap().get(key); // Cerchiamo lo stesso termine nel secondo multiset
+            if (v2 != null) {
+                // Nei multiset l'intersezione sceglie il MINIMO dei coefficienti
+                final int min = Math.min(entry.getValue(), v2);
+                if (min > 0) {
+                    out.put(key, min);
+                }
+            }
+        }
+
+        //System.out.println("interMulti: " + f1 + " inter " + f2 + " = " + out); // debug
+        // Se l'intersezione è vuota, restituisce una LinearComb vuota (il multiset nullo)
+        return out.isEmpty() ? new LinearComb(f1.getSort()) : new LinearComb(out, false);
+    }
+
+    private static ColorFunction differMulti(ColorFunction f1, ColorFunction f2) {
+        if (f1.equals(f2)) {
+            return new LinearComb(f1.getSort()); // f1 - f1 = 0 (multiset vuoto)
+        }
+
+        LinearComb lc1 = toLinearComb(f1);
+        LinearComb lc2 = toLinearComb(f2);
+
+        // Copiamo tutti i termini e i loro coefficienti dal primo multiset
+        final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>(lc1.asMap());
+
+        // Sottraggiamo i coefficienti del secondo multiset
+        for (var e : lc2.asMap().entrySet()) {
+            final int newVal = out.getOrDefault(e.getKey(), 0) - e.getValue();
+            if (newVal == 0) {
+                out.remove(e.getKey()); // Se il coefficiente scende a 0, il termine scompare
+            } else {
+                out.put(e.getKey(), newVal); // Altrimenti aggiorna il coefficiente (anche negativo)
+            }
+        }
+
+        //System.out.println("differMulti: " + f1 + " differ " + f2 + " = " + out); // debug
+        return out.isEmpty() ? new LinearComb(f1.getSort()) : new LinearComb(out, false);
+    }
+
+    private static LinearComb toLinearComb(ColorFunction cf) {
+        if (cf instanceof LinearComb lc) {
+            return lc;
+        }
+        // Avvolgiamo la singola funzione elementare in una LinearComb con molteplicità 1
+        if (cf instanceof ElementaryFunction ef) {
+            return new LinearComb(ef);
+        }
+        return new LinearComb(cf.getSort());
+    }
+
+    /**
+     * Applica l'operatore successore con offset k a una ColorFunction (es. LinearComb).
+     *
+     * @param k l'offset del successore (può essere positivo o negativo)
+     * @param f la funzione di colore / combinazione lineare di partenza
+     * @return una nuova ColorFunction con gli indici o i successori shiftati di k
+     */
+    private static ColorFunction succMulti(int k, ColorFunction f) {
+        if (k == 0 || f == null) {
+            return f; // Offset 0: non cambia nulla
+        }
+
+        if (!(f instanceof LinearComb lc)) {
+            return f;
+        }
+
+        final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>();
+        for (var entry : lc.asMap().entrySet()) {
+            final SetFunction x = entry.getKey();
+            final SetFunction shifted;
+
+            // Se è una Proiezione, incrementa direttamente il suo successore
+            if (x instanceof Projection p) {
+                shifted = p.setExp(p.getSucc() + k);
+            } else if (x instanceof Successor s) {
+                shifted = Successor.factory(k + s.getExp(), s.getArg());
+            } else {
+                // Altrimenti crea un nuovo oggetto Successor mediante la factory
+                shifted = Successor.factory(k, x);
+            }
+
+            // Fonde il nuovo termine nel multiset di output sommando i coefficienti
+            if (shifted instanceof ElementaryFunction ef) {
+                out.merge(ef, entry.getValue(), Integer::sum);
+            }
+        }
+
+        return out.isEmpty() ? new LinearComb(f.getSort()) : new LinearComb(out, false);
+    }
+
+    /**
+     * Cardinality <= 1 test for multiset components.
+     */
+    private static boolean cardLeq1(ColorFunction f) {
+        Integer lb = f.cardLb();
+        return lb != null && lb <= 1;
     }
 
     @Override

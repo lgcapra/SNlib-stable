@@ -21,7 +21,7 @@ import java.util.Map.Entry;
     public final class LinearComb extends Bag<ElementaryFunction> implements ColorFunction {
 
         private final ColorClass cc;
-        private HashMap<Integer, Map<ElementaryFunction, Integer>> components; // cache
+        private Set<Integer> indexSet;
 
         /**
          * base constructor: creates a linear-combination of (elementary) class-functions
@@ -120,35 +120,20 @@ import java.util.Map.Entry;
         }
 
         /**
-         * extracts the components of this l.c. composed of terms with the same index
-         */
-        public HashMap<Integer, Map<ElementaryFunction, Integer>> components() {
-            if (this.components == null) {
-                this.components = new HashMap<>();
-                support().forEach(f -> {
-                    Integer i = f instanceof Projection ? ((Projection)f).getIndex() : 0;
-                    Map<ElementaryFunction, Integer> b = this.components.get(i);
-                    if (b == null)
-                        this.components.put(i, b = new HashMap<>());
-                    b.put(f, mult(f));
-                });
-
-                Map<ElementaryFunction, Integer> b;
-                if (this.components.size() > 1 && (b = this.components.get(0)) != null) {
-                    this.components.remove(0);
-                    this.components.get(this.components.keySet().iterator().next()).putAll(b);
-                }
-            }
-            return this.components;
-        }
-
-        /**
          * @return the index set of this function
          */
         @Override
         public Set<Integer> indexSet() {
-            Set<Integer> s = components().keySet();
-            return s.contains(0) ? Collections.emptySet() : s;
+            if(this.indexSet == null) {
+                var res = new HashSet<Integer>();
+                for (ElementaryFunction elementaryFunction : this.asMap().keySet()) {
+                    if (elementaryFunction instanceof Projection p) {
+                        res.add(p.getIndex());
+                    }
+                }
+                this.indexSet = res;
+            }
+            return this.indexSet;
         }
 
         @Override
@@ -237,6 +222,25 @@ import java.util.Map.Entry;
                 result.add(newList);
             }
             return result;
+        }
+
+        @Override
+        public Integer cardLb() {
+            if (indexSet().size() > 1) {
+                boolean hasPositive = false;
+                boolean hasNegative = false;
+
+                for (Map.Entry<? extends ElementaryFunction, Integer> e : asMap().entrySet()) {
+                    final int coeff = e.getValue();
+                    if (coeff > 0) hasPositive = true;
+                    if (coeff < 0) hasNegative = true;
+
+                    if (hasPositive && hasNegative) {
+                        return null;
+                    }
+                }
+            }
+            return super.cardLb();
         }
 
         

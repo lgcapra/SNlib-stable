@@ -29,11 +29,17 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
      * @throws NoSuchElementException if the map is empty or if all its elements are associated with value zero
     */
     public Bag(Map<? extends E, Integer> m) {
+        if (m == null || m.isEmpty()) {
+            throw new IllegalArgumentException("empty bag is not allowed here");
+        }
         for (E e : m.keySet()) {
             if(e.isParametric())
                 throw new IllegalDomain("bag elements cannot be parametric expressions: "+e);
         }
        m.values().removeAll(Collections.singleton(0));
+        if (m.isEmpty()) {
+            throw new IllegalArgumentException("bag became empty after removing zero coefficients");
+        }
        Expressions.checkArity(m.keySet());
        E e = m.keySet().iterator().next();
        this.dom   = e.getDomain();
@@ -131,7 +137,7 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
     }
 
     @Override
-    public final Integer cardLb() {
+    public Integer cardLb() {
         if (card == null) {
             card = 0;
             for (Map.Entry<? extends E, Integer> x : asMap().entrySet()) {
@@ -158,6 +164,11 @@ public abstract class Bag<E extends ParametricExpr> implements BagExpr<E>  {
         for (Map.Entry<? extends E, Integer> x : b.asMap().entrySet()) {
             int k = mult(x.getKey());
             m.put(x.getKey(), k + x.getValue());
+        }
+        m.entrySet().removeIf(e -> e.getValue() == 0);
+
+        if (m.isEmpty()) {
+            return buildEmpty(getDomain(), getCodomain()); // bag vuoto, non costruire da map vuota
         }
         return build(m);
     }

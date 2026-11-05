@@ -622,48 +622,6 @@ public class Main {
         //Util.getChar();
     }
 
-    /**
-     *
-     */
-    public static void testBag() {
-        Projection c_1 = Projection.builder(1, C),
-                c_2 = Projection.builder(2, C),
-                c_3 = Projection.builder(3, C),
-                c_4 = Projection.builder(4, C);
-        Subcl S_1 = Subcl.factory(1, C),
-                S_2 = Subcl.factory(2, C);
-        
-        System.out.println("+++ BagFunction +++");
-        LinearComb l = new LinearComb(c_1, c_2, c_2, c_1, c_1, S_1, S_1, S_2);
-        LinearComb l1, l2, l3;
-        System.out.println(l);
-        l1 = new LinearComb(c_2, c_1, c_1, S_1, S_1, S_2, S_1);
-        System.out.println(l1 + " -> " + l1.components());
-        BagExpr<ElementaryFunction> d = BagDiff.build(l, l1);
-        System.out.println("diff:\n" + d);
-        d = (BagExpr<ElementaryFunction>) d.normalize();
-        System.out.println("diff semplificata:\n" + d);
-        l = new LinearComb(c_1, c_2, c_2, c_1, c_1, S_1, S_1, S_2);
-        System.out.println(l + " -> " + l.components());
-        l1 = new LinearComb(c_2, c_1, c_1, S_1, S_1, S_2, S_1);
-        System.out.println(l1 + " -> " + l1.components());
-        d = BagDiff.build(l, l1);
-        System.out.println("semplifico:\n" + d);
-        System.out.println(d.normalize());
-        l = new LinearComb(c_1, c_1, c_1, S_1, S_1, S_2);
-        l2 = new LinearComb(c_2, c_4, c_1, S_1, c_4, S_2);
-        l3 = new LinearComb(c_3, c_1, c_1, S_1, c_4, S_2, S_1);
-        System.out.println(l + " -> " + l.components());
-        Domain d4 = new Domain(C, C, C, C);
-        WNtuple wnt;
-        List<LinearComb> lb = new ArrayList<>(Arrays.asList(new LinearComb[]{l1, l2, l3}));
-        Equality eq1 = (Equality) Equality.builder(c_2, c_3, false, d4),
-                eq2 = (Equality) Equality.builder(c_2, c_4, false, d4);
-        And ng1 = (And) And.factory(eq1, eq2);
-        System.out.println(ng1.getSort());
-        wnt = new WNtuple(lb, ng1, true);
-        
-    }
 
     /*
     example used in PN2020 paper
@@ -1142,6 +1100,19 @@ public class Main {
         System.out.println(e.normalize());
         System.out.println("normalizzo\n" + f);
         System.out.println(f.normalize());
+        Util.getChar();
+
+        Pair<ElementaryFunction, Integer> ppr2 = new Pair<>(pr2, -1),
+                                        ppr1 = new Pair<>(pr1, 1);
+        WNtuple wn = new WNtuple(
+                eq2,
+                new LinearComb(pr1),
+                new LinearComb(ppr1, ppr2),
+                new LinearComb(pr2)
+        );
+
+        System.out.println("normalizzo\n" + wn);
+        System.out.println(wn.normalize());
         Util.getChar();
     }
 
