@@ -219,12 +219,14 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         if (! (res instanceof WNtuple tres))
             return res;
 
-        // Split reduction: if the filter or the guard refer to some tuple's positions, we can try to split the tuple at those positions
-        Set<Integer> targetPositions = GuardAndFilterIdx(tres);
+        // Split reduction: if the filter or the guard refer to some tuple's positions,
+        // we can try to split the tuple at those positions, separately for each color.
+        Map<ColorClass, Set<Integer>> targetPositions = GuardAndFilterIdx(tres);
+        //System.out.println("\n"+this + "\n" + targetPositions + "\n");
         if (!targetPositions.isEmpty()) {
             ArcFunction splitTuple = tres.splitAtPositions(targetPositions);
             if (splitTuple != tres) {
-                //System.out.println("Split tuple: " + splitTuple);
+                //System.out.println("\nSplit tuple: " + splitTuple);
                 // If the tuple was split, we recursively simplify the resulting sum of tuples
                 return (ArcFunction) splitTuple.specSimplify();
             }
@@ -236,7 +238,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             final var membMap = tres.filter().membMap();
             final ArcFunction reduced = tres.baseFilterReduction(equalityMap, membMap);
             if (reduced != tres) {
-//                System.out.println("specSimplify: "+tres.toStringDetailed()); //debug
+//                System.out.println("\nspecSimplify: "+tres.toStringDetailed()); //debug
 //                System.out.println("specSimplify: reduced by filter to "+reduced.toStringDetailed());
                 return reduced;
             }
@@ -277,54 +279,67 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param tres the tuple to analyze
      * @return the set of positions (1-based) mentioned in the guard and filter
      */
-    private @NotNull Set<Integer> GuardAndFilterIdx(@NotNull WNtuple tres) {
-        Set<Integer> targetPositions = new HashSet<>();
-
-        ColorClass cc = tres.getSort();
-        if (cc == null) return targetPositions;
+    private @NotNull Map<ColorClass, Set<Integer>> GuardAndFilterIdx(@NotNull WNtuple tres) {
+        Map<ColorClass, Set<Integer>> targetPositions = new HashMap<>();
 
         // Collect positions referenced by the filter.
         if (tres.filter().isElemAndForm()) {
             var equalityMap = tres.filter().equalityMap();
             var membMap = tres.filter().membMap();
 
-            Map<Boolean, SortedSet<Equality>> equalities = equalityMap.get(cc);
-            if (equalities != null) {
-                for (SortedSet<Equality> set : equalities.values()) {
-                    for (Equality eq : set) {
-                        targetPositions.add(eq.firstIndex());
-                        targetPositions.add(eq.secondIndex());
+            for (ColorClass cc : equalityMap.keySet()) {
+                Map<Boolean, SortedSet<Equality>> equalities = equalityMap.get(cc);
+                if (equalities != null) {
+                    for (SortedSet<Equality> set : equalities.values()) {
+                        for (Equality eq : set) {
+                            targetPositions.computeIfAbsent(cc, k -> new HashSet<>()).add(eq.firstIndex());
+                            targetPositions.computeIfAbsent(cc, k -> new HashSet<>()).add(eq.secondIndex());
+                        }
                     }
                 }
             }
 
-            Map<Boolean, Set<Membership>> memberships = membMap.get(cc);
-            if (memberships != null) {
-                for (Set<Membership> set : memberships.values()) {
-                    for (Membership mb : set) {
-                        targetPositions.add(mb.firstIndex());
+            for (ColorClass cc : membMap.keySet()) {
+                Map<Boolean, Set<Membership>> memberships = membMap.get(cc);
+                if (memberships != null) {
+                    for (Set<Membership> set : memberships.values()) {
+                        for (Membership mb : set) {
+                            targetPositions.computeIfAbsent(cc, k -> new HashSet<>()).add(mb.firstIndex());
+                        }
                     }
                 }
             }
         }
 
-        // Collect projection indices referenced by the guard.
-        Set<Integer> guardIndices = new HashSet<>();
+        // Split the tuple and its guard by color.
+        Map<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> splitMap = tres.splitColors(tres.guard());
 
-        if (tres.guard() != null && !tres.guard().isTrivial()) {
-            collectGuardIndices(tres.guard(), guardIndices);
-        }
+        for (var entry : splitMap.entrySet()) {
+            ColorClass cc = entry.getKey();
 
-        // Convert guard projection indices into tuple positions.
-        List<? extends ColorFunction> components = tres.getHomSubTuple(cc);
+            List<? extends ColorFunction> components = entry.getValue().getKey();
+            Set<? extends ElementaryGuard> guards = entry.getValue().getValue();
 
-        for (int pos = 0; pos < components.size(); pos++) {
-            ColorFunction component = components.get(pos);
+            Set<Integer> guardIndices = new HashSet<>();
 
-            if (!Collections.disjoint(component.indexSet(), guardIndices)) {
-                targetPositions.add(pos + 1);
+            // Collect projection indices used by the guards of this color.
+            for (ElementaryGuard guard : guards) {
+                collectGuardIndices(guard, guardIndices);
+            }
+
+            // Convert projection indices into positions within this color.
+            for (int pos = 0; pos < components.size(); pos++) {
+                ColorFunction component = components.get(pos);
+
+                if (!Collections.disjoint(component.indexSet(), guardIndices)) {
+                    targetPositions.computeIfAbsent(cc, k -> new HashSet<>()).add(pos + 1);
+                }
             }
         }
+
+        // Remove colors for which no position needs to be expanded.
+        targetPositions.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+
 
         return targetPositions;
     }
@@ -356,58 +371,80 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param targetPositions the positions at which to split the tuple (1-based)
      * @return a sum of tuples resulting from the split, or <tt>this</tt> if no split is possible
      */
-    public @NotNull ArcFunction splitAtPositions(@NotNull Set<Integer> targetPositions) {
-        ColorClass cc = getSort();
-        if (cc == null) {
-            return this; // this is not a 1-sorted tuple: this global expansion cannot be performed
-        }
+    public @NotNull ArcFunction splitAtPositions(@NotNull Map<ColorClass, Set<Integer>> targetPositions) {
 
-        List<? extends ColorFunction> comps = getHomSubTuple(cc);
+        // Retrieve all tuple components, preserving their original order.
+        List<? extends ColorFunction> comps = getComponents();
+
+        // For each component, store the possible alternatives obtained by expanding
+        // its linear combination. Each alternative is paired with its coefficient.
         List<Set<Map.Entry<ColorFunction, Integer>>> choices = new ArrayList<>();
         boolean expandable = false;
 
-        for (int i = 0; i < comps.size(); i++) {
-            int pos1Based = i + 1;
-            ColorFunction cf = comps.get(i);
+        // Keep track of the current position within each color class.
+        // Positions are counted independently for each color class.
+        Map<ColorClass, Integer> colorPositions = new HashMap<>();
 
-            // If the position is in targetPositions and the component is a LinearComb with size > 1, we expand it
-            if (targetPositions.contains(pos1Based) && cf instanceof LinearComb lc && lc.size() > 1) {
-                Set<Map.Entry<ColorFunction, Integer>> c = new HashSet<>();
-                // For each term in the LinearComb, we create a new LinearComb with a single term and keep its coefficient
-                lc.asMap().forEach((f, k) -> c.add(new AbstractMap.SimpleEntry<>(new LinearComb(f), k)));
-                choices.add(c);
+        for (ColorFunction cf : comps) {
+            ColorClass cc = cf.getSort();
+            int pos = colorPositions.merge(cc, 1, Integer::sum);
+
+            Set<Map.Entry<ColorFunction, Integer>> alternatives = new HashSet<>();
+
+            // Expand the component only if:
+            // - its color class has target positions;
+            // - its position within that color class is among the targets;
+            // - it is a linear combination containing more than one term.
+            if (targetPositions.containsKey(cc)
+                    && targetPositions.get(cc).contains(pos)
+                    && cf instanceof LinearComb lc
+                    && lc.size() > 1) {
+
+                // Create one alternative for each term of the linear combination,
+                // preserving the coefficient associated with that term.
+                for (var entry : lc.asMap().entrySet()) {
+                    alternatives.add(new AbstractMap.SimpleEntry<>(
+                            new LinearComb(entry.getKey()), entry.getValue()));
+                }
+
                 expandable = true;
+
             } else {
-                // Otherwise, we keep the original component with a coefficient of 1
-                Set<Map.Entry<ColorFunction, Integer>> c = new HashSet<>();
-                c.add(new AbstractMap.SimpleEntry<>(cf, 1));
-                choices.add(c);
+                // Keep the original component unchanged, with coefficient 1.
+                alternatives.add(new AbstractMap.SimpleEntry<>(cf, 1));
             }
+
+            choices.add(alternatives);
         }
 
-        // If no components are expandable, we return the original tuple
+        // If no component can be expanded, return the original tuple unchanged.
         if (!expandable) {
             return this;
         }
 
         List<ArcFunction> tupleAddends = new ArrayList<>();
 
-        // For each combination of choices (cartesian product), we create a new WNtuple and wrap it in ArcFunScalar if needed
+        // Generate all possible combinations of component alternatives using the Cartesian product of the previously collected choices.
         for (Collection<Map.Entry<ColorFunction, Integer>> prod : Util.cartesianProd(choices)) {
+
             List<ColorFunction> newComps = new ArrayList<>(comps.size());
             int mult = 1;
 
+            // Reconstruct the tuple using the selected alternative for each component.
+            // The coefficient of the resulting tuple is the product of the coefficients of its selected component alternatives.
             for (Map.Entry<ColorFunction, Integer> choice : prod) {
                 newComps.add(choice.getKey());
                 mult *= choice.getValue();
             }
 
-            WNtuple t = new WNtuple(filter(), Util.singleSortedMap(cc, newComps), guard());
+            // Build a new tuple preserving the original filter and guard.
+            WNtuple t = new WNtuple(filter(), newComps, guard(), false);
 
-            // If the multiplicity is greater than 1, we wrap the tuple in an ArcFunScalar to account for the coefficient
+            // If the resulting coefficient differs from 1, represent it by wrapping the tuple in an ArcFunScalar.
             tupleAddends.add(mult != 1 ? new ArcFunScalar(t, mult) : t);
         }
 
+        // Combine all generated tuples into a sum of arc functions.
         return ArcFunSum.factory(tupleAddends);
     }
 
