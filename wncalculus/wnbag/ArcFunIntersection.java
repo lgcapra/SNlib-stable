@@ -25,8 +25,7 @@ public final class ArcFunIntersection extends BagIntersection<WNtuple> implement
         return factory(List.of(l));
     }
 
-     
-    @SuppressWarnings("unchecked")
+
     @Override
     public ArcFunction buildOp(Collection<? extends BagExpr<WNtuple>> args) {
         return factory((Collection<? extends ArcFunction>) args);

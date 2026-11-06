@@ -40,10 +40,12 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
 
     /**
      * 
-     * @param ctuples
-     * @param guard
-     * @param check
-     * @return
+     * @param ctuples a map of colour classes to arc functions
+     * @param guard a guard associated with the juxtaposition
+     * @param check a boolean indicating whether to check the domain of the arc functions
+     * @return an ArcFunction representing the juxtaposition of the provided arc functions
+     * If the map contains only one entry, returns that entry directly.
+     * Otherwise, creates a new ArcFunJuxt instance with the provided components and guard.
      */
     public static ArcFunction factory (final Map<ColorClass, ? extends ArcFunction> ctuples, final Guard guard, final boolean check) {
         if (ctuples.size() == 1) {
@@ -93,16 +95,14 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
     }
     
 
-     @Override
-    /** the simplification algorithm treats two cases; a juxtaposition formed only by 
-        Tuples; a juxtaposition containing a n-ary operator*/
+    @Override
     public ArcFunction specSimplify() { 
        final var components = this.ccomponents.values(); 
        if ( Util.checkAny(components, comp -> comp instanceof TupleBag cbag && cbag.isEmpty()) )
           return build(); //optimization
        
        if ( Util.checkAll(components, comp -> comp instanceof WNtuple) ) 
-        { // there are only tuples ..
+        { // there are only tuples
             final SortedMap<ColorClass, List<? extends ColorFunction>> map = new TreeMap<>();
             final List<Guard> filters = new ArrayList<>();
             final List<Guard> guards = new ArrayList<>();

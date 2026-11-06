@@ -21,8 +21,7 @@ public final class ArcFunSum extends BagSum<WNtuple> implements ArcFunction {
     public static ArcFunction factory(ArcFunction ... l) {
         return factory(List.of(l));
     }
-    
-    @SuppressWarnings("unchecked")
+
     @Override
     public ArcFunction buildOp(Collection<? extends BagExpr<WNtuple>> args) {
         return factory((Collection<? extends ArcFunction>) args);

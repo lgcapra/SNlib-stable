@@ -16,6 +16,7 @@ public final class ArcFunScalar extends ScalarProd<WNtuple> implements ArcFuncti
         return new ArcFunScalar(arg.cast(), this.k);
     }  
 
+    @Override
     public ArcFunction specSimplify() {
         ArcFunction x = super.specSimplify().cast();
         if (x instanceof ArcFunScalar sprod) {

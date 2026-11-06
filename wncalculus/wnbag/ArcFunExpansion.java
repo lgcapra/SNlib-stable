@@ -52,6 +52,7 @@ public final class ArcFunExpansion extends UnaryBagOp<WNtuple> implements  ArcFu
         return symb() + getArg().toString() + ", " + mapExpand.toString() + symb();
     }
 
+    @Override
     public ArcFunction specSimplify() {
         final var arg = getArg(); 
         
@@ -80,7 +81,7 @@ public final class ArcFunExpansion extends UnaryBagOp<WNtuple> implements  ArcFu
             return ArcFunSum.factory(expandedTuples);
         }
            
-        if (arg instanceof ArcFunScalar sc) { // mettiamo fuori il coefficiente
+        if (arg instanceof ArcFunScalar sc) { // if the argument is a scalar, we apply the expansion to its underlying tuple and keep the same multiplicity
             return new ArcFunScalar(new ArcFunExpansion(sc.getArg().cast(), this.mapExpand), sc.k());
         }
 
@@ -98,10 +99,15 @@ public final class ArcFunExpansion extends UnaryBagOp<WNtuple> implements  ArcFu
         return this; // otherwise, no simplification is performed
     }
 
-
-    private Map<Integer, Integer> buildIndexMap(
-            int originalSize,
-            Map<Integer, ColorFunction> mapExpand) {
+    /**
+     * Builds a mapping from the original indices of the tuple to their new positions after the expansion.
+     * For each original index, it checks how many new positions have been inserted before it and adjusts its position accordingly.
+     *
+     * @param originalSize the size of the original tuple
+     * @param mapExpand a map of positions to expand (insert new components)
+     * @return a map from original indices to their new positions after expansion
+     */
+    private Map<Integer, Integer> buildIndexMap(int originalSize, Map<Integer, ColorFunction> mapExpand) {
 
         Map<Integer, Integer> map = new HashMap<>();
 

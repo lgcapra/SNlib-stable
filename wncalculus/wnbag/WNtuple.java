@@ -82,7 +82,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public WNtuple build(Guard filter, Guard guard) {
         return new WNtuple(filter, getHomSubTuples(), guard);
     }
@@ -98,7 +97,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         }
         if (simple == null) {
           simple = Util.checkAll(getComponents(), c ->
-                  LinearComb.class.isInstance(c) || ElementaryFunction.class.isInstance(c));
+                  c instanceof LinearComb || c instanceof ElementaryFunction);
         }
         return simple;
     }
@@ -108,7 +107,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      */
     public boolean elementaryTuple() {
         if (elementary == null) {
-          elementary = Util.checkAll(getComponents(), c -> ElementaryFunction.class.isInstance(c));
+          elementary = Util.checkAll(getComponents(), c -> c instanceof ElementaryFunction);
         }
 
         return elementary;
@@ -167,7 +166,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     /**
      * overloaded version of <tt>independentComponents</tt>, which assumes <tt>this</tt> tuple single-color,
      * and with and and-type guard
-     * @return
+     * @return a map whose keys are sets of independent variable indices and whose values are corresponding
      */
     public Map<Set<Integer>, LinkedHashMap<Integer,ColorFunction> > independentComponents () {
     	Guard g = guard();
@@ -204,7 +203,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     /**
      * overloaded version of <tt>independentComponentsV2</tt>, which assumes <tt>this</tt> tuple single-color,
      * and with and and-type guard
-     * @return
+     * @return a map whose keys are sets of independent variable indices and whose values are corresponding
      */
     public Map<Set<Integer>, LinkedHashSet<Integer>> independentComponentsV2 () {
     	Guard g = guard();
@@ -715,7 +714,15 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         return new LinearComb(m.getSort());
     }
 
-
+    /**
+     * Computes the intersection of two ColorFunctions, treating them as multisets.
+     * The intersection is defined as the multiset containing each term present in both functions,
+     * with multiplicity equal to the minimum multiplicity of that term in the two functions.
+     *
+     * @param f1 the first ColorFunction
+     * @param f2 the second ColorFunction
+     * @return a new ColorFunction representing the intersection of f1 and f2 as multisets
+     */
     private static ColorFunction interMulti(ColorFunction f1, ColorFunction f2) {
         if (f1.equals(f2)) {
             return f1;
@@ -744,6 +751,16 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         return out.isEmpty() ? new LinearComb(f1.getSort()) : new LinearComb(out, false);
     }
 
+    /**
+     * Computes the difference of two ColorFunctions, treating them as multisets.
+     * The difference is defined as the multiset containing each term present in the first function,
+     * with multiplicity equal to the multiplicity in the first function minus the multiplicity in the second function.
+     * If a term's multiplicity becomes zero or negative, it is removed from the resulting multiset.
+     *
+     * @param f1 the first ColorFunction
+     * @param f2 the second ColorFunction
+     * @return a new ColorFunction representing the difference of f1 and f2 as multisets
+     */
     private static ColorFunction differMulti(ColorFunction f1, ColorFunction f2) {
         if (f1.equals(f2)) {
             return new LinearComb(f1.getSort()); // f1 - f1 = 0 (empty multiset)
@@ -769,6 +786,15 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         return out.isEmpty() ? new LinearComb(f1.getSort()) : new LinearComb(out, false);
     }
 
+    /**
+     * Converts a ColorFunction to a LinearComb representation.
+     * If the ColorFunction is already a LinearComb, it returns it as is.
+     * If it is an ElementaryFunction, it creates a LinearComb with that function and multiplicity 1.
+     * If it is neither, it creates an empty LinearComb with the same sort as the original ColorFunction.
+     *
+     * @param cf the ColorFunction to convert
+     * @return the LinearComb representation of the ColorFunction
+     */
     private static LinearComb toLinearComb(ColorFunction cf) {
         if (cf instanceof LinearComb lc) {
             return lc;
@@ -917,7 +943,14 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         return new WNtuple(resultComps, other.guard(), true);
     }
 
-
+    /**
+     * Composes a projection with the right tuple's components based on the substitution map.
+     *
+     * @param p the projection to compose
+     * @param subst the substitution map from projection indices to right tuple components
+     * @param result the map to accumulate the resulting elementary functions and their multiplicities
+     * @param multiplicity the multiplicity of the projection in the left tuple
+     */
     private void composeProjection(Projection p, Map<Integer, ColorFunction> subst, Map<ElementaryFunction, Integer> result, int multiplicity) {
 
         ColorFunction replacement = subst.get(p.getIndex());
@@ -954,9 +987,17 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
     }
 
+    /**
+     * Performs the composition of this tuple with another tuple, taking into account repeated indices.
+     * If the result of the basic composition is a WNtuple, it applies a filter to enforce equality constraints
+     * for repeated indices based on the positions of the components in this tuple.
+     *
+     * @param other the right tuple to compose with
+     * @return the composed ArcFunction, potentially with a filter for repeated indices
+     */
     public ArcFunction repetedIndexCompose(WNtuple other) {
 
-        //System.out.println(this + " " + other);
+        System.out.println(this + " " + other);
         // First, perform the basic composition
         ArcFunction composed = baseCompose(other);
 
@@ -1033,9 +1074,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     public List<Set<Integer>> projectionIndexPositions() {
         final ColorClass cc = getSort();
         if (cc == null) {
-            throw new IllegalStateException(
-                    "projectionIndexPositions() requires a single-color tuple"
-            );
+            throw new IllegalStateException("projectionIndexPositions() requires a single-color tuple");
         }
 
         final List<? extends ColorFunction> comps = getHomSubTuple(cc);

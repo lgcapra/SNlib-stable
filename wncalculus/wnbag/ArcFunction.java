@@ -44,7 +44,6 @@ public interface ArcFunction extends BagExpr<WNtuple> {
         return new TupleBag(m);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
      default ArcFunction buildSum(Collection<? extends BagExpr<WNtuple>> c) {
         return ArcFunSum.factory((Collection<? extends ArcFunction>) c);
@@ -55,7 +54,6 @@ public interface ArcFunction extends BagExpr<WNtuple> {
         return new ArcFunScalar((ArcFunction) arg, coeff);
      }
 
-    @SuppressWarnings("unchecked")
     @Override
     default ArcFunction buildIntersection(Collection<? extends BagExpr<WNtuple>> c) {
         return ArcFunIntersection.factory((Collection<? extends ArcFunction>) c);

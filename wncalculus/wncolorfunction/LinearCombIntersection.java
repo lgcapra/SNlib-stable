@@ -18,7 +18,6 @@ public final class LinearCombIntersection extends BagIntersection<ElementaryFunc
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public LinearCombIntersection buildOp(Collection<? extends BagExpr<ElementaryFunction>> args) {
         return new LinearCombIntersection((Collection<? extends LinearComb>) args);
     }

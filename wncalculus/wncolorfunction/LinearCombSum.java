@@ -14,7 +14,6 @@ public final class LinearCombSum extends BagSum<ElementaryFunction> implements C
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public LinearCombSum buildOp(Collection<? extends BagExpr<ElementaryFunction>> args) {
         return new LinearCombSum((Collection<? extends LinearComb>) args);
     }

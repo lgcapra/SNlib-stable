@@ -78,7 +78,7 @@ import java.util.Map.Entry;
         
         /**
          * creates an empty linear-combination, corresponding to the given color class 
-         * @param cc
+         * @param cc the color class
          */
         public LinearComb (ColorClass cc) {
             super(new Domain(cc), new Domain(cc));
@@ -95,6 +95,7 @@ import java.util.Map.Entry;
             this(Util.pairsAsMap(c), check);
         }
 
+        @SafeVarargs
         public LinearComb (Pair<ElementaryFunction, Integer> ... c) {
             this(false, Arrays.asList(c));
         }
@@ -107,7 +108,6 @@ import java.util.Map.Entry;
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public <E extends ClassFunction> E setDefaultIndex() {
             Set<Integer> s = indexSet();
             if (s.isEmpty() || s.size() == 1 && s.iterator().next() == 1)
@@ -215,17 +215,6 @@ import java.util.Map.Entry;
             }
 
             return res;
-        }
-
-        public static Set<List<LinearComb>> splitSum(List<LinearComb> list, int p1) {
-            Set<List<LinearComb>> result = new HashSet<>();
-            var lc = list.get(p1-1);
-            for ( Map.Entry<? extends ElementaryFunction, Integer> l : lc.asMap().entrySet()) {
-                var newList = new ArrayList<>(list);
-                newList.set(p1 - 1, new LinearComb(l.getKey(), l.getValue()));
-                result.add(newList);
-            }
-            return result;
         }
 
         @Override
