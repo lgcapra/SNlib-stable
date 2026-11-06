@@ -210,60 +210,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     	Guard g = guard();
     	return independentComponentsV2(!g.isTrivial() ? ((And) g).igraph().get( getSort()).connectedIndices(): Collections.emptySet());
     }
-    
-    /**
-     * if <code>this</code> tuple contains non trivial linear combinations, expand the tuple into a corresponding TupleBag
-     * @return the bag corresponding to the expansion of inner linear combinations
-     */
-    public ArcFunction expand() {
-        ColorClass cc = getSort();
-        if (cc == null) {
-            return this;
-        }
-
-        List<? extends ColorFunction> comps = getComponents();
-        List<Set<Map.Entry<ColorFunction, Integer>>> choices = new ArrayList<>();
-        boolean expandable = false;
-
-        for (ColorFunction cf : comps) {
-            Set<Map.Entry<ColorFunction, Integer>> c = expandChoices(cf);
-            if (c.size() > 1) {
-                expandable = true;
-            }
-            choices.add(c);
-        }
-
-        if (!expandable) {
-            return this;
-        }
-
-        HashMap<WNtuple, Integer> result = new HashMap<>();
-
-        for (Collection<Map.Entry<ColorFunction, Integer>> prod : Util.cartesianProd(choices)) {
-            List<ColorFunction> newComps = new ArrayList<>(comps.size());
-            int mult = 1;
-
-            for (Map.Entry<ColorFunction, Integer> choice : prod) {
-                newComps.add(choice.getKey());
-                mult *= choice.getValue();
-            }
-
-            WNtuple t = new WNtuple(Util.singleSortedMap(cc, newComps), guard());
-            result.merge(t, mult, Integer::sum);
-        }
-
-        return new TupleBag(result);
-    }
-
-    private Set<Map.Entry<ColorFunction, Integer>> expandChoices(ColorFunction cf) {
-        if (cf instanceof LinearComb lc && lc.size() > 1) {
-            Set<Map.Entry<ColorFunction, Integer>> s = new HashSet<>();
-            lc.asMap().forEach((f, k) -> s.add(new AbstractMap.SimpleEntry<>(new LinearComb(f), k)));
-            return s;
-        }
-
-        return Collections.singleton(new AbstractMap.SimpleEntry<>(cf, 1));
-    }
 
     @Override
     public ArcFunction specSimplify() {
@@ -273,10 +219,14 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         if (! (res instanceof WNtuple tres))
             return res;
 
-        // if the tuple can be split into a sum of tuples, do it
-        ArcFunction split = tres.toEquivSimpleSum();
-        if (split != tres) {
-            return split;
+        // Split reduction: if the filter or the guard refer to some tuple's positions, we can try to split the tuple at those positions
+        Set<Integer> targetPositions = GuardAndFilterIdx(tres);
+        if (!targetPositions.isEmpty()) {
+            ArcFunction splitTuple = tres.splitAtPositions(targetPositions);
+            if (splitTuple != tres) {
+                // If the tuple was split, we recursively simplify the resulting sum of tuples
+                return (ArcFunction) splitTuple.specSimplify();
+            }
         }
 
         // Filter reduction: if the filter is non-trivial, we can try to reduce the tuple by applying the filter's equalities and memberships
@@ -287,16 +237,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             if (reduced != tres) {
 //                System.out.println("specSimplify: "+tres.toStringDetailed()); //debug
 //                System.out.println("specSimplify: reduced by filter to "+reduced.toStringDetailed());
-                return reduced;
-            }
-        }
-
-        // Guard reduction: if the guard is non-trivial, we can try to switch some guard clauses to the filter if all variables involved in the guard clauses are projected in the tuple's components
-        if (tres.guard().isElemAndForm()) {
-            final ArcFunction reduced = tres.baseGuardReduction();
-            if (reduced != tres) {
-//                System.out.println("specSimplify: "+tres.toStringDetailed()); //debug
-//                System.out.println("specSimplify: reduced by guard to "+reduced.toStringDetailed());
                 return reduced;
             }
         }
@@ -330,42 +270,125 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     }
 
     /**
-     * Expands each component that is a non-trivial LinearComb into a sum of tuples.
-     * This is the multiset analogue of Tuple.toEquivSimpleSum().
+     * Returns the set of positions (1-based) mentioned in the guard and filter of the given tuple.
      *
-     * If a component is a LinearComb with support size > 1, the tuple is rewritten
-     * as a sum of tuples, each selecting one term of the LinearComb.
+     * @param tres the tuple to analyze
+     * @return the set of positions (1-based) mentioned in the guard and filter
      */
-    public ArcFunction toEquivSimpleSum() {
-        final ColorClass cc = getSort();
+    private static Set<Integer> GuardAndFilterIdx(WNtuple tres) {
+        Set<Integer> targetPositions = new HashSet<>();
+
+        ColorClass cc = tres.getSort();
+        if (cc == null) return targetPositions;
+
+        // Collect positions referenced by the filter.
+        if (tres.filter().isElemAndForm()) {
+            var equalityMap = tres.filter().equalityMap();
+            var membMap = tres.filter().membMap();
+
+            Map<Boolean, SortedSet<Equality>> equalities = equalityMap.get(cc);
+            if (equalities != null) {
+                for (SortedSet<Equality> set : equalities.values()) {
+                    for (Equality eq : set) {
+                        targetPositions.add(eq.firstIndex());
+                        targetPositions.add(eq.secondIndex());
+                    }
+                }
+            }
+
+            Map<Boolean, Set<Membership>> memberships = membMap.get(cc);
+            if (memberships != null) {
+                for (Set<Membership> set : memberships.values()) {
+                    for (Membership mb : set) {
+                        targetPositions.add(mb.firstIndex());
+                    }
+                }
+            }
+        }
+
+        // Collect projection indices referenced by the guard.
+        Set<Integer> guardIndices = new HashSet<>();
+
+        if (tres.guard() != null && !tres.guard().isTrivial()) {
+            collectGuardIndices(tres.guard(), guardIndices);
+        }
+
+        // Convert guard projection indices into tuple positions.
+        List<? extends ColorFunction> components = tres.getHomSubTuple(cc);
+
+        for (int pos = 0; pos < components.size(); pos++) {
+            ColorFunction component = components.get(pos);
+
+            if (!Collections.disjoint(component.indexSet(), guardIndices)) {
+                targetPositions.add(pos + 1);
+            }
+        }
+
+        return targetPositions;
+    }
+
+    /**
+     * Collects projection indices occurring in a guard.
+     */
+    private static void collectGuardIndices(Guard guard, Set<Integer> indices) {
+        if (guard instanceof And and) {
+            for (Guard clause : and.getArgs()) {
+                collectGuardIndices(clause, indices);
+            }
+        } else if (guard instanceof Equality eq) {
+            indices.add(eq.firstIndex());
+            indices.add(eq.secondIndex());
+        } else if (guard instanceof Membership mb) {
+            indices.add(mb.firstIndex());
+        }
+    }
+
+    /**
+     * splits <tt>this</tt> tuple at the given positions, if possible, and returns a sum of resulting tuples;
+     * if no split is possible, returns <tt>this</tt>
+     *
+     * @param targetPositions the positions at which to split the tuple (1-based)
+     * @return a sum of tuples resulting from the split, or <tt>this</tt> if no split is possible
+     */
+    public ArcFunction splitAtPositions(Set<Integer> targetPositions) {
+        ColorClass cc = getSort();
         if (cc == null) {
             return this; // this is not a 1-sorted tuple: this global expansion cannot be performed
         }
-        final List<? extends ColorFunction> comps = getComponents();
-        final List<List<Map.Entry<ColorFunction, Integer>>> choices = new ArrayList<>();
+
+        List<? extends ColorFunction> comps = getHomSubTuple(cc);
+        List<Set<Map.Entry<ColorFunction, Integer>>> choices = new ArrayList<>();
         boolean expandable = false;
 
-        for (ColorFunction cf : comps) {
-            if (cf instanceof LinearComb lc && lc.size() > 1) {
-                final List<Map.Entry<ColorFunction, Integer>> c = new ArrayList<>();
+        for (int i = 0; i < comps.size(); i++) {
+            int pos1Based = i + 1;
+            ColorFunction cf = comps.get(i);
+
+            // If the position is in targetPositions and the component is a LinearComb with size > 1, we expand it
+            if (targetPositions.contains(pos1Based) && cf instanceof LinearComb lc && lc.size() > 1) {
+                Set<Map.Entry<ColorFunction, Integer>> c = new HashSet<>();
+                // For each term in the LinearComb, we create a new LinearComb with a single term and keep its coefficient
                 lc.asMap().forEach((f, k) -> c.add(new AbstractMap.SimpleEntry<>(new LinearComb(f), k)));
                 choices.add(c);
                 expandable = true;
             } else {
-                final List<Map.Entry<ColorFunction, Integer>> c = new ArrayList<>();
+                // Otherwise, we keep the original component with a coefficient of 1
+                Set<Map.Entry<ColorFunction, Integer>> c = new HashSet<>();
                 c.add(new AbstractMap.SimpleEntry<>(cf, 1));
                 choices.add(c);
             }
         }
 
+        // If no components are expandable, we return the original tuple
         if (!expandable) {
             return this;
         }
 
-        final Map<WNtuple, Integer> result = new HashMap<>();
+        List<ArcFunction> tupleAddends = new ArrayList<>();
 
+        // For each combination of choices (cartesian product), we create a new WNtuple and wrap it in ArcFunScalar if needed
         for (Collection<Map.Entry<ColorFunction, Integer>> prod : Util.cartesianProd(choices)) {
-            final List<ColorFunction> newComps = new ArrayList<>(comps.size());
+            List<ColorFunction> newComps = new ArrayList<>(comps.size());
             int mult = 1;
 
             for (Map.Entry<ColorFunction, Integer> choice : prod) {
@@ -373,34 +396,36 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                 mult *= choice.getValue();
             }
 
-            final WNtuple t = new WNtuple(Util.singleSortedMap(getSort(), newComps), guard());
-            result.merge(t, mult, Integer::sum);
+            WNtuple t = new WNtuple(filter(), Util.singleSortedMap(cc, newComps), guard());
+
+            // If the multiplicity is greater than 1, we wrap the tuple in an ArcFunScalar to account for the coefficient
+            tupleAddends.add(mult != 1 ? new ArcFunScalar(t, mult) : t);
         }
 
-        return new TupleBag(result);
+        return ArcFunSum.factory(tupleAddends);
     }
 
     /**
-     * Sposta le clausole della guardia (Guard) come filtro (Filter) della tupla
-     * se tutte le variabili coinvolte nelle clausole compaiono come proiezioni
-     * all'interno delle componenti della tupla.
+     * Move the guard clauses (Guard) to act as a filter (Filter) for the tuple
+     * if all variables involved in the clauses appear as projections
+     * within the components of the tuple.
      *
-     * @return una nuova WNtuple con il filtro aggiornato e la guardia ridotta,
-     *         oppure 'this' se non è stata applicata alcuna trasformazione.
+     * @return a new WNtuple with the updated filter and the reduced guard,
+     * or 'this' if no transformation has been applied.
      */
     public WNtuple baseGuardReduction() {
         Guard currentGuard = guard();
 
-        // Se la guardia è banale (True), non c'è nulla da spostare
+        // If the guard is trivial, there's nothing to reduce
         if (currentGuard.isTrivial()) {
             return this;
         }
 
-        // Mappa degli indici di proiezione presenti nella tupla verso le loro posizioni (1-based)
+        // Map from projection indices to their corresponding positions in the tuple (1-based)
         // Es: <c1, c3, c2> -> {1: pos 1, 3: pos 2, 2: pos 3}
         final ColorClass cc = getSort();
         if (cc == null) {
-            return this; // Operiamo su tuple omogenee/single-color
+            return this; // this is not a 1-sorted tuple: this global expansion cannot be performed
         }
 
         final List<? extends ColorFunction> comps = getHomSubTuple(cc);
@@ -418,7 +443,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             }
         }
 
-        // Estraiamo le clausole della guardia (And)
+        // Extract the guard clauses (And)
         final Collection<Guard> guardClauses = (Collection<Guard>) And.getArgs(currentGuard);
         final Collection<Guard> clausesToMoveToFilter = new LinkedList<>();
         final Collection<Guard> newFilterClauses = new LinkedList<>();
@@ -428,12 +453,12 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                 int idx1 = eq.getArg1().getIndex();
                 int idx2 = eq.getArg2().getIndex();
 
-                // Verifichiamo se entrambi gli indici delle variabili compaiono nella tupla
+                // Check if both indices are present in the projection-to-position map
                 Integer pos1 = projToPosMap.get(idx1);
                 Integer pos2 = projToPosMap.get(idx2);
 
                 if (pos1 != null && pos2 != null) {
-                    // Creiamo la corrispondente clausola per il Filtro usando le posizioni della tupla!
+                    // Create a new Equality clause for the filter using the positions instead of the original indices
                     Projection filterProj1 = Projection.builder(pos1, cc);
                     Projection filterProj2 = Projection.builder(pos2, cc);
 
@@ -445,22 +470,22 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             }
         }
 
-        // Se nessuna clausola è stata spostata, restituisce la tupla inalterata
+        // If no clause has been moved, return the tuple unchanged
         if (clausesToMoveToFilter.isEmpty()) {
             return this;
         }
 
-        // Ricostruzione del nuovo Filtro
+        // Rebuild the new filter by combining the existing filter with the new filter clauses
         Guard newFilter = filter();
         if (!newFilterClauses.isEmpty()) {
             final Set<Guard> args = new LinkedHashSet<>();
 
-            if (newFilter.isTrivial()) {
-                // niente da aggiungere: il filtro era true
-            } else if (newFilter instanceof ElementaryGuard || newFilter instanceof And) {
-                args.addAll(And.getArgs(newFilter));
-            } else {
-                args.add(newFilter);
+            if (!newFilter.isTrivial()) {
+                if (newFilter instanceof ElementaryGuard || newFilter instanceof And) {
+                    args.addAll(And.getArgs(newFilter));
+                } else {
+                    args.add(newFilter);
+                }
             }
 
             args.addAll(newFilterClauses);
@@ -468,7 +493,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                        : And.buildAndFormWithDom(args, getCodomain());
         }
 
-        // Ricostruzione della nuova Guardia (rimuovendo le clausole spostate)
+        // Rebuild the new guard by removing the moved clauses from the original guard
         Guard newGuard;
         final Set<Guard> remainingGuardArgs = new LinkedHashSet<>(guardClauses);
         clausesToMoveToFilter.forEach(remainingGuardArgs::remove);
@@ -502,7 +527,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         int i;
         List<ColorFunction> h_tuple;
 
-        // Riduzione per Membership
+        // Reduction for Memberships
         for (var mx : membMap.entrySet()) {
             h_tuple = new ArrayList<>(getHomSubTuple(cc = mx.getKey()));
             for (var my : mx.getValue().entrySet()) {
@@ -524,7 +549,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             tuple_copy.put(cc, h_tuple);
         }
 
-        // Riduzione per Uguaglianze (=) e Disuguaglianze (!=)
+        // Reduction for Equalities (=) and Inequalities (!=)
         for (var ex : equalityMap.entrySet()) {
             if ((h_tuple = (List<ColorFunction>) tuple_copy.get(cc = ex.getKey())) == null) {
                 h_tuple = new ArrayList<>(getHomSubTuple(cc));
@@ -554,23 +579,23 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                     }
 
                     if (op) {
-                        // UGUAGLIANZA (=)
+                        // Equality (=)
                         final boolean fi_card_leq_1 = cardLeq1(f_i);
                         final boolean fj_card_leq_1 = cardLeq1(f_j);
 
                         if (fi_card_leq_1 || fj_card_leq_1) {
                             if (fi_card_leq_1 && isSetFunction(f_j)) {
-                                // S_C2 alla posizione j ristretto alla proiezione puntuale f_i
+                                // S_C2 at position j restricted to the pointwise projection f_i
                                 h_tuple.set(j, succ_fi);
                                 to_remove.add(eq);
                                 reduced = true;
                             } else if (fj_card_leq_1 && isSetFunction(f_i)) {
-                                // S_C2 alla posizione i ristretto alla proiezione puntuale f_j
+                                // S_C2 at position i restricted to the pointwise projection f_j
                                 h_tuple.set(i, succ_fj);
                                 to_remove.add(eq);
                                 reduced = true;
                             } else if (fi_card_leq_1 && fj_card_leq_1) {
-                                // Entrambe proiezioni puntuali: sostituzione simbolica diretta
+                                // Either both are singletons or both are projections; if they are different projections, we can substitute one with the other
                                 if (f_i instanceof Projection p1 && f_j instanceof Projection p2 && p1.getIndex() != p2.getIndex()) {
                                     final Projection target = Projection.builder(p1.getIndex(), cc);
                                     for (int k = 0; k < h_tuple.size(); k++) {
@@ -579,31 +604,31 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                                     to_remove.add(eq);
                                     reduced = true;
                                 } else if (f_i.equals(succ_fj)) {
-                                    to_remove.add(eq); // Tautologia c_i = c_i
+                                    to_remove.add(eq); // Tautology: c_i = c_i
                                     reduced = true;
                                 }
                             }
                         }
                     } else {
-                        // DISUGUAGLIANZA (!=)
+                        // Inequality (!=)
                         if (f_i.equals(f_j) && cardLeq1(f_i)) {
-                            // Incompatibilità c_i != c_i su elemento singolo -> tupla vuota
+                            // If both components are equal and have cardinality <= 1, the inequality is unsatisfiable
                             return build().cast();
                         }
 
-                        // Se una componente è un supporto globale S_C e l'altra è una proiezione puntuale c:
+                        // If one component is a set function and the other has cardinality <= 1, we can restrict the set function by removing the singleton
                         if (isSetFunction(f_i) && cardLeq1(f_j)) {
                             ColorFunction restricted = differMulti(f_i, succ_fj);
                             if (!restricted.equals(f_i)) {
                                 h_tuple.set(i, restricted);
-                                to_remove.add(eq); // Clausola assorbita nella componente come S_C - c
+                                to_remove.add(eq); // Clause absorbed in the component as S_C - c
                                 reduced = true;
                             }
                         } else if (isSetFunction(f_j) && cardLeq1(f_i)) {
                             ColorFunction restricted = differMulti(f_j, succ_fi);
                             if (!restricted.equals(f_j)) {
                                 h_tuple.set(j, restricted);
-                                to_remove.add(eq); // Clausola assorbita nella componente come S_C - c
+                                to_remove.add(eq); // Clause absorbed in the component as S_C - c
                                 reduced = true;
                             }
                         }
@@ -617,7 +642,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             return this;
         }
 
-        // Ricostruzione del filtro pulito
+        // Rebuild the filter by removing the clauses that have been absorbed into the components
         var f = filter();
         if (!to_remove.isEmpty()) {
             var args = new HashSet<>(And.getArgs(f));
@@ -696,17 +721,17 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             return f1;
         }
 
-        // Convertiamo f1 e f2 in LinearComb per poter accedere alla mappa (ElementaryFunction -> Coefficiente)
+        // Converted to LinearComb for easier multiset operations
         LinearComb lc1 = toLinearComb(f1);
         LinearComb lc2 = toLinearComb(f2);
 
-        // Scorriamo ciascun termine del primo multiset
+        // We compute the intersection of the two multisets by taking the minimum multiplicity for each term present in both
         final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>();
         for (var entry : lc1.asMap().entrySet()) {
             final ElementaryFunction key = entry.getKey();
-            final Integer v2 = lc2.asMap().get(key); // Cerchiamo lo stesso termine nel secondo multiset
+            final Integer v2 = lc2.asMap().get(key); // Get the multiplicity of the same term in the second multiset
             if (v2 != null) {
-                // Nei multiset l'intersezione sceglie il MINIMO dei coefficienti
+                // Take the minimum multiplicity between the two multisets for this term
                 final int min = Math.min(entry.getValue(), v2);
                 if (min > 0) {
                     out.put(key, min);
@@ -715,28 +740,28 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         }
 
         //System.out.println("interMulti: " + f1 + " inter " + f2 + " = " + out); // debug
-        // Se l'intersezione è vuota, restituisce una LinearComb vuota (il multiset nullo)
+        // If the intersection is empty, return an empty LinearComb (the null multiset)
         return out.isEmpty() ? new LinearComb(f1.getSort()) : new LinearComb(out, false);
     }
 
     private static ColorFunction differMulti(ColorFunction f1, ColorFunction f2) {
         if (f1.equals(f2)) {
-            return new LinearComb(f1.getSort()); // f1 - f1 = 0 (multiset vuoto)
+            return new LinearComb(f1.getSort()); // f1 - f1 = 0 (empty multiset)
         }
 
         LinearComb lc1 = toLinearComb(f1);
         LinearComb lc2 = toLinearComb(f2);
 
-        // Copiamo tutti i termini e i loro coefficienti dal primo multiset
+        // We compute the difference of the two multisets by subtracting the multiplicity of each term in the second multiset from that in the first.
         final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>(lc1.asMap());
 
-        // Sottraggiamo i coefficienti del secondo multiset
+        // For each term in the second multiset, subtract its multiplicity from the first.
         for (var e : lc2.asMap().entrySet()) {
             final int newVal = out.getOrDefault(e.getKey(), 0) - e.getValue();
             if (newVal == 0) {
-                out.remove(e.getKey()); // Se il coefficiente scende a 0, il termine scompare
+                out.remove(e.getKey()); // If the new multiplicity is zero, remove the term from the result
             } else {
-                out.put(e.getKey(), newVal); // Altrimenti aggiorna il coefficiente (anche negativo)
+                out.put(e.getKey(), newVal); // Otherwise, update the multiplicity in the result
             }
         }
 
@@ -748,7 +773,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         if (cf instanceof LinearComb lc) {
             return lc;
         }
-        // Avvolgiamo la singola funzione elementare in una LinearComb con molteplicità 1
+        // Convert the single elementary function to a LinearComb with multiplicity 1
         if (cf instanceof ElementaryFunction ef) {
             return new LinearComb(ef);
         }
@@ -756,15 +781,16 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     }
 
     /**
-     * Applica l'operatore successore con offset k a una ColorFunction (es. LinearComb).
+     * Shifts the successor exponent of each elementary function in the multiset by k.
+     * If the function is not a LinearComb, it returns the function unchanged.
      *
-     * @param k l'offset del successore (può essere positivo o negativo)
-     * @param f la funzione di colore / combinazione lineare di partenza
-     * @return una nuova ColorFunction con gli indici o i successori shiftati di k
+     * @param k the amount to shift the successor exponent
+     * @param f the ColorFunction to shift
+     * @return a new ColorFunction with shifted successor exponents, or the original function if it is not a LinearComb
      */
     private static ColorFunction succMulti(int k, ColorFunction f) {
         if (k == 0 || f == null) {
-            return f; // Offset 0: non cambia nulla
+            return f; // Offset 0: no change needed, or null function: return as is
         }
 
         if (!(f instanceof LinearComb lc)) {
@@ -776,17 +802,17 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             final SetFunction x = entry.getKey();
             final SetFunction shifted;
 
-            // Se è una Proiezione, incrementa direttamente il suo successore
+            // Shift the successor exponent based on the type of the elementary function
             if (x instanceof Projection p) {
                 shifted = p.setExp(p.getSucc() + k);
             } else if (x instanceof Successor s) {
                 shifted = Successor.factory(k + s.getExp(), s.getArg());
             } else {
-                // Altrimenti crea un nuovo oggetto Successor mediante la factory
+                // For other types of elementary functions, we create a new Successor with the shifted exponent
                 shifted = Successor.factory(k, x);
             }
 
-            // Fonde il nuovo termine nel multiset di output sommando i coefficienti
+            // If the shifted function is an ElementaryFunction, we add it to the output map with the same multiplicity
             if (shifted instanceof ElementaryFunction ef) {
                 out.merge(ef, entry.getValue(), Integer::sum);
             }
@@ -799,8 +825,32 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * Cardinality <= 1 test for multiset components.
      */
     private static boolean cardLeq1(ColorFunction f) {
-        Integer lb = f.cardLb();
-        return lb != null && lb <= 1;
+        switch (f) {
+            // If the function is null, it is considered to have cardinality <= 1
+            case null -> {
+                return true;
+            }
+            // If the function is a Projection, it is considered to have cardinality <= 1
+            case Projection projection -> {
+                return true;
+            }
+            // If the function is a LinearComb, we check its map representation
+            case LinearComb lc -> {
+                var map = lc.asMap();
+                if (map.isEmpty()) {
+                    return true; // empty: <= 1
+                }
+                if(map.size() == 1) {
+                    var entry = map.entrySet().iterator().next();
+                    // If the multiplicity is 1 and the key has cardinality <= 1, then the whole function has cardinality <= 1
+                    return (entry.getValue() == 1 && cardLeq1(entry.getKey()));
+                }
+            }
+            default -> {
+                return false;
+            }
+        }
+        return false;
     }
 
     @Override

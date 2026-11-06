@@ -1094,10 +1094,13 @@ public class Main {
         ArcFunComp f = new ArcFunComp(wntineq, wnt3);
         System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
+        Util.getChar();
         System.out.println("normalizzo\n" + d);
         System.out.println(d.normalize());
+        Util.getChar();
         System.out.println("normalizzo\n" + e);
         System.out.println(e.normalize());
+        Util.getChar();
         System.out.println("normalizzo\n" + f);
         System.out.println(f.normalize());
         Util.getChar();

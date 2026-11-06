@@ -137,7 +137,6 @@ import java.util.Map.Entry;
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public <E extends ClassFunction> E replace(Equality eq) {
             HashMap<ElementaryFunction, Integer> copy = new HashMap<>();
             asMap().forEach((key1, value) -> {
@@ -145,11 +144,16 @@ import java.util.Map.Entry;
                 copy.compute(k, (key, m) -> value + (m == null ? 0 : m));
             });
 
+            copy.entrySet().removeIf(e -> e.getValue() == 0);
+
+            if (copy.isEmpty()) {
+                return (E) new wncolorfunction.LinearComb(getSort()); // combinazione nulla
+            }
+
             return (E) new wncolorfunction.LinearComb(copy, false);
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public <E extends ClassFunction> E copy(ColorClass newcc) {
             HashMap<ElementaryFunction, Integer> newmap = new HashMap<>();
             asMap().forEach((key, value) -> newmap.put(key.copy(newcc), value));

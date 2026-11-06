@@ -107,7 +107,8 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     card = ccr.k();
                     // If there is still something in the right filter, it is moved to the left guard position so that it can then be shifted into the left filter.
                     if(!(((WNtuple)(((ArcFunComp)ccr.getArg()).right())).filter().isTrivial())) {
-                        WNtuple tleft = (WNtuple) ((WNtuple)(((ArcFunComp)ccr.getArg()).left())).joinGuard(((WNtuple)(((ArcFunComp)ccr.getArg()).right())).filter().cast()).genSimplify();
+                        WNtuple tleft = (WNtuple) ((WNtuple)(((ArcFunComp)ccr.getArg()).left())).joinGuard(((WNtuple)(((ArcFunComp)ccr.getArg()).right())).filter().cast());
+                        tleft=tleft.baseGuardReduction().specSimplify().cast();
                         WNtuple tright = ((WNtuple)(((ArcFunComp)ccr.getArg()).right())).withoutFilter().cast();
                         cc_res = new ArcFunScalar(new ArcFunComp(tleft, tright), card);
                     }
