@@ -10,6 +10,8 @@ import color.ColorClass;
 import expr.Domain;
 import graph.InequalityGraph;
 import guard.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import util.Pair;
 import util.Util;
 import wncolorfunction.ColorFunction;
@@ -23,7 +25,7 @@ import static guard.Guard.scaleGuardIndex;
 
 public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
        
-    public ArcFunComp(ArcFunction l, ArcFunction r) {
+    public ArcFunComp(@NotNull ArcFunction l, @NotNull ArcFunction r) {
         super(l, r);
     }
 
@@ -137,7 +139,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param right the right tuple
      * @return true if the prerequisites are met, false otherwise
      */
-    private boolean prerequisite(Set<? extends ElementaryGuard> guards, WNtuple right) {
+    private boolean prerequisite(@NotNull Set<? extends ElementaryGuard> guards, @NotNull WNtuple right) {
         for (ElementaryGuard guard : guards) {
             if (guard.isMembership()) {
                 return false;
@@ -169,7 +171,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param card the cardinality of the right tuple's non-projected components
      * @return an ArcFunScalar representing the result of applying property 2, or null if the property cannot be applied
      */
-    private ArcFunScalar property2(List<? extends ColorFunction> cleftComps, Set<? extends ElementaryGuard> crightF, WNtuple right, Map<Integer, ColorFunction> constants, ColorClass cc, int card){
+    private @Nullable ArcFunScalar property2(@NotNull List<? extends ColorFunction> cleftComps, @NotNull Set<? extends ElementaryGuard> crightF, @NotNull WNtuple right, @NotNull Map<Integer, ColorFunction> constants, @NotNull ColorClass cc, int card){
         final Guard rf = right.filter();
         cleftComps = Util.remove(cleftComps, constants.keySet()); // we remove (in the event) constant components from the left tuple's components
         final SortedSet<Integer> leftindx = new TreeSet<>(ClassFunction.indexSet(cleftComps));
@@ -208,7 +210,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param card the cardinality of the ArcFunComp
      * @return an ArcFunScalar representing the result of applying property 15
      */
-    private ArcFunScalar property15(ArcFunComp ccr, int card){
+    private @NotNull ArcFunScalar property15(@NotNull ArcFunComp ccr, int card){
         WNtuple rtx = ccr.right().cast();
         Guard rightFilter = rtx.filter();
         var rightComps = rtx.getComponents();
@@ -273,7 +275,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param card the cardinality of the ArcFunComp
      * @return an ArcFunction representing the result of applying Lemma 4, or null if the conditions for applying Lemma 4 are not met
      */
-    private ArcFunction lemma4(ArcFunComp comp, int card) {
+    private @Nullable ArcFunction lemma4(@NotNull ArcFunComp comp, int card) {
         WNtuple left = comp.left().cast();
         WNtuple right = comp.right().cast();
         Guard rightFilter = right.filter();
@@ -432,8 +434,8 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param g the guard to process
      * @param out the set to which the inequality clauses are added
      */
-    private static void collectIneq(Guard g, Set<Equality> out) {
-        if (g == null || g.isTrivial()) {
+    private void collectIneq(@NotNull Guard g, @NotNull Set<Equality> out) {
+        if (g.isTrivial()) {
             return;
         }
         if (g instanceof And and) {
@@ -454,7 +456,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param rightFilter the guard from which to extract equality classes
      * @return a set of sets, where each inner set contains the indices of components involved in an equality class
      */
-    private Set<Set<Integer>> extractEqualityClasses(Guard rightFilter) {
+    private @NotNull Set<Set<Integer>> extractEqualityClasses(@NotNull Guard rightFilter) {
         // Extract the equalities from the right-side filter.
         // For an AND guard, group independent equalities;
         // for a single equality, create a group containing only that equality.
@@ -489,7 +491,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param tleft the tuple to check
      * @return true if there are repeated indices, false otherwise
      */
-    private static boolean isRepeatedIndex(WNtuple tleft) {
+    private static boolean isRepeatedIndex(@NotNull WNtuple tleft) {
         for (Set<Integer> positions : tleft.projectionIndexPositions()) {
             if (positions.size() > 1) {
                 return true;
@@ -505,7 +507,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param left the tuple to split
      * @return a list of homogeneous tuples
      */
-    private List<WNtuple> splitHomogeneousTuples(WNtuple left) {
+    private @NotNull List<WNtuple> splitHomogeneousTuples(@NotNull WNtuple left) {
         final List<List<ColorFunction>> alternatives = new ArrayList<>();
 
         for (ColorFunction component : left.getComponents()) {
@@ -545,7 +547,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param comp the ArcFunComp containing the two tuples to compose
      * @return the composed ArcFunction
      */
-    private ArcFunction composeColorTuples(ArcFunComp comp) {
+    private @NotNull ArcFunction composeColorTuples(@NotNull ArcFunComp comp) {
         WNtuple tleft = comp.left().cast();
         WNtuple rtx = comp.right().cast();
         if (!isRepeatedIndex(tleft)) {
@@ -580,7 +582,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param i the index of the component to split (1-based index)
      * @return an ArcFunction representing the sum of compositions of each split tuple with the right tuple
      */
-    private ArcFunction splitAndCompose(WNtuple left, WNtuple right, int i) {
+    private @NotNull ArcFunction splitAndCompose(@NotNull WNtuple left, @NotNull WNtuple right, int i) {
 
         List<LinearComb> tupleComps = (List<LinearComb>) Util.cast(left.getComponents(), LinearComb.class);
         ArcFunction result = null;
@@ -591,7 +593,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
             result = result == null ? newRes : ArcFunSum.factory(result, newRes);
         }
 
-        return result;
+        return Objects.requireNonNull(result);
     }
 
     /**
@@ -600,7 +602,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param p1 the position of the LinearComb to split (1-based index)
      * @return a set of lists, each containing one of the ElementaryFunctions from the split LinearComb
      */
-    private Set<List<LinearComb>> splitSum(List<LinearComb> list, int p1) {
+    private @NotNull Set<List<LinearComb>> splitSum(@NotNull List<LinearComb> list, int p1) {
         Set<List<LinearComb>> result = new HashSet<>();
         var lc = list.get(p1-1);
         for ( Map.Entry<? extends ElementaryFunction, Integer> l : lc.asMap().entrySet()) {
@@ -620,7 +622,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @param d the domain for the new guard
      * @return a new Guard representing the conjunction of the provided elementary guards, or a trivial true guard if the set is empty
      */
-    private static Guard newGuard(Set<? extends ElementaryGuard> s, Domain d) {
+    private @NotNull Guard newGuard(@NotNull Set<? extends ElementaryGuard> s, @NotNull Domain d) {
         if (s.isEmpty())
             return True.getInstance(d);
 

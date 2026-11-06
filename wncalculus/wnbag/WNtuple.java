@@ -7,6 +7,7 @@ import classfunction.*;
 import color.ColorClass;
 import expr.*;
 import guard.*;
+import org.jetbrains.annotations.NotNull;
 import tuple.AbstractTuple;
 import util.Pair;
 import util.Util;
@@ -140,7 +141,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * sub-tuples of <tt>this</tt> tuple, computed according the method's parameter;
      * each independent sub-tuple is expressed in turn as a map between tuple's positions (starting from 0) and components
      */
-    public Map<Set<Integer>, LinkedHashMap<Integer,ColorFunction> > independentComponents (Set<? extends Set<Integer>> connected) {
+    public @NotNull Map<Set<Integer>, LinkedHashMap<Integer,ColorFunction> > independentComponents (@NotNull Set<? extends Set<Integer>> connected) {
     	List<? extends ColorFunction> components = getHomSubTuple(getSort());
     	Map<Set<Integer>, LinkedHashMap<Integer, ColorFunction>>  imap = new HashMap<>();
     	for (Set<Integer> c : connected) 
@@ -176,7 +177,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     /*
      * 2nd version of independentComponents, which only returns the positions of independent subtuple elements
      */
-    public Map<Set<Integer>, LinkedHashSet<Integer>> independentComponentsV2 (Set<? extends Set<Integer>> connected) {
+    public @NotNull Map<Set<Integer>, LinkedHashSet<Integer>> independentComponentsV2 (@NotNull Set<? extends Set<Integer>> connected) {
     	List<? extends ColorFunction> components = getHomSubTuple(getSort());
     	Map<Set<Integer>, LinkedHashSet<Integer>>  imap = new HashMap<>();
     	for (Set<Integer> c : connected) 
@@ -274,7 +275,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param tres the tuple to analyze
      * @return the set of positions (1-based) mentioned in the guard and filter
      */
-    private static Set<Integer> GuardAndFilterIdx(WNtuple tres) {
+    private @NotNull Set<Integer> GuardAndFilterIdx(@NotNull WNtuple tres) {
         Set<Integer> targetPositions = new HashSet<>();
 
         ColorClass cc = tres.getSort();
@@ -329,16 +330,20 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     /**
      * Collects projection indices occurring in a guard.
      */
-    private static void collectGuardIndices(Guard guard, Set<Integer> indices) {
-        if (guard instanceof And and) {
-            for (Guard clause : and.getArgs()) {
-                collectGuardIndices(clause, indices);
+    private void collectGuardIndices(@NotNull Guard guard, @NotNull Set<Integer> indices) {
+        switch (guard) {
+            case And and -> {
+                for (Guard clause : and.getArgs()) {
+                    collectGuardIndices(clause, indices);
+                }
             }
-        } else if (guard instanceof Equality eq) {
-            indices.add(eq.firstIndex());
-            indices.add(eq.secondIndex());
-        } else if (guard instanceof Membership mb) {
-            indices.add(mb.firstIndex());
+            case Equality eq -> {
+                indices.add(eq.firstIndex());
+                indices.add(eq.secondIndex());
+            }
+            case Membership mb -> indices.add(mb.firstIndex());
+            default -> {
+            }
         }
     }
 
@@ -349,7 +354,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param targetPositions the positions at which to split the tuple (1-based)
      * @return a sum of tuples resulting from the split, or <tt>this</tt> if no split is possible
      */
-    public ArcFunction splitAtPositions(Set<Integer> targetPositions) {
+    public @NotNull ArcFunction splitAtPositions(@NotNull Set<Integer> targetPositions) {
         ColorClass cc = getSort();
         if (cc == null) {
             return this; // this is not a 1-sorted tuple: this global expansion cannot be performed
@@ -412,7 +417,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return a new WNtuple with the updated filter and the reduced guard,
      * or 'this' if no transformation has been applied.
      */
-    public WNtuple baseGuardReduction() {
+    public @NotNull WNtuple baseGuardReduction() {
         Guard currentGuard = guard();
 
         // If the guard is trivial, there's nothing to reduce
@@ -517,7 +522,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param membMap    the filter's precomputed membership map
      * @return an equivalent reduced tuple, or this if no reduction happened
      */
-    public WNtuple baseFilterReduction(Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap, Map<ColorClass, Map<Boolean, Set<Membership>>> membMap) {
+    public @NotNull WNtuple baseFilterReduction(@NotNull Map<ColorClass, @NotNull Map<Boolean, SortedSet<Equality>>> equalityMap, @NotNull Map<ColorClass, @NotNull Map<Boolean, Set<Membership>>> membMap) {
 
         final Collection<Guard> to_remove = new LinkedList<>();
         final SortedMap<ColorClass, List<? extends ColorFunction>> tuple_copy = new TreeMap<>();
@@ -666,9 +671,8 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     }
 
     // Helper for identifying set functions S_C
-    private static boolean isSetFunction(ColorFunction cf) {
+    private boolean isSetFunction(@NotNull ColorFunction cf) {
         return switch (cf) {
-            case null -> false;
             case SetFunction setFunction -> true;
             case LinearComb lc -> lc.asMap().keySet().stream().anyMatch(Objects::nonNull);
             default -> false;
@@ -678,7 +682,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     /**
      * Sostituisce ricorsivamente un indice di proiezione target con la nuova proiezione all'interno di una ColorFunction.
      */
-    private static ColorFunction substituteProjection(ColorFunction cf, int targetIndex, Projection replacement) {
+    private @NotNull ColorFunction substituteProjection(@NotNull ColorFunction cf, int targetIndex, @NotNull Projection replacement) {
         if (cf instanceof Projection p) {
             if (p.getIndex() == targetIndex) {
                 return replacement;
@@ -706,7 +710,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * For a membership clause m = X_i in S (or !in S), the corresponding multiset
      * restriction is just the intersection with the subclass support.
      */
-    private static ColorFunction multisetConstraint(Membership m) {
+    private @NotNull ColorFunction multisetConstraint(@NotNull Membership m) {
         // In this library a Membership is a guard on a projection; for a multiset
         // component the effect is just a restriction of the support.
         // We keep it conservative and return the component unchanged when the
@@ -723,7 +727,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param f2 the second ColorFunction
      * @return a new ColorFunction representing the intersection of f1 and f2 as multisets
      */
-    private static ColorFunction interMulti(ColorFunction f1, ColorFunction f2) {
+    private @NotNull ColorFunction interMulti(@NotNull ColorFunction f1, @NotNull ColorFunction f2) {
         if (f1.equals(f2)) {
             return f1;
         }
@@ -761,7 +765,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param f2 the second ColorFunction
      * @return a new ColorFunction representing the difference of f1 and f2 as multisets
      */
-    private static ColorFunction differMulti(ColorFunction f1, ColorFunction f2) {
+    private @NotNull ColorFunction differMulti(@NotNull ColorFunction f1, @NotNull ColorFunction f2) {
         if (f1.equals(f2)) {
             return new LinearComb(f1.getSort()); // f1 - f1 = 0 (empty multiset)
         }
@@ -795,7 +799,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param cf the ColorFunction to convert
      * @return the LinearComb representation of the ColorFunction
      */
-    private static LinearComb toLinearComb(ColorFunction cf) {
+    private @NotNull LinearComb toLinearComb(@NotNull ColorFunction cf) {
         if (cf instanceof LinearComb lc) {
             return lc;
         }
@@ -814,9 +818,9 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param f the ColorFunction to shift
      * @return a new ColorFunction with shifted successor exponents, or the original function if it is not a LinearComb
      */
-    private static ColorFunction succMulti(int k, ColorFunction f) {
-        if (k == 0 || f == null) {
-            return f; // Offset 0: no change needed, or null function: return as is
+    private @NotNull ColorFunction succMulti(int k, @NotNull ColorFunction f) {
+        if (k == 0) {
+            return f; // Offset 0: no change needed
         }
 
         if (!(f instanceof LinearComb lc)) {
@@ -850,12 +854,8 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     /**
      * Cardinality <= 1 test for multiset components.
      */
-    private static boolean cardLeq1(ColorFunction f) {
+    private boolean cardLeq1(@NotNull ColorFunction f) {
         switch (f) {
-            // If the function is null, it is considered to have cardinality <= 1
-            case null -> {
-                return true;
-            }
             // If the function is a Projection, it is considered to have cardinality <= 1
             case Projection projection -> {
                 return true;
@@ -891,7 +891,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param other the right tuple
      * @return the composed tuple
      */
-    public ArcFunction baseCompose(WNtuple other) {
+    public @NotNull ArcFunction baseCompose(@NotNull WNtuple other) {
         final List<? extends ColorFunction> leftComps = getHomSubTuple(getSort());
         final List<? extends ColorFunction> rightComps = other.getHomSubTuple(other.getSort());
 
@@ -951,7 +951,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param result the map to accumulate the resulting elementary functions and their multiplicities
      * @param multiplicity the multiplicity of the projection in the left tuple
      */
-    private void composeProjection(Projection p, Map<Integer, ColorFunction> subst, Map<ElementaryFunction, Integer> result, int multiplicity) {
+    private void composeProjection(@NotNull Projection p, @NotNull Map<Integer, ColorFunction> subst, @NotNull Map<ElementaryFunction, Integer> result, int multiplicity) {
 
         ColorFunction replacement = subst.get(p.getIndex());
 
@@ -995,9 +995,9 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param other the right tuple to compose with
      * @return the composed ArcFunction, potentially with a filter for repeated indices
      */
-    public ArcFunction repetedIndexCompose(WNtuple other) {
+    public @NotNull ArcFunction repetedIndexCompose(@NotNull WNtuple other) {
 
-        System.out.println(this + " " + other);
+        //System.out.println(this + " " + other);
         // First, perform the basic composition
         ArcFunction composed = baseCompose(other);
 
@@ -1031,7 +1031,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param filterDomain the domain of the filter
      * @return a Guard representing the equality constraints for repeated indices
      */
-    public Guard buildRepeatedIndexFilter(List<Set<Integer>> indexPositions, Domain filterDomain) {
+    public @NotNull Guard buildRepeatedIndexFilter(List<Set<Integer>> indexPositions, @NotNull Domain filterDomain) {
         final ColorClass cc = getSort();
         final Collection<Guard> equalityGuards = new ArrayList<>();
 
@@ -1071,7 +1071,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return a list containing, for each projection index, the positions
      *         of the tuple components containing that index
      */
-    public List<Set<Integer>> projectionIndexPositions() {
+    public @NotNull List<Set<Integer>> projectionIndexPositions() {
         final ColorClass cc = getSort();
         if (cc == null) {
             throw new IllegalStateException("projectionIndexPositions() requires a single-color tuple");
