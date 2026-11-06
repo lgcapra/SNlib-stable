@@ -68,8 +68,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     return res;
 
                 int card = 1; // the cardinality of the right-tuple components non-projected
-                final Map<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> splitColors
-                      = left.splitColors(rf);
+                final Map<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> splitColors = left.splitColors(rf);
                 //System.out.println("DEBUG (a):\n"+left+'\n'+splitColors+'\n'+right);
                 final Map<ColorClass, ArcFunction> results = new HashMap<>(); // the divided-by color outcomes
                 for (Entry<ColorClass, Pair<List<? extends ColorFunction>, Set<? extends ElementaryGuard>>> cleft : splitColors.entrySet()) {
@@ -78,8 +77,9 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     Set<? extends ElementaryGuard> crightF=  pair.getValue();
                     final ColorClass cc = cleft.getKey();
 
+                    //System.out.println("DEBUG (a):\n"+cleftComps+'\n'+crightF+'\n'+cc+'\n'+right);
                     // Simple-form prerequisite
-                    if (!prerequisite(crightF, right)) {
+                    if (!prerequisite(crightF, right, cc)) {
                         return res;
                     }
 
@@ -89,13 +89,13 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     if (cc_res == null) {
                         return res;
                     }
-                    //System.out.println(rtx);
+                    //System.out.println("property 2: " + cc_res);
 
                     // Property 15
                     ArcFunScalar ccr = (ArcFunScalar) cc_res;
                     card = ccr.k();
                     cc_res = property15((ArcFunComp)ccr.getArg(), card);
-                    //System.out.println(cc_res);
+                    //System.out.println("property 15: " + cc_res);
 
                     // Lemma 4
                     ccr = (ArcFunScalar) cc_res;
@@ -113,14 +113,14 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                         WNtuple tright = ((WNtuple)(((ArcFunComp)ccr.getArg()).right())).withoutFilter().cast();
                         cc_res = new ArcFunScalar(new ArcFunComp(tleft, tright), card);
                     }
-                    //System.out.println(cc_res);
+                    //System.out.println("lemma 4 : " + cc_res);
 
                     ccr = (ArcFunScalar) cc_res;
                     card = Objects.requireNonNull(ccr).k();
                     cc_res = composeColorTuples((ArcFunComp)ccr.getArg());
 
                     cc_res = ArcFunExpansion.factory(cc_res, constants);
-                    //System.out.println("DEBUG (c):\n"+cc_res);
+                    //System.out.println("DEBUG (c):\n"+ card + " " + cc_res+ "\n") ;
                     results.put(cc, cc_res);
                 } // for each color class
 
@@ -137,23 +137,30 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * Checks if the prerequisites for applying certain properties are met, based on the guards and the right tuple.
      * @param guards the set of elementary guards
      * @param right the right tuple
+     * @param cc the color class
      * @return true if the prerequisites are met, false otherwise
      */
-    private boolean prerequisite(@NotNull Set<? extends ElementaryGuard> guards, @NotNull WNtuple right) {
+    private boolean prerequisite(@NotNull Set<? extends ElementaryGuard> guards, @NotNull WNtuple right, @NotNull ColorClass cc) {
+
         for (ElementaryGuard guard : guards) {
             if (guard.isMembership()) {
                 return false;
             }
-            Equality eq = (Equality) guard;
-            var rc1 = right.getComponent(eq.getArg1().getIndex(), right.getSort());
-            var rc2 = right.getComponent(eq.getArg2().getIndex(), right.getSort());
 
-            // Continue only if the equality concerns equivalent components in the right tuple
-            // and their cardinality is greater than one.
+            Equality eq = (Equality) guard;
+
+            var rc1 = right.getComponent(eq.getArg1().getIndex(), cc);
+
+            var rc2 = right.getComponent(eq.getArg2().getIndex(), cc);
+
+            // Continue only if the equality concerns equivalent
+            // components in the right tuple and their cardinality
+            // is greater than one.
             if (!rc1.equals(rc2) || rc1.cardLb() <= 1) {
                 return false;
             }
         }
+
         return true;
     }
 

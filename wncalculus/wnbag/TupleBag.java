@@ -72,7 +72,7 @@ public final class TupleBag extends Bag<WNtuple> implements ArcFunction {
         Map<WNtuple, Integer> simplified = new HashMap<>();
         boolean changed = false;
 
-        for (Map.Entry<? extends WNtuple, Integer> e : tb.asMap().entrySet()) {
+        for (Map.Entry<? extends WNtuple, Integer> e : this.asMap().entrySet()) {
             ArcFunction normalized = e.getKey().normalize();
 
             if (normalized instanceof WNtuple nt) {
@@ -87,7 +87,7 @@ public final class TupleBag extends Bag<WNtuple> implements ArcFunction {
                 return normalized;
             }
         }
-
+        //System.out.println("\nSimplified tuples: " + simplified);
         return changed ? new TupleBag(simplified) : tb;
     }
 

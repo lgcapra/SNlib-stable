@@ -224,6 +224,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         if (!targetPositions.isEmpty()) {
             ArcFunction splitTuple = tres.splitAtPositions(targetPositions);
             if (splitTuple != tres) {
+                //System.out.println("Split tuple: " + splitTuple);
                 // If the tuple was split, we recursively simplify the resulting sum of tuples
                 return (ArcFunction) splitTuple.specSimplify();
             }
@@ -251,22 +252,23 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             final List<ColorFunction> simplifiedSubtuple = new ArrayList<>();
             for (ColorFunction cf : subtuple) {
                 if (cf instanceof LinearComb lc && lc.size() == 1) {
-                        ColorFunction simplifiedCf = lc.asMap().keySet().iterator().next().cast();
-                        coeff *= lc.asMap().values().iterator().next();
-                        simplifiedSubtuple.add(simplifiedCf);
-                        modified = true;
-                    } else if (cf instanceof LinearCombScalar sc) {
-                        coeff *= sc.k();
-                        simplifiedSubtuple.add(sc.getArg().cast());
-                        modified = true;
-                    }
-                    else {
-                        simplifiedSubtuple.add(cf);
-                    }
-                } 
-                subtuples.put(cc, simplifiedSubtuple);
+                    ColorFunction simplifiedCf = lc.asMap().keySet().iterator().next().cast();
+                    coeff *= lc.asMap().values().iterator().next();
+                    simplifiedSubtuple.add(simplifiedCf);
+                    modified = true;
+                } else if (cf instanceof LinearCombScalar sc) {
+                    coeff *= sc.k();
+                    simplifiedSubtuple.add(sc.getArg().cast());
+                    modified = true;
+                }
+                else {
+                    simplifiedSubtuple.add(cf);
+                }
             }
-        return coeff == 1 || !modified ? tres : new ArcFunScalar(new WNtuple(tres.filter(), subtuples, tres.guard()), coeff);
+            subtuples.put(cc, simplifiedSubtuple);
+        }
+        //if (modified) System.out.println("simplified Sub Tuple: "+ new ArcFunScalar(new WNtuple(tres.filter(), subtuples, tres.guard()), coeff));
+        return !modified ? tres : new ArcFunScalar(new WNtuple(tres.filter(), subtuples, tres.guard()), coeff);
     }
 
     /**
@@ -892,6 +894,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return the composed tuple
      */
     public @NotNull ArcFunction baseCompose(@NotNull WNtuple other) {
+        //System.out.println("Base Compose: " + this + " . " + other);
         final List<? extends ColorFunction> leftComps = getHomSubTuple(getSort());
         final List<? extends ColorFunction> rightComps = other.getHomSubTuple(other.getSort());
 
@@ -940,6 +943,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             }
         }
 
+        //System.out.println("Compose Result: " + resultComps);
         return new WNtuple(resultComps, other.guard(), true);
     }
 
@@ -997,7 +1001,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      */
     public @NotNull ArcFunction repetedIndexCompose(@NotNull WNtuple other) {
 
-        //System.out.println(this + " " + other);
+        //System.out.println("\n\n " + this + " " + other + "\n\n");
         // First, perform the basic composition
         ArcFunction composed = baseCompose(other);
 

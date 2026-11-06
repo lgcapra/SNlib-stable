@@ -16,7 +16,6 @@ public interface MultiArgs<E extends ParametricExpr, F extends ParametricExpr> e
     
     /**
      * @return the (unmodifiable) collection of arguments of this operator
-     * @throws UnmodifiableCollectionException
      */
      Collection<? extends E> getArgs();
      
@@ -44,10 +43,7 @@ public interface MultiArgs<E extends ParametricExpr, F extends ParametricExpr> e
      * creates a new list of expressions of an arbitrary type setting a new sort support
      * @param <E> the expressions domain
      * @param arglist the list of expressions to be cloned
-     * @param s_map a map between old and new sorts
-     * @param type the expressions'  type
      * @param dom the expressions' new domain
-     * @param cd the expressions' new codomain
      * @return a copy of the passed list of expressions with the specified new sorts and co-domains
      */
     public static <E extends ParametricExpr> Collection<E> clone(Collection<? extends E> arglist, Domain dom) {

@@ -135,6 +135,7 @@ public class Main {
 
         // parte sui m
         // ultiset -- modificata dopo ultimi cambiamenti di bag expressions
+        testComplexComposition();
         testSplitSumInRightTupleGuard();
         testMultiset();
         testLemma1();
@@ -1118,5 +1119,114 @@ public class Main {
         System.out.println(wn.normalize());
         Util.getChar();
     }
+
+
+
+    public static void testComplexComposition() {
+
+        // Proiezioni della classe C2
+        Projection pr2_1 = Projection.builder(1, fc2),
+                pr2_2 = Projection.builder(2, fc2),
+                pr2_3 = Projection.builder(3, fc2);
+
+        // Proiezioni della classe C1
+        Projection pr1_1 = Projection.builder(1, fc1),
+                pr1_2 = Projection.builder(2, fc1);
+
+        // Dominio della prima tupla:
+        // 2 posizioni di C1 e 3 posizioni di C2
+        Domain tuple1Domain = new Domain(
+                fc1, fc1,
+                fc2, fc2, fc2
+        );
+
+        // Dominio della seconda tupla:
+        // 2 posizioni di C1 e 3 posizioni di C2
+        Domain tuple2Domain = new Domain(
+                fc1, fc1,
+                fc2, fc2, fc2
+        );
+
+        // Guardia della prima tupla:
+        // c1_1 = c1_2
+        Guard eq1 = Equality.builder(
+                pr1_1, pr1_2, true, tuple1Domain
+        );
+
+        // c2_1 != c2_3
+        Guard eq2 = Equality.builder(
+                pr2_1, pr2_3, false, tuple1Domain
+        );
+
+        Guard filter1 = And.factory(eq1, eq2);
+
+        // Filtro della seconda tupla:
+        // c1_1 != c1_2
+        Guard filter2 = Equality.builder(
+                pr1_1, pr1_2, false, tuple2Domain
+        );
+
+        // Guardia della seconda tupla:
+        // c2_1 = c2_3
+        Guard guard2 = Equality.builder(
+                pr2_1, pr2_3, true, tuple2Domain
+        );
+
+        // Componenti delle combinazioni lineari
+        Pair<ElementaryFunction, Integer> ppr1_1 =
+                new Pair<>(pr1_1, -1);
+
+        Pair<ElementaryFunction, Integer> ppr1_2 =
+                new Pair<>(pr1_2, 3);
+
+        Pair<ElementaryFunction, Integer> pall2 =
+                new Pair<>(All.getInstance(fc2), 2);
+
+        Pair<ElementaryFunction, Integer> pall1 =
+                new Pair<>(All.getInstance(fc1), 1);
+
+        // Prima tupla:
+        // [c1_1 = c1_2 AND c2_1 != c2_3]
+        // <All1-c1_1, c2_3, 3c1_2, c2_2, 2All2>
+        WNtuple wnt1 = new WNtuple(
+                filter1,
+                Arrays.asList(
+                        new LinearComb(pall1, ppr1_1),
+                        new LinearComb(pr2_3),
+                        new LinearComb(ppr1_2),
+                        new LinearComb(pr2_2),
+                        new LinearComb(pall2)
+                ),
+                True.getInstance(tuple1Domain),
+                false
+        );
+
+        // Seconda tupla:
+        // [c1_1 != c1_2]
+        // <All1, All2, c2_1, c2_2, All2+c2_3, All1>
+        // [c2_1 = c2_3]
+        WNtuple wnt2 = new WNtuple(
+                filter2,
+                Arrays.asList(
+                        new LinearComb(All.getInstance(fc1)),
+                        new LinearComb(All.getInstance(fc2)),
+                        new LinearComb(pr2_1),
+                        new LinearComb(All.getInstance(fc2), pr2_3),
+                        new LinearComb(All.getInstance(fc1))
+                ),
+                guard2,
+                false
+        );
+
+        // Composizione
+        ArcFunComp c = new ArcFunComp(wnt1, wnt2);
+
+        System.out.println("\nnormalizzo\n" + c);
+        System.out.println("\n" + c.normalize()+"\n");
+
+        Util.getChar();
+    }
+
+
 
 }
