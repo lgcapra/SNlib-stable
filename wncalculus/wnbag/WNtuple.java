@@ -234,9 +234,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
         // Filter reduction: if the filter is non-trivial, we can try to reduce the tuple by applying the filter's equalities and memberships
         if (tres.filter().isElemAndForm()) {
-            final var equalityMap = tres.filter().equalityMap();
-            final var membMap = tres.filter().membMap();
-            final ArcFunction reduced = tres.baseFilterReduction(equalityMap, membMap);
+            final ArcFunction reduced = tres.baseFilterReduction(tres.filter().equalityMap(), tres.filter().membMap());
             if (reduced != tres) {
 //                System.out.println("\nspecSimplify: "+tres.toStringDetailed()); //debug
 //                System.out.println("specSimplify: reduced by filter to "+reduced.toStringDetailed());
@@ -277,7 +275,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * Returns the set of positions (1-based) mentioned in the guard and filter of the given tuple.
      *
      * @param tres the tuple to analyze
-     * @return the set of positions (1-based) mentioned in the guard and filter
+     * @return the map of positions (1-based) mentioned in the guard and filter
      */
     private @NotNull Map<ColorClass, Set<Integer>> GuardAndFilterIdx(@NotNull WNtuple tres) {
         Map<ColorClass, Set<Integer>> targetPositions = new HashMap<>();
@@ -403,8 +401,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                 // Create one alternative for each term of the linear combination,
                 // preserving the coefficient associated with that term.
                 for (var entry : lc.asMap().entrySet()) {
-                    alternatives.add(new AbstractMap.SimpleEntry<>(
-                            new LinearComb(entry.getKey()), entry.getValue()));
+                    alternatives.add(new AbstractMap.SimpleEntry<>(new LinearComb(entry.getKey()), entry.getValue()));
                 }
 
                 expandable = true;
@@ -562,20 +559,17 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return an equivalent reduced tuple, or this if no reduction happened
      */
     public @NotNull WNtuple baseFilterReduction(@NotNull Map<ColorClass, @NotNull Map<Boolean, SortedSet<Equality>>> equalityMap, @NotNull Map<ColorClass, @NotNull Map<Boolean, Set<Membership>>> membMap) {
-
         final Collection<Guard> to_remove = new LinkedList<>();
         final SortedMap<ColorClass, List<? extends ColorFunction>> tuple_copy = new TreeMap<>();
-        var reduced = false;
-        ColorClass cc;
-        int i;
-        List<ColorFunction> h_tuple;
+        boolean reduced = false;
 
-        // Reduction for Memberships
+        // membership reductions
         for (var mx : membMap.entrySet()) {
-            h_tuple = new ArrayList<>(getHomSubTuple(cc = mx.getKey()));
+            ColorClass cc = mx.getKey();
+            List<ColorFunction> h_tuple = new ArrayList<>(getHomSubTuple(cc));
             for (var my : mx.getValue().entrySet()) {
                 for (var m : my.getValue()) {
-                    i = m.firstIndex() - 1;
+                    int i = m.firstIndex() - 1;
                     if (i >= 0 && i < h_tuple.size()) {
                         ColorFunction oldCf = h_tuple.get(i);
                         ColorFunction constraint = multisetConstraint(m);
@@ -592,17 +586,18 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             tuple_copy.put(cc, h_tuple);
         }
 
-        // Reduction for Equalities (=) and Inequalities (!=)
+        // equality/inequality reductions
         for (var ex : equalityMap.entrySet()) {
-            if ((h_tuple = (List<ColorFunction>) tuple_copy.get(cc = ex.getKey())) == null) {
+            ColorClass cc = ex.getKey();
+            List<ColorFunction> h_tuple = (List<ColorFunction>) tuple_copy.get(cc);
+            if (h_tuple == null) {
                 h_tuple = new ArrayList<>(getHomSubTuple(cc));
             }
 
             for (var ey : ex.getValue().entrySet()) {
-                final boolean op = ey.getKey(); // true = '=', false = '!='
-
+                boolean op = ey.getKey();
                 for (var eq : ey.getValue()) {
-                    i = eq.firstIndex() - 1;
+                    int i = eq.firstIndex() - 1;
                     int j = eq.secondIndex() - 1;
 
                     if (i < 0 || j < 0 || i >= h_tuple.size() || j >= h_tuple.size()) {
@@ -611,7 +606,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
                     final ColorFunction f_i = h_tuple.get(i);
                     final ColorFunction f_j = h_tuple.get(j);
-
                     ColorFunction succ_fi = f_i;
                     ColorFunction succ_fj = f_j;
 
@@ -622,9 +616,9 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                     }
 
                     if (op) {
-                        // Equality (=)
-                        final boolean fi_card_leq_1 = cardLeq1(f_i);
-                        final boolean fj_card_leq_1 = cardLeq1(f_j);
+                        // Equality
+                        boolean fi_card_leq_1 = cardLeq1(f_i);
+                        boolean fj_card_leq_1 = cardLeq1(f_j);
 
                         if (fi_card_leq_1 || fj_card_leq_1) {
                             if (fi_card_leq_1 && isSetFunction(f_j)) {
@@ -640,7 +634,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                             } else if (fi_card_leq_1 && fj_card_leq_1) {
                                 // Either both are singletons or both are projections; if they are different projections, we can substitute one with the other
                                 if (f_i instanceof Projection p1 && f_j instanceof Projection p2 && p1.getIndex() != p2.getIndex()) {
-                                    final Projection target = Projection.builder(p1.getIndex(), cc);
+                                    Projection target = Projection.builder(p1.getIndex(), cc);
                                     for (int k = 0; k < h_tuple.size(); k++) {
                                         h_tuple.set(k, substituteProjection(h_tuple.get(k), p2.getIndex(), target));
                                     }
@@ -653,31 +647,31 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                             }
                         }
                     } else {
-                        // Inequality (!=)
+                        // Inequality
                         if (f_i.equals(f_j) && cardLeq1(f_i)) {
                             // If both components are equal and have cardinality <= 1, the inequality is unsatisfiable
                             return build().cast();
                         }
-
                         // If one component is a set function and the other has cardinality <= 1, we can restrict the set function by removing the singleton
                         if (isSetFunction(f_i) && cardLeq1(f_j)) {
                             ColorFunction restricted = differMulti(f_i, succ_fj);
                             if (!restricted.equals(f_i)) {
                                 h_tuple.set(i, restricted);
-                                to_remove.add(eq); // Clause absorbed in the component as S_C - c
+                                to_remove.add(eq);
                                 reduced = true;
                             }
                         } else if (isSetFunction(f_j) && cardLeq1(f_i)) {
                             ColorFunction restricted = differMulti(f_j, succ_fi);
                             if (!restricted.equals(f_j)) {
                                 h_tuple.set(j, restricted);
-                                to_remove.add(eq); // Clause absorbed in the component as S_C - c
+                                to_remove.add(eq);
                                 reduced = true;
                             }
                         }
                     }
                 }
             }
+
             tuple_copy.put(cc, h_tuple);
         }
 
@@ -685,28 +679,10 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             return this;
         }
 
-        // Rebuild the filter by removing the clauses that have been absorbed into the components
-        var f = filter();
-        if (!to_remove.isEmpty()) {
-            var args = new HashSet<>(And.getArgs(f));
-            to_remove.forEach(args::remove);
+        Guard newFilter = rebuildFilterAfterReduction(filter(), to_remove);
+        SortedMap<ColorClass, List<? extends ColorFunction>> rebuilt = rebuildHomParts(getHomSubTuples(), tuple_copy);
 
-            if (args.isEmpty()) {
-                f = guard.True.getInstance(getCodomain());
-            } else if (args.size() == 1) {
-                f = args.iterator().next();
-            } else {
-                f = And.buildAndFormWithDom(args, getCodomain());
-            }
-        }
-
-        final SortedMap<ColorClass, List<? extends ColorFunction>> rebuilt = new TreeMap<>();
-        for (var e : getHomSubTuples().entrySet()) {
-            rebuilt.putIfAbsent(e.getKey(), new ArrayList<>(e.getValue()));
-        }
-        rebuilt.putAll(tuple_copy);
-
-        return new WNtuple(f, rebuilt, guard());
+        return new WNtuple(newFilter, rebuilt, guard());
     }
 
     // Helper for identifying set functions S_C
