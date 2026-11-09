@@ -300,4 +300,109 @@ class ArcFunCompTest {
         assertEquals(9, All.getInstance(cc).cardLb());
         assertEquals(35, scalar.k());
     }
+
+    @Test
+    void property15_multipliesCardinalityOfRemovedEqualityClass() throws Exception {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+
+        SortedMap<ColorClass, List<? extends ColorFunction>> leftMap = new TreeMap<>();
+        leftMap.put(cc, List.of(p1));
+
+        SortedMap<ColorClass, List<? extends ColorFunction>> rightMap = new TreeMap<>();
+        rightMap.put(cc, List.of(All.getInstance(cc), All.getInstance(cc), All.getInstance(cc)));
+
+        WNtuple left = new WNtuple(leftMap, True.getInstance(domain));
+
+        Equality eq = (Equality) Equality.builder(p2, p3, true, domain);
+        Guard filter = eq;
+
+        WNtuple right = new WNtuple(filter, rightMap, True.getInstance(domain));
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        Method method = ArcFunComp.class.getDeclaredMethod("property15", ArcFunComp.class, int.class);
+        method.setAccessible(true);
+
+        int card = 5;
+
+        ArcFunScalar result = (ArcFunScalar) method.invoke(comp, comp, card);
+
+        assertNotNull(result);
+        assertEquals(9, All.getInstance(cc).cardLb());
+        assertEquals(45, result.k());
+    }
+
+    @Test
+    void property15_projectsUnusedEqualityClassAndScalesIndices() throws Exception {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+
+        SortedMap<ColorClass, List<? extends ColorFunction>> leftMap = new TreeMap<>();
+        leftMap.put(cc, List.of(p2));
+
+        SortedMap<ColorClass, List<? extends ColorFunction>> rightMap = new TreeMap<>();
+        rightMap.put(cc, List.of(All.getInstance(cc), All.getInstance(cc), All.getInstance(cc)));
+
+        WNtuple left = new WNtuple(leftMap, True.getInstance(domain));
+
+        Equality eq = (Equality) Equality.builder(p1, p3, true, domain);
+
+        WNtuple right = new WNtuple(eq, rightMap, True.getInstance(domain));
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        Method method = ArcFunComp.class.getDeclaredMethod("property15", ArcFunComp.class, int.class);
+        method.setAccessible(true);
+
+        ArcFunScalar result = (ArcFunScalar) method.invoke(comp, comp, 5);
+
+        assertNotNull(result);
+        assertEquals(45, result.k());
+    }
+
+    @Test
+    void property15_multipliesCardinalityOfMultipleRemovedEqualityClasses() throws Exception {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc, cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+        Projection p4 = Projection.builder(4, cc);
+        Projection p5 = Projection.builder(5, cc);
+
+        SortedMap<ColorClass, List<? extends ColorFunction>> leftMap = new TreeMap<>();
+        leftMap.put(cc, List.of(p1));
+
+        SortedMap<ColorClass, List<? extends ColorFunction>> rightMap = new TreeMap<>();
+        rightMap.put(cc, List.of(All.getInstance(cc), All.getInstance(cc), All.getInstance(cc), All.getInstance(cc), All.getInstance(cc)));
+
+        WNtuple left = new WNtuple(leftMap, True.getInstance(domain));
+
+        Equality eq1 = (Equality) Equality.builder(p2, p3, true, domain);
+        Equality eq2 = (Equality) Equality.builder(p4, p5, true, domain);
+
+        Guard filter = And.factory(List.of(eq1, eq2), true);
+
+        WNtuple right = new WNtuple(filter, rightMap, True.getInstance(domain));
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        Method method = ArcFunComp.class.getDeclaredMethod("property15", ArcFunComp.class, int.class);
+        method.setAccessible(true);
+
+        ArcFunScalar result = (ArcFunScalar) method.invoke(comp, comp, 5);
+
+        assertNotNull(result);
+        assertEquals(405, result.k());
+    }
 }
