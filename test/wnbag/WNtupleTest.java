@@ -1,10 +1,7 @@
 
 package wnbag;
 
-import classfunction.All;
-import classfunction.Empty;
-import classfunction.Projection;
-import classfunction.Subcl;
+import classfunction.*;
 import color.ColorClass;
 import expr.Domain;
 import expr.Interval;
@@ -13,9 +10,8 @@ import org.junit.jupiter.api.Test;
 import wncolorfunction.ColorFunction;
 import wncolorfunction.LinearComb;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -497,6 +493,208 @@ class WNtupleTest {
         assertEquals(2, simplified.asMap().get(Projection.builder(1, 0, cc)));
         assertEquals(3, simplified.asMap().get(Projection.builder(2, 1, cc)));
         assertEquals(4, simplified.asMap().get(all));
+    }
+
+    @Test
+    void collectGuardIndices_collectsIndicesRecursivelyFromAnd() throws Exception {
+        ColorClass cc = new ColorClass(2, 3);
+        Domain domain = new Domain(cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+
+        Equality eq1 = (Equality) Equality.builder(p1, p2, true, domain);
+        Equality eq2 = (Equality) Equality.builder(p2, p3, false, domain);
+
+        Guard guard = And.factory(List.of(eq1, eq2), true);
+
+        Set<Integer> indices = new HashSet<>();
+
+        Method method = WNtuple.class.getDeclaredMethod("collectGuardIndices", Guard.class, Set.class);
+        method.setAccessible(true);
+
+        WNtuple.class.cast(new WNtuple(True.getInstance(domain), List.of(p1, p2, p3), guard, false));
+
+        method.invoke(new WNtuple(True.getInstance(domain), List.of(p1, p2, p3), guard, false), guard, indices);
+        assertEquals(Set.of(1, 2, 3), indices);
+    }
+
+    @Test
+    void baseGuardReduction_doesNotModifyTupleWhenGuardIsTrivial() {
+        ColorClass cc = new ColorClass(2, 3);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        WNtuple tuple = new WNtuple(True.getInstance(domain), List.of(p1, p2), True.getInstance(domain), false);
+
+        assertSame(tuple, tuple.baseGuardReduction());
+    }
+
+    @Test
+    void baseGuardReduction_doesNotModifyTupleWhenNoEqualityCanBeMoved() {
+        ColorClass cc = new ColorClass(2, 3);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Equality eq = (Equality) Equality.builder(p1, p2, true, domain);
+        Guard guard = And.factory(List.of(eq), true);
+
+        WNtuple tuple = new WNtuple(True.getInstance(domain), List.of(All.getInstance(cc), All.getInstance(cc)), guard, false);
+
+        assertSame(tuple, tuple.baseGuardReduction());
+    }
+
+    @Test
+    void baseGuardReduction_movesEqualityToFilter() {
+        ColorClass cc = new ColorClass(2, 3);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Equality eq = (Equality) Equality.builder(p1, p2, true, domain);
+        Guard guard = And.factory(List.of(eq), true);
+
+        WNtuple tuple = new WNtuple(True.getInstance(domain), List.of(p1, p2), guard, false);
+
+        WNtuple result = tuple.baseGuardReduction();
+        assertNotSame(tuple, result);
+        assertEquals(Equality.builder(Projection.builder(1, cc), Projection.builder(2, cc), true, domain), result.filter());
+        assertTrue(result.guard().isTrivial());
+    }
+
+    @Test
+    void baseGuardReduction_handlesSingleProjectionLinearComb() {
+        ColorClass cc = new ColorClass(2, 3);
+        Domain domain = new Domain(cc, cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+        Projection p4 = Projection.builder(4, cc);
+
+        LinearComb lc = new LinearComb(Map.of(p3, 1));
+
+        Equality moved = (Equality) Equality.builder(p3, p1, true, domain);
+        Equality remaining = (Equality) Equality.builder(p1, p4, false, domain);
+
+        Guard guard = And.factory(List.of(moved, remaining), true);
+
+        WNtuple tuple = new WNtuple(True.getInstance(domain), List.of(lc, p1, All.getInstance(cc), All.getInstance(cc)), guard, false);
+
+        WNtuple result = tuple.baseGuardReduction();
+        assertNotSame(tuple, result);
+        assertEquals(remaining, result.guard());
+        assertInstanceOf(Equality.class, result.filter());
+    }
+
+    @Test
+    void baseGuardReduction_preservesExistingElementaryFilter() {
+        ColorClass cc = new ColorClass(2, 3);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Guard existingFilter = Equality.builder(p1, p2, false, domain);
+        Equality guardEquality = (Equality) Equality.builder(p1, p2, true, domain);
+
+        Guard guard = And.factory(List.of(guardEquality), true);
+
+        WNtuple tuple = new WNtuple(existingFilter, List.of(p1, p2), guard, false);
+
+        WNtuple result = tuple.baseGuardReduction();
+        assertNotSame(tuple, result);
+        assertInstanceOf(And.class, result.filter());
+        assertTrue(And.getArgs(result.filter()).contains(existingFilter));
+        assertTrue(result.guard().isTrivial());
+    }
+
+    @Test
+    void baseGuardReduction_preservesMultipleRemainingGuardClauses() {
+        ColorClass cc = new ColorClass(2, 3);
+        Domain domain = new Domain(cc, cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+        Projection p4 = Projection.builder(4, cc);
+
+        Equality moved = (Equality) Equality.builder(p1, p2, true, domain);
+
+        Equality remaining1 = (Equality) Equality.builder(p1, p4, false, domain);
+        Equality remaining2 = (Equality) Equality.builder(p2, p3, false, domain);
+
+        Guard guard = And.factory(List.of(moved, remaining1, remaining2), true);
+
+        WNtuple tuple = new WNtuple(True.getInstance(domain), List.of(p1, p2, All.getInstance(cc), All.getInstance(cc)), guard, false);
+
+        WNtuple result = tuple.baseGuardReduction();
+
+        assertNotSame(tuple, result);
+        assertInstanceOf(And.class, result.guard());
+        Collection<Guard> remainingClauses = (Collection<Guard>) And.getArgs(result.guard());
+        assertEquals(2, remainingClauses.size());
+        assertTrue(remainingClauses.contains(remaining1));
+        assertTrue(remainingClauses.contains(remaining2));
+    }
+
+    @Test
+    void baseFilterReduction_handlesSingletonLinearCombWithMultiplicity() throws Exception {
+        ColorClass cc = new ColorClass(2, 3, true);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, 0, cc);
+        Projection p2 = Projection.builder(2, 1, cc);
+
+        LinearComb fi = new LinearComb(Map.of(p1, 2));
+        LinearComb fj = new LinearComb(Map.of(p2, 1));
+
+        Equality eq = (Equality) Equality.builder(p1, p2, true, domain);
+        Guard filter = And.factory(List.of(eq), true);
+
+        WNtuple tuple = new WNtuple(filter, List.of(fi, fj), True.getInstance(domain), false);
+
+        Method method = WNtuple.class.getDeclaredMethod("baseFilterReduction", Map.class, Map.class);
+        method.setAccessible(true);
+        Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap = Map.of(cc, Map.of(true, new TreeSet<>(Set.of(eq))));
+        Map<ColorClass, Map<Boolean, Set<Membership>>> membershipMap = Map.of();
+
+        ArcFunction result = (ArcFunction) method.invoke(tuple, equalityMap, membershipMap);
+        assertInstanceOf(WNtuple.class, result);
+        WNtuple reduced = (WNtuple) result;
+        LinearComb expected = new LinearComb(Projection.builder(2, 2, cc), 2);
+        assertEquals(expected, reduced.getHomSubTuple(cc).getFirst());
+        assertTrue(reduced.filter().isTrivial());
+    }
+
+    @Test
+    void restrictConstantByMembership_excludesSelectedSubclassFromAll() throws Exception {
+        ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3), new Interval(4, 4)});
+        Domain dom = new Domain(cc);
+
+        All all = All.getInstance(cc);
+        Subcl selected = Subcl.factory(1, cc);
+        Projection p = Projection.builder(1, cc);
+
+        Membership membership = Membership.build(p, selected, false, dom);
+
+        WNtuple tuple = new WNtuple(True.getInstance(dom), List.of(all), True.getInstance(dom), false);
+
+        Method method = WNtuple.class.getDeclaredMethod("restrictConstantByMembership", ConstantFunction.class, Membership.class);
+        method.setAccessible(true);
+
+        ColorFunction result = (ColorFunction) method.invoke(tuple, all, membership);
+        Map<ElementaryFunction, Integer> expectedTerms = new LinkedHashMap<>();
+        expectedTerms.put(Subcl.factory(2, cc), 1);
+        expectedTerms.put(Subcl.factory(3, cc), 1);
+        LinearComb expected = new LinearComb(expectedTerms, false);
+        assertEquals(expected, result);
     }
 
 }
