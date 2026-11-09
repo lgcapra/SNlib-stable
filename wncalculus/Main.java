@@ -14,6 +14,8 @@ import util.Util;
 import wnbag.*;
 import wncolorfunction.LinearComb;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * This class embeds some examples of use of library's type and methods
  *
@@ -62,7 +64,16 @@ public class Main {
      * @param args command line arguments (not used)
      */
     public static void main(String[] args) {
+        // multiset -- modificata dopo ultimi cambiamenti di bag expressions
+        //testBaseComposeWithSuccessorAndMultiplicity();
+        //testCompositionSuccessorMembership();
+        testComplexComposition();
+        testSplitSumInRightTupleGuard();
+        testMultiset();
+        testLemma1();
         testSeparateIndependentEqualities();
+
+
 //        /*try {
 //           Runtime.getRuntime().exec(new String[] { "java", "-jar", "E:\\lorenzo\\CLISVN\\SNexpressions\\SNexCLI.jar" });
 //           return;
@@ -78,7 +89,6 @@ public class Main {
 //
 //        test0();
 //
-//        //testBag();
 //        System.out.println("\n*** testGuard *** ");
 //        testGuard();
 //        Util.getChar();
@@ -99,8 +109,6 @@ public class Main {
 //        Projection f1;
 //        SetFunction f3, f4, f5;
 //
-//        //testGuard();
-//        //testInequalitygraph();
 //        testBasicComposition();
 //        //System.exit(0);
 //
@@ -133,14 +141,6 @@ public class Main {
 //        //System.out.println(f2 + " implies " + f1+" intersez "+ f2 + " :" + LogicalExprs.implies(f2,f1.andFactory(f1, f2)));
 //        testIntersection(f_list, f1, f4);
 
-        // parte sui m
-        // ultiset -- modificata dopo ultimi cambiamenti di bag expressions
-        testComplexComposition();
-        testSplitSumInRightTupleGuard();
-        testMultiset();
-        testLemma1();
-        //testProperty2();
-
 //        Guard g2;
 //        Util.getChar();
 //
@@ -150,9 +150,6 @@ public class Main {
 //        testRightComposable(f_list);
 //
 //        testProjectionComposition();
-//
-//        //System.out.println("---testing bags---");
-//        //testBag();
     }
 
     /**
@@ -595,6 +592,7 @@ public class Main {
         }
 
         System.out.println("testSeparateIndependentEqualities passed");
+        Util.getChar();
     }
 
     /**
@@ -1027,6 +1025,7 @@ public class Main {
 
         System.out.println("normalizzo\n" + c);
         System.out.println(c.normalize());
+        Util.getChar();
     }
 
     public static void testSplitSumInRightTupleGuard() {
@@ -1148,9 +1147,9 @@ public class Main {
         );
 
         // Guardia della prima tupla:
-        // c1_1 = c1_2
+        // c1_1 = !c1_2
         Guard eq1 = Equality.builder(
-                pr1_1, pr1_2, true, tuple1Domain
+                pr1_1, pr1_2.setExp(1), true, tuple1Domain
         );
 
         // c2_1 != c2_3
@@ -1186,7 +1185,7 @@ public class Main {
                 new Pair<>(All.getInstance(fc1), 1);
 
         // Prima tupla:
-        // [c1_1 = c1_2 AND c2_1 != c2_3]
+        // [c1_1 = !c1_2 AND c2_1 != c2_3]
         // <All1-c1_1, c2_3, 3c1_2, c2_2, 2All2>
         WNtuple wnt1 = new WNtuple(
                 filter1,
@@ -1227,6 +1226,100 @@ public class Main {
         Util.getChar();
     }
 
+    public static void testCompositionSuccessorMembership() {
+
+        // Domain: one position for each color class
+        Domain domain = new Domain(fc1, c2);
+
+        // Projections
+        Projection pr1 = Projection.builder(1, fc1);
+        Projection pr2 = Projection.builder(1, c2);
+
+        // Successor of the projection belonging to fc1
+        Projection succ = pr1.setExp(2);
+
+        Subcl sc1 = Subcl.factory(1, c2);
+        // Membership: the projection belonging to c2
+        // must belong to subclass 1
+        Membership memb = (Membership) Membership.build(
+                pr2,
+                sc1,
+                true,
+                domain
+        );
+
+        // Left tuple: <succ(pr1), pr2>
+        // No filter and no additional guard
+        WNtuple left = new WNtuple(
+                domain,
+                new LinearComb(succ),
+                new LinearComb(pr2)
+        );
+
+        // Right tuple: <pr1, pr2>
+        // The membership constraint is in the guard, not in the filter
+        WNtuple right = new WNtuple(
+                Arrays.asList(new LinearComb(pr1), new LinearComb(pr2)),
+                memb,
+                false
+        );
+
+        // Composition
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        System.out.println("Original composition:");
+        System.out.println(comp);
+
+        ArcFunction result = comp.normalize();
+
+        System.out.println("\nNormalized composition:");
+        System.out.println(result);
+
+        if (result == null) {
+            throw new AssertionError("Composition returned null");
+        }
+        Util.getChar();
+    }
+
+    static void testBaseComposeWithSuccessorAndMultiplicity() {
+        // Dominio
+        ColorClass cc = fc1;
+
+        Domain leftDomain = new Domain(cc);
+        Domain rightDomain = new Domain(cc, 2);
+
+        // Tupla sinistra: < !c_1_1, !c_1_1 >
+        Projection p1 = Projection.builder(1, cc);
+        Projection succP1 = (Projection) Successor.factory(1, p1);
+
+        WNtuple left = new WNtuple(
+                leftDomain,
+                new LinearComb(succP1),
+                new LinearComb(succP1)
+        );
+
+        // Tupla destra: < c_1_2 >
+        Projection p2 = Projection.builder(2, cc);
+
+        WNtuple right = new WNtuple(
+                rightDomain,
+                new LinearComb(p2)
+        );
+
+        // Composizione
+        ArcFunction result = left.baseCompose(right);
+
+        // Risultato atteso: < !c_1_2, !c_1_2 >
+        Projection expectedProjection = (Projection) Successor.factory(1, p2);
+
+        WNtuple expected = new WNtuple(
+                rightDomain,
+                new LinearComb(expectedProjection),
+                new LinearComb(expectedProjection)
+        );
+
+        assertEquals(expected, result);
+    }
 
 
 }

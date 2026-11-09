@@ -56,6 +56,7 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
         while (it.hasNext()) {
             res = Op(res, it.next());
         }
+        //System.out.println("N_aryBagOp.specSimplify: " + this + " -> \n" + res);
         return res;
     }
 
@@ -108,7 +109,6 @@ public abstract class N_aryBagOp<E extends ParametricExpr> implements N_aryOp<Ba
     }
 
 
-    @SuppressWarnings("unchecked")
     @Override
     public final N_aryBagOp<E> clone(Map<Sort, Sort> split_map) {
         return (N_aryBagOp<E>) BagExpr.super.clone(split_map); // default implementation is fine

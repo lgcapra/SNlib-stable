@@ -94,6 +94,10 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     // Property 15
                     ArcFunScalar ccr = (ArcFunScalar) cc_res;
                     card = ccr.k();
+                    if (!(ccr.getArg() instanceof ArcFunComp)) {
+                        results.put(cc, cc_res);
+                        continue;
+                    }
                     cc_res = property15((ArcFunComp)ccr.getArg(), card);
                     //System.out.println("property 15: " + cc_res);
 
@@ -141,26 +145,18 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
      * @return true if the prerequisites are met, false otherwise
      */
     private boolean prerequisite(@NotNull Set<? extends ElementaryGuard> guards, @NotNull WNtuple right, @NotNull ColorClass cc) {
-
         for (ElementaryGuard guard : guards) {
             if (guard.isMembership()) {
                 return false;
             }
-
             Equality eq = (Equality) guard;
-
             var rc1 = right.getComponent(eq.getArg1().getIndex(), cc);
-
             var rc2 = right.getComponent(eq.getArg2().getIndex(), cc);
-
-            // Continue only if the equality concerns equivalent
-            // components in the right tuple and their cardinality
-            // is greater than one.
+            // Continue only if the equality concerns equivalent components in the right tuple and their cardinality is greater than one.
             if (!rc1.equals(rc2) || rc1.cardLb() <= 1) {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -206,6 +202,19 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
 
         WNtuple rtx = new WNtuple(redRightComps, right.getDomain());
         Guard rightFilter = newGuard(crightF, rtx.getCodomain());
+
+        // If the left tuple consists only of constants, then I do not perform the composition.
+        if (cleftComps.isEmpty()) {
+            List<ColorFunction> originalLeftComps = new ArrayList<>(
+                    constants.entrySet().stream()
+                            .sorted(Map.Entry.comparingByKey())
+                            .map(Map.Entry::getValue).toList());
+            WNtuple leftTuple = new WNtuple(originalLeftComps, right.getDomain());
+            // The guard must have the same domain as the left tuple.
+            Guard leftGuard = newGuard(crightF, right.getDomain());
+            return new ArcFunScalar((ArcFunction) leftTuple.joinGuard(leftGuard), card);
+        }
+
         return new ArcFunScalar(new ArcFunComp(new WNtuple(cleftComps, rightFilter.getDomain()), rtx.joinFilter(rightFilter).cast()), card);
 
     }

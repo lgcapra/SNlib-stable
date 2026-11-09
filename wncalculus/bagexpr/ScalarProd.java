@@ -1,6 +1,7 @@
 package bagexpr;
 
 import expr.*;
+import wncolorfunction.LinearComb;
 
 /**
  * this class implements the bag's scalar product
@@ -50,10 +51,19 @@ public abstract class ScalarProd<E extends ParametricExpr> extends UnaryBagOp<E>
         if (arg instanceof ScalarProd sprod) {
             return buildScProd(sprod.getArg().cast(), sprod.k * this.k);
         }
-        
+
         if (arg instanceof Bag) {
             Bag<E> b = (Bag<E>) arg;
-            return b.isEmpty() ? b : b.scalarProd(this.k) ;
+
+            if (b.isEmpty()) {
+                return b;
+            }
+
+            if (b instanceof LinearComb) {
+                return this;
+            }
+
+            return b.scalarProd(this.k);
         }
         
         return this;
