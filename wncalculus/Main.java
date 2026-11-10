@@ -67,6 +67,7 @@ public class Main {
         // multiset -- modificata dopo ultimi cambiamenti di bag expressions
         //testBaseComposeWithSuccessorAndMultiplicity();
         //testCompositionSuccessorMembership();
+        test();
         testComplexComposition();
         testSplitSumInRightTupleGuard();
         testMultiset();
@@ -1319,6 +1320,33 @@ public class Main {
         );
 
         assertEquals(expected, result);
+    }
+
+    static void test() {
+        // Dominio
+        ColorClass cc = fc1;
+
+        Domain leftDomain = new Domain(cc, cc);
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Equality eq = (Equality) Equality.builder(
+                p1,
+                p2,
+                true,
+                leftDomain
+        );
+        WNtuple t = new WNtuple(
+                eq,
+                Arrays.asList(
+                new LinearComb(p2),
+                new LinearComb(p1)),
+                True.getInstance(leftDomain),
+                true
+        );
+        System.out.println(t);
+        System.out.println("result:" + t.specSimplify());
+        Util.getChar();
     }
 
 

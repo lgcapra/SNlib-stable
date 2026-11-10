@@ -73,7 +73,7 @@ class ArcFunCompTest {
     }
 
     @Test
-    void lemma4_returnsNullWhenThereAreNoExtraVariables() throws Exception {
+    void lemma4_returnsScalarWhenThereAreNoExtraVariables() throws Exception {
         ColorClass cc = new ColorClass(2, 3);
         Domain domain = new Domain(cc, cc);
 
@@ -90,8 +90,13 @@ class ArcFunCompTest {
         Method method = ArcFunComp.class.getDeclaredMethod("lemma4", ArcFunComp.class, int.class);
         method.setAccessible(true);
 
+        int card = 5;
+
         ArcFunction result = (ArcFunction) method.invoke(comp, comp, 5);
-        assertNull(result);
+        assertInstanceOf(ArcFunScalar.class, result);
+        ArcFunScalar scalar = (ArcFunScalar) result;
+        assertEquals(card, scalar.k());
+        assertSame(comp, scalar.getArg());
     }
 
     @Test

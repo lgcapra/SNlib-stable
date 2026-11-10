@@ -61,6 +61,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     return new ArcFunComp(left.withoutGuard().cast(), right.joinFilter(left.guard()).cast());
                 }
 
+                Guard lF = True.getInstance(left.getCodomain());
                 // left tuple, with no constant components
                 // Lemma 1
                 final Guard rf = right.filter();
@@ -105,19 +106,21 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     ccr = (ArcFunScalar) cc_res;
                     card = ccr.k();
                     cc_res = lemma4((ArcFunComp)ccr.getArg(), card);
-                    if (cc_res == null) {//The conditions are not met; I will attempt to simplify the left-hand tuple.
-                        return new ArcFunComp(left.joinGuard(right.filter()).cast(), right.withoutFilter().cast());
+                    //System.out.println("lemma 4: " + cc_res);
+                    if (cc_res == null) {
+                        throw new IllegalStateException("Lemma 4 could not be applied to the composition: " + ccr);
                     }
                     ccr = (ArcFunScalar) cc_res;
                     card = ccr.k();
+                    //System.out.println("lemma 4: " + cc_res);
                     // If there is still something in the right filter, it is moved to the left guard position so that it can then be shifted into the left filter.
                     if(!(((WNtuple)(((ArcFunComp)ccr.getArg()).right())).filter().isTrivial())) {
                         WNtuple tleft = (WNtuple) ((WNtuple)(((ArcFunComp)ccr.getArg()).left())).joinGuard(((WNtuple)(((ArcFunComp)ccr.getArg()).right())).filter().cast());
                         tleft=tleft.baseGuardReduction().specSimplify().cast();
                         WNtuple tright = ((WNtuple)(((ArcFunComp)ccr.getArg()).right())).withoutFilter().cast();
                         cc_res = new ArcFunScalar(new ArcFunComp(tleft, tright), card);
+                        //System.out.println("after moving right filter to left: " + cc_res);
                     }
-                    //System.out.println("lemma 4 : " + cc_res);
 
                     ccr = (ArcFunScalar) cc_res;
                     card = Objects.requireNonNull(ccr).k();
@@ -320,7 +323,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         final SortedSet<Integer> extra = new TreeSet<>(gIdx);
         extra.removeAll(leftidx);
         if (extra.isEmpty()) {
-            return null;
+            return new ArcFunScalar(comp, card);
         }
 
         // Lambda: domain available; we use the minimum lb known for the components involved
