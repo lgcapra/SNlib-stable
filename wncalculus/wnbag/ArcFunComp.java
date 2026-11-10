@@ -61,7 +61,6 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     return new ArcFunComp(left.withoutGuard().cast(), right.joinFilter(left.guard()).cast());
                 }
 
-                Guard lF = True.getInstance(left.getCodomain());
                 // left tuple, with no constant components
                 // Lemma 1
                 final Guard rf = right.filter();
@@ -112,6 +111,10 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     }
                     ccr = (ArcFunScalar) cc_res;
                     card = ccr.k();
+                    if (card == 0) {
+                        results.put(cc, cc_res);
+                        continue;
+                    }
                     //System.out.println("lemma 4: " + cc_res);
                     // If there is still something in the right filter, it is moved to the left guard position so that it can then be shifted into the left filter.
                     if(!(((WNtuple)(((ArcFunComp)ccr.getArg()).right())).filter().isTrivial())) {

@@ -10,6 +10,8 @@ import expr.Interval;
 import expr.Domain;
 import guard.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import util.Util;
 import wncolorfunction.ColorFunction;
 import wncolorfunction.LinearComb;
@@ -326,9 +328,8 @@ class ArcFunCompTest {
         WNtuple left = new WNtuple(leftMap, True.getInstance(domain));
 
         Equality eq = (Equality) Equality.builder(p2, p3, true, domain);
-        Guard filter = eq;
 
-        WNtuple right = new WNtuple(filter, rightMap, True.getInstance(domain));
+        WNtuple right = new WNtuple(eq, rightMap, True.getInstance(domain));
 
         ArcFunComp comp = new ArcFunComp(left, right);
 
@@ -550,7 +551,6 @@ class ArcFunCompTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void splitHomogeneousTuples_splitsLinearCombIntoAlternatives() throws Exception {
         ColorClass cc = new ColorClass(2, 9);
         Domain domain = new Domain(cc, cc);
@@ -589,7 +589,6 @@ class ArcFunCompTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void splitHomogeneousTuples_keepsProjectionAndConstantUnchanged() throws Exception {
         ColorClass cc = new ColorClass(2, 9);
         Domain domain = new Domain(cc, cc);
@@ -622,7 +621,6 @@ class ArcFunCompTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void splitSum_splitsLinearCombAtSpecifiedPosition() throws Exception {
         ColorClass cc = new ColorClass(2, 9);
 
@@ -792,5 +790,308 @@ class ArcFunCompTest {
         boolean result = (boolean) method.invoke(comp, Set.of(eq), right, cc);
 
         assertFalse(result);
+    }
+
+    @Test
+    void testSpecSimplify_InitialSimplificationNotArcFunComp() {
+        ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3)});
+        Domain domain = new Domain(cc);
+
+        Subcl subcl = Subcl.factory(1, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+
+        WNtuple left = new WNtuple(List.of(subcl), True.getInstance(domain), false);
+        WNtuple right = new WNtuple(List.of(p1), True.getInstance(domain), false);
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertInstanceOf(ArcFunScalar.class, result);
+    }
+
+    @Test
+    void testSpecSimplify_LeftIsNotWNtuple() {
+        ColorClass cc = new ColorClass(2, 3);
+        Domain domain = new Domain(cc);
+
+        Projection p1 = Projection.builder(1, cc);
+
+        WNtuple t1 = new WNtuple(List.of(p1), True.getInstance(domain), false);
+        WNtuple t2 = new WNtuple(List.of(p1), True.getInstance(domain), false);
+
+        ArcFunComp innerComp = new ArcFunComp(t1, t2);
+        ArcFunComp comp = new ArcFunComp(innerComp, t1);
+
+        ArcFunction result = comp.specSimplify();
+        assertInstanceOf(ArcFunComp.class, result);
+        assertSame(comp, result);
+    }
+
+    @Test
+    void testSpecSimplify_SplitsHomogeneousTuples() {
+        ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3)});
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Subcl subcl1 = Subcl.factory(1, cc);
+
+        LinearComb lc = new LinearComb(Map.of(p1, 1, subcl1, 1));
+
+        assertEquals(2, lc.separateConst().size());
+
+        WNtuple left = new WNtuple(List.of(lc), True.getInstance(domain), false);
+        WNtuple right = new WNtuple(List.of(All.getInstance(cc), All.getInstance(cc)), domain);
+
+        assertTrue(left.simple());
+        assertFalse(left.isConstant());
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertInstanceOf(ArcFunComp.class, result);
+        ArcFunComp simplified = (ArcFunComp) result;
+        assertInstanceOf(ArcFunSum.class, simplified.left());
+    }
+
+    @Test
+    void testSpecSimplify_LeftFilterNotTrivial() {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        LinearComb lc = new LinearComb(Map.of(p1, 1, p2, -1));
+
+        Guard filter = Equality.builder(p1, p2, true, domain);
+
+        WNtuple left = new WNtuple(filter, List.of(lc, p1), True.getInstance(domain), false);
+        WNtuple right = new WNtuple(List.of(All.getInstance(cc), All.getInstance(cc)), domain);
+
+        assertTrue(left.simple());
+        assertFalse(left.filter().isTrivial());
+        assertEquals(1, lc.separateConst().size());
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertSame(comp, result);
+    }
+
+    @Test
+    void testSpecSimplify_RightIsNotWNtuple() {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc);
+
+        Projection p1 = Projection.builder(1, cc);
+
+        WNtuple left = new WNtuple(List.of(p1), domain);
+        WNtuple right1 = new WNtuple(List.of(All.getInstance(cc)), domain);
+        WNtuple right2 = new WNtuple(List.of(p1), domain);
+        ArcFunSum right = (ArcFunSum) ArcFunSum.factory(List.of(right1, right2));
+
+        assertTrue(left.simple());
+        assertTrue(left.filter().isTrivial());
+        assertInstanceOf(ArcFunSum.class, right);
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertSame(comp, result);
+    }
+
+    @Test
+    void testSpecSimplify_MovesLeftGuardToRightFilter() {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Guard guard = Equality.builder(p1, p2, true, domain);
+
+        WNtuple left = new WNtuple(List.of(p1, p2), guard, false);
+        WNtuple right = new WNtuple(List.of(p1, p2), True.getInstance(domain), false);
+
+        assertTrue(left.simple());
+        assertTrue(left.filter().isTrivial());
+        assertFalse(left.guard().isTrivial());
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertInstanceOf(ArcFunComp.class, result);
+        ArcFunComp simplified = (ArcFunComp) result;
+        WNtuple simplifiedLeft = (WNtuple) simplified.left();
+        WNtuple simplifiedRight = (WNtuple) simplified.right();
+        assertTrue(simplifiedLeft.guard().isTrivial());
+        assertEquals(guard, simplifiedRight.filter());
+    }
+
+    @Test
+    void testSpecSimplify_RightFilterNotTrivial() {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Guard filter = And.factory(Equality.builder(p1, p2, true, domain), Equality.builder(p1, p2, false, domain));
+
+        WNtuple left = new WNtuple(List.of(p1, p2), domain);
+        WNtuple right = new WNtuple(filter, List.of(p1, p2), True.getInstance(domain), false);
+
+        assertTrue(left.simple());
+        assertTrue(left.filter().isTrivial());
+        assertFalse(right.filter().isTrivial());
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertSame(comp, result);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void testSpecSimplify_PrerequisiteFails(boolean sameComponents) {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Guard filter = Equality.builder(p1, p2, true, domain);
+
+        WNtuple left = new WNtuple(List.of(p1, p2), domain);
+        WNtuple right = new WNtuple(filter, sameComponents ? List.of(p1, p1) : List.of(p2, p1), True.getInstance(domain), false);
+
+        assertTrue(left.simple());
+        assertTrue(left.filter().isTrivial());
+        assertFalse(right.filter().isTrivial());
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertSame(comp, result);
+    }
+
+    @Test
+    void testSpecSimplify_Property2ReturnsScalarWithoutComposition() {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc);
+
+        WNtuple left = new WNtuple(List.of(All.getInstance(cc)), domain);
+        WNtuple right = new WNtuple(List.of(All.getInstance(cc)), domain);
+
+        assertTrue(left.simple());
+        assertTrue(left.filter().isTrivial());
+        assertTrue(left.getComponents().getFirst().isConstant());
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertInstanceOf(ArcFunScalar.class, result);
+    }
+
+    @Test
+    void testSpecSimplify_Property15ProjectsEqualityClass() {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+
+        Guard filter = Equality.builder(p2, p3, true, domain);
+
+        WNtuple left = new WNtuple(List.of(p1, p1, p1), domain);
+        WNtuple right = new WNtuple(filter, List.of(p1, All.getInstance(cc), All.getInstance(cc)), True.getInstance(domain), false);
+
+        assertTrue(left.simple());
+        assertTrue(left.filter().isTrivial());
+        assertFalse(right.filter().isTrivial());
+
+        assertEquals(All.getInstance(cc).cardLb(), right.getComponent(2, cc).cardLb());
+        assertEquals(right.getComponent(2, cc), right.getComponent(3, cc));
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertInstanceOf(ArcFunScalar.class, result);
+    }
+
+    @Test
+    void testSpecSimplify_Property15ScalesIndices() {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+        Projection p4 = Projection.builder(4, cc);
+
+        Guard filter = Equality.builder(p2, p4, true, domain);
+
+        WNtuple left = new WNtuple(List.of(p1, p3), domain);
+        WNtuple right = new WNtuple(filter, List.of(p1, All.getInstance(cc), p3, All.getInstance(cc)), True.getInstance(domain), false);
+
+        assertTrue(left.simple());
+        assertTrue(left.filter().isTrivial());
+        assertFalse(right.filter().isTrivial());
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertInstanceOf(ArcFunScalar.class, result);
+    }
+
+    @Test
+    void testSpecSimplify_Lemma4WithoutExtraVariables() {
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+
+        Guard filter = Equality.builder(p2, p3, false, domain);
+
+        WNtuple left = new WNtuple(List.of(p2, p3), domain);
+        WNtuple right = new WNtuple(filter, List.of(All.getInstance(cc), All.getInstance(cc), All.getInstance(cc)), True.getInstance(domain), false);
+
+        assertTrue(left.simple());
+        assertTrue(left.filter().isTrivial());
+        assertFalse(right.filter().isTrivial());
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        assertInstanceOf(ArcFunScalar.class, result);
+    }
+
+    @Test
+    void testSpecSimplify_Lemma4LambdaSmallerThanS() {
+        ColorClass cc = new ColorClass(2, 2);
+        Domain domain = new Domain(cc, cc, cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+        Projection p4 = Projection.builder(4, cc);
+
+        Guard e12 = Equality.builder(p1, p2, false, domain);
+        Guard e23 = Equality.builder(p2, p3, false, domain);
+        Guard e34 = Equality.builder(p3, p4, false, domain);
+
+        Guard filter = And.factory(e12, e23, e34);
+
+        WNtuple left = new WNtuple(List.of(p1, p2, p3), domain);
+        WNtuple right = new WNtuple(filter, List.of(All.getInstance(cc), All.getInstance(cc), All.getInstance(cc), All.getInstance(cc)), True.getInstance(domain), false);
+
+        ArcFunComp comp = new ArcFunComp(left, right);
+
+        ArcFunction result = comp.specSimplify();
+        ArcFunScalar scalar = assertInstanceOf(ArcFunScalar.class, result);
+        assertEquals(0, scalar.k());
     }
 }
