@@ -88,7 +88,15 @@ public final class TupleBag extends Bag<WNtuple> implements ArcFunction {
             }
         }
         //System.out.println("\nSimplified tuples: " + simplified);
-        return changed ? new TupleBag(simplified) : tb;
+        // Delete any tuples with a coefficient of zero from the simplified map.
+        simplified.entrySet().removeIf(e -> e.getValue() == 0);
+        if (!changed) {
+            return tb;
+        }
+        if (simplified.isEmpty()) {
+            return tb.buildEmpty(tb.getDomain(), tb.getCodomain());
+        }
+        return new TupleBag(simplified);
     }
 
     @Override

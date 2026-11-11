@@ -49,11 +49,6 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
                     return new ArcFunComp(ArcFunSum.factory(homogeneousTuples), comp.right().cast());
                 }
 
-                if (!(left.filter().isTrivial())) {
-                    //to do
-                    return res;
-                }
-
                 if (!(comp.right() instanceof WNtuple right))
                     return res;
 
@@ -136,7 +131,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
 
                 // we build the scalar product of juxtaposition of results
                 // System.out.println("DEBUG (b):\n"+results);
-                res = new ArcFunScalar(ArcFunJuxt.factory(results, right.guard()), card); // k⋅(Tr∘TX′);
+                res = new ArcFunScalar(ArcFunJuxt.factory(left.filter(), results, right.guard()), card); // k⋅(Tr∘TX′);
             }
         }
         //System.out.println("(ArcFunComp) simplified to: " + res + ", class: " + res.getClass()); //debug
@@ -558,9 +553,8 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         final List<WNtuple> result = new ArrayList<>();
 
         for (Collection<ColorFunction> combination : combinations) {
-            result.add(new WNtuple(new ArrayList<>(combination), left.guard(), false));
+            result.add(new WNtuple(left.filter(), new ArrayList<>(combination), left.guard(), false));
         }
-
         return result;
     }
 

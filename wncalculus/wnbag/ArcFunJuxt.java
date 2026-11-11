@@ -19,7 +19,8 @@ import wncolorfunction.ColorFunction;
  */
 
 public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
-    
+
+    final Guard filter;
     private final Map<ColorClass, ArcFunction> ccomponents;
     private final Guard guard;
     private final Domain  codom;
@@ -28,11 +29,12 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
     /*
     base constructor
     */
-    private ArcFunJuxt(final Map<ColorClass, ? extends ArcFunction> ctuples, final Guard guard, final boolean check) {
+    private ArcFunJuxt(final Guard leftFilter, final Map<ColorClass, ? extends ArcFunction> ctuples, final Guard guard, final boolean check) {
         final Collection<? extends ArcFunction> afunctions = ctuples.values();
         if (check) 
             Expressions.checkDomain(afunctions);
-        
+
+        this.filter = leftFilter;
         this.ccomponents = Collections.unmodifiableMap(ctuples);
         this.codom  =  buildCodomain(afunctions );
         this.guard = guard;
@@ -47,17 +49,18 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
      * If the map contains only one entry, returns that entry directly.
      * Otherwise, creates a new ArcFunJuxt instance with the provided components and guard.
      */
-    public static ArcFunction factory (final Map<ColorClass, ? extends ArcFunction> ctuples, final Guard guard, final boolean check) {
-        if (ctuples.size() == 1) {
+    public static ArcFunction factory (final Guard leftFilter, final Map<ColorClass, ? extends ArcFunction> ctuples, final Guard guard, final boolean check) {
+        if (ctuples.size() == 1 && leftFilter.isTrivial()
+                && guard.isTrivial()) {
             return ctuples.values().iterator().next();
         }
 //        ArcFunJuxt DEBUG = new ArcFunJuxt(ctuples, guard, check);
 //        System.out.println("ArcFunJuxt.factory: " + DEBUG);
-        return new ArcFunJuxt(ctuples, guard, check);
+        return new ArcFunJuxt(leftFilter, ctuples, guard, check).specSimplify();
     }
 
-    public static ArcFunction factory (final Map<ColorClass, ? extends ArcFunction> ctuples, final Guard guard) {
-        return factory(ctuples, guard, true);
+    public static ArcFunction factory (final Guard leftFilter, final Map<ColorClass, ? extends ArcFunction> ctuples, final Guard guard) {
+        return factory(leftFilter, ctuples, guard, true);
     }
  
     
@@ -67,7 +70,7 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
        for (ArcFunction f : args)
          map.put((ColorClass)f.getCodomain().asMap().keySet().iterator().next(), f);
 
-       return ArcFunJuxt.factory(map, this.guard);
+       return ArcFunJuxt.factory(this.filter, map, this.guard);
     }
     
     /** 
@@ -96,7 +99,7 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
     
 
     @Override
-    public ArcFunction specSimplify() { 
+    public ArcFunction specSimplify() {
        final var components = this.ccomponents.values(); 
        if ( Util.checkAny(components, comp -> comp instanceof TupleBag cbag && cbag.isEmpty()) )
           return build(); //optimization
@@ -121,6 +124,7 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
                 guards.add(tc.guard());
             }
 
+            filters.add(this.filter); // Include the left filter associated with the juxtaposition.
             // Include the guard associated with the whole juxtaposition.
             guards.add(this.guard);
 
@@ -146,7 +150,7 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
                      newComponents.put(ccomp.getKey(), term.getKey());
 
                      // Build the juxtaposition corresponding to the current tuple.
-                     ArcFunction distributed = ArcFunJuxt.factory(newComponents, this.guard, false);
+                     ArcFunction distributed = ArcFunJuxt.factory(this.filter, newComponents, this.guard, false);
 
                      // Preserve the tuple's multiplicity, if greater than one.
                      if (term.getValue() != 1) {
@@ -173,7 +177,7 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
                      newComponents.put(ccomp.getKey(), term.cast());
 
                      // Build a juxtaposition for the current term, preserving the original guard.
-                     distributedTerms.add(ArcFunJuxt.factory(newComponents, this.guard, false));
+                     distributedTerms.add(ArcFunJuxt.factory(this.filter, newComponents, this.guard, false));
                  }
 
                  // Combine the distributed terms into a single sum.
@@ -198,11 +202,6 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
     }
 
     @Override
-    public boolean isConstant() {
-        return false;
-    }
-
-    @Override
     public String symb() {
         return "::";
     }
@@ -216,7 +215,7 @@ public final class ArcFunJuxt  implements ArcFunction, N_aryOp<ArcFunction >  {
     public final boolean equals(Object o) {
         ArcFunJuxt other;
         return o != null && this.getClass() == o.getClass() && Objects.equals(this.ccomponents, (other = (ArcFunJuxt) o).ccomponents)
-           && Objects.equals(this.guard, other.guard);
+           && Objects.equals(this.guard, other.guard) && Objects.equals(this.filter, other.filter);
     }
 
     @Override

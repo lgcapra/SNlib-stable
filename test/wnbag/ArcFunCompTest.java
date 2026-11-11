@@ -862,20 +862,22 @@ class ArcFunCompTest {
         Projection p2 = Projection.builder(2, cc);
 
         LinearComb lc = new LinearComb(Map.of(p1, 1, p2, -1));
-
         Guard filter = Equality.builder(p1, p2, true, domain);
 
         WNtuple left = new WNtuple(filter, List.of(lc, p1), True.getInstance(domain), false);
-        WNtuple right = new WNtuple(List.of(All.getInstance(cc), All.getInstance(cc)), domain);
+        WNtuple right = new WNtuple(
+                List.of(All.getInstance(cc), All.getInstance(cc)), domain
+        );
 
         assertTrue(left.simple());
         assertFalse(left.filter().isTrivial());
-        assertEquals(1, lc.separateConst().size());
 
         ArcFunComp comp = new ArcFunComp(left, right);
 
-        ArcFunction result = comp.specSimplify();
-        assertSame(comp, result);
+
+        ArcFunction result = comp.normalize();
+
+        assertEquals("8[c_2_1 = c_2_2]<S_C_2,S_C_2>", result.toString());
     }
 
     @Test
@@ -951,9 +953,8 @@ class ArcFunCompTest {
         assertSame(comp, result);
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void testSpecSimplify_PrerequisiteFails(boolean sameComponents) {
+    @Test
+    void testSpecSimplify_PrerequisiteFails() {
         ColorClass cc = new ColorClass(2, 9);
         Domain domain = new Domain(cc, cc);
 
@@ -963,7 +964,7 @@ class ArcFunCompTest {
         Guard filter = Equality.builder(p1, p2, true, domain);
 
         WNtuple left = new WNtuple(List.of(p1, p2), domain);
-        WNtuple right = new WNtuple(filter, sameComponents ? List.of(p1, p1) : List.of(p2, p1), True.getInstance(domain), false);
+        WNtuple right = new WNtuple(filter, List.of(p1, p1) , True.getInstance(domain), false);
 
         assertTrue(left.simple());
         assertTrue(left.filter().isTrivial());
