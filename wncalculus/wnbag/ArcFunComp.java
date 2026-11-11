@@ -158,10 +158,13 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
             Equality eq = (Equality) guard;
             var rc1 = right.getComponent(eq.getArg1().getIndex(), cc);
             var rc2 = right.getComponent(eq.getArg2().getIndex(), cc);
-            // Continue only if the equality concerns equivalent components in the right tuple and their cardinality is greater than one.
-            if (!rc1.equals(rc2) || rc1.cardLb() <= 1) {
-                return false;
-            }
+            // Continue only if the equality concerns equivalent components in the right tuple and their cardinality is greater than one,
+            // or if the equality concerns different components but both are singletons and the equality is positive.
+            boolean sameComponents = rc1.equals(rc2);
+            boolean bothSingleton = rc1.cardLb() <= 1 && rc2.cardLb() <= 1;
+            if (!(!rc1.equals(rc2) || rc1.cardLb() <= 1)) continue;
+            if (!sameComponents && bothSingleton && eq.sign()) continue;
+            return false;
         }
         return true;
     }

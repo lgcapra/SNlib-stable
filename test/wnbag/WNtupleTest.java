@@ -1378,4 +1378,265 @@ class WNtupleTest {
         assertEquals(expected, result);
     }
 
+    private static Stream<Arguments> specSimplifyCases() {
+        System.out.println("\nBase Case\n");
+
+        ColorClass cc = new ColorClass(1, 3, true);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Equality eq = (Equality) Equality.builder(
+                p1, p2, true, domain
+        );
+
+        Equality ineq = (Equality) Equality.builder(
+                p1, p2, false, domain
+        );
+
+        return Stream.of(
+                Arguments.of(
+                        "eq - p2, p1",
+                        eq,
+                        List.of(new LinearComb(p2), new LinearComb(p1)),
+                        "[c_1_1 = c_1_2]<c_1_2,c_1_1>"
+                ),
+                Arguments.of(
+                        "eq - All, All",
+                        eq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(All.getInstance(cc))
+                        ),
+                        "[c_1_1 = c_1_2]<S_C_1,S_C_1>"
+                ),
+                Arguments.of(
+                        "ineq - p2, p1",
+                        ineq,
+                        List.of(new LinearComb(p2), new LinearComb(p1)),
+                        "<1c_1_2-1c_1_1,c_1_1>"
+                ),
+                Arguments.of(
+                        "ineq - All, All",
+                        ineq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(All.getInstance(cc))
+                        ),
+                        "[c_1_1 != c_1_2]<S_C_1,S_C_1>"
+                ),
+                Arguments.of(
+                        "eq - p1, p1",
+                        eq,
+                        List.of(new LinearComb(p1), new LinearComb(p1)),
+                        "<c_1_1,c_1_1>"
+                ),
+                Arguments.of(
+                        "ineq - p1, p1",
+                        ineq,
+                        List.of(new LinearComb(p1), new LinearComb(p1)),
+                        "<null>_@C_1^2"
+                ),
+                Arguments.of(
+                        "eq - All, p1",
+                        eq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(p1)
+                        ),
+                        "<c_1_1,c_1_1>"
+                ),
+                Arguments.of(
+                        "ineq - All, p1",
+                        ineq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(p1)
+                        ),
+                        "<1S_C_1-1c_1_1,c_1_1>"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{index} - {0}")
+    @MethodSource("specSimplifyCases")
+    void testSpecSimplify(String description, Guard guard, List<ColorFunction> components, String expected) {
+
+        ColorClass cc = new ColorClass(1, 3, true);
+        Domain domain = new Domain(cc, cc);
+
+        WNtuple tuple = new WNtuple(
+                guard,
+                components,
+                True.getInstance(domain),
+                true
+        );
+
+        ArcFunction result = tuple.specSimplify();
+
+        System.out.println(tuple);
+        System.out.println("Result: " + result + "\n");
+
+        assertEquals(expected, result.toString());
+    }
+
+    private static Stream<Arguments> specSimplifyCasesWithSuccessor() {
+        System.out.println("\nSuccessor in filter\n");
+
+        ColorClass cc = new ColorClass(1, 3, true);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Projection p2Succ = (Projection) Successor.factory(1, p2);
+
+        Equality eq = (Equality) Equality.builder(
+                p1, p2Succ, true, domain
+        );
+
+        Equality ineq = (Equality) Equality.builder(
+                p1, p2Succ, false, domain
+        );
+
+        return Stream.of(
+                Arguments.of(
+                        "eq - p2, p1",
+                        eq,
+                        List.of(new LinearComb(p2), new LinearComb(p1))
+                ),
+                Arguments.of(
+                        "eq - All, All",
+                        eq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(All.getInstance(cc))
+                        )
+                ),
+                Arguments.of(
+                        "ineq - p2, p1",
+                        ineq,
+                        List.of(new LinearComb(p2), new LinearComb(p1))
+                ),
+                Arguments.of(
+                        "ineq - All, All",
+                        ineq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(All.getInstance(cc))
+                        )
+                ),
+                Arguments.of(
+                        "eq - p1, p1",
+                        eq,
+                        List.of(new LinearComb(p1), new LinearComb(p1))
+                ),
+                Arguments.of(
+                        "ineq - p1, p1",
+                        ineq,
+                        List.of(new LinearComb(p1), new LinearComb(p1))
+                ),
+                Arguments.of(
+                        "eq - All, p1",
+                        eq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(p1)
+                        )
+                ),
+                Arguments.of(
+                        "ineq - All, p1",
+                        ineq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(p1)
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{index} - {0}")
+    @MethodSource("specSimplifyCasesWithSuccessor")
+    void testSpecSimplify_WithSuccessor(String description, Guard guard, List<ColorFunction> components) {
+
+        ColorClass cc = new ColorClass(1, 3, true);
+        Domain domain = new Domain(cc, cc);
+
+        WNtuple tuple = new WNtuple(
+                guard,
+                components,
+                True.getInstance(domain),
+                true
+        );
+
+        System.out.println(tuple);
+        System.out.println("Result: " + tuple.specSimplify() + "\n");
+    }
+
+    private static Stream<Arguments> specSimplifyCasesWithTupleSuccessor() {
+        System.out.println("\nSuccessor in tuple\n");
+
+        ColorClass cc = new ColorClass(1, 3, true);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Projection p1Succ = (Projection) Successor.factory(1, p1);
+        Projection p2Succ = (Projection) Successor.factory(1, p2);
+
+        Equality eq = (Equality) Equality.builder(
+                p1, p2, true, domain
+        );
+
+        Equality ineq = (Equality) Equality.builder(
+                p1, p2, false, domain
+        );
+
+        return Stream.of(
+                Arguments.of("eq - p2', p1", eq,
+                        List.of(new LinearComb(p2Succ), new LinearComb(p1))),
+
+                Arguments.of("ineq - p2', p1", ineq,
+                        List.of(new LinearComb(p2Succ), new LinearComb(p1))),
+
+                Arguments.of("eq - p1', p1", eq,
+                        List.of(new LinearComb(p1Succ), new LinearComb(p1))),
+
+                Arguments.of("ineq - p1', p1", ineq,
+                        List.of(new LinearComb(p1Succ), new LinearComb(p1))),
+
+                Arguments.of("eq - All, p1'", eq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(p1Succ)
+                        )),
+
+                Arguments.of("ineq - All, p1'", ineq,
+                        List.of(
+                                new LinearComb(All.getInstance(cc)),
+                                new LinearComb(p1Succ)
+                        ))
+        );
+    }
+
+    @ParameterizedTest(name = "{index} - {0}")
+    @MethodSource("specSimplifyCasesWithTupleSuccessor")
+    void testSpecSimplify_WithTupleSuccessor(String description, Guard guard, List<ColorFunction> components) {
+
+        ColorClass cc = new ColorClass(1, 3, true);
+        Domain domain = new Domain(cc, cc);
+
+        WNtuple tuple = new WNtuple(
+                guard,
+                components,
+                True.getInstance(domain),
+                true
+        );
+
+        System.out.println(tuple);
+        System.out.println("Result: " + tuple.specSimplify() + "\n");
+    }
+
 }

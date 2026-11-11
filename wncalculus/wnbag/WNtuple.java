@@ -602,8 +602,15 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                                 return getEmpty().cast();
                             }
                         }
-                        // Distinct symbolic singleton components: preserve the filter because their values are unknown.
-                        continue;
+                        if (equality) {
+                            // Distinct symbolic singleton components: preserve the filter because their values are unknown.
+                            continue;
+                        } else {
+                            ColorFunction diff_i = differMulti(f_i, succ_fj);
+                            h_tuple.set(i, diff_i);
+                            to_remove.add(eq);
+                            reduced = true;
+                        }
                     }
 
                     if (!fi_card_leq_1 && !fj_card_leq_1) {
