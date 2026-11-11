@@ -564,8 +564,6 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         return result;
     }
 
-
-
     /**
      * Composes two color tuples, handling cases where the left tuple has repeated indices.
      *

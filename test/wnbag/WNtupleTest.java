@@ -47,7 +47,7 @@ class WNtupleTest {
         interMultiMethod.setAccessible(true);
         splitAtPositionsMethod = WNtuple.class.getDeclaredMethod("splitAtPositions", Map.class);
         splitAtPositionsMethod.setAccessible(true);
-        filterIdxMethod = WNtuple.class.getDeclaredMethod("FilterIdx", WNtuple.class);
+        filterIdxMethod = WNtuple.class.getDeclaredMethod("filterIdx", WNtuple.class);
         filterIdxMethod.setAccessible(true);
     }
 
@@ -997,23 +997,6 @@ class WNtupleTest {
     }
 
     @Test
-    void testFilterIdx_FilterMembership() throws Exception {
-        ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3), new Interval(4, 4)});
-        Domain domain = new Domain(cc);
-        Projection p1 = Projection.builder(1, cc);
-
-        Membership membership = Membership.build(p1, Subcl.factory(1, cc), domain);
-
-        Guard filter = And.factory(membership);
-
-        WNtuple tuple = new WNtuple(filter, List.of(p1), True.getInstance(domain), false);
-
-        Map<ColorClass, Set<Integer>> result = invokeFilterIdx(tuple);
-
-        assertEquals(Set.of(1), result.get(cc));
-    }
-
-    @Test
     void testFilterIdx_FilterEqualityAndMembership() throws Exception {
         ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3), new Interval(4, 4)});
 
@@ -1032,7 +1015,7 @@ class WNtupleTest {
 
         Map<ColorClass, Set<Integer>> result = invokeFilterIdx(tuple);
 
-        assertEquals(Set.of(1, 2, 3), result.get(cc));
+        assertEquals(Set.of(1, 2), result.get(cc));
     }
 
     @Test
@@ -1207,27 +1190,6 @@ class WNtupleTest {
         WNtuple simplified = (WNtuple) result;
         assertTrue(simplified.filter().isTrivial());
         assertEquals(subcl, simplified.getComponents().getFirst());
-    }
-
-    @Test
-    void testSpecSimplify_SplitAndRecursiveSimplification() {
-        ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3), new Interval(4, 4)});
-        Domain domain = new Domain(cc);
-
-        Projection p1 = Projection.builder(1, cc);
-
-        Subcl subcl1 = Subcl.factory(1, cc);
-        Subcl subcl2 = Subcl.factory(2, cc);
-
-        LinearComb lc = new LinearComb(subcl1, subcl2);
-
-        Membership membership = Membership.build(p1, subcl1, domain);
-        Guard filter = And.factory(membership);
-
-        WNtuple tuple = new WNtuple(filter, List.of(lc), True.getInstance(domain), false);
-
-        ArcFunction result = tuple.specSimplify();
-        assertNotSame(tuple, result);
     }
 
     @Test

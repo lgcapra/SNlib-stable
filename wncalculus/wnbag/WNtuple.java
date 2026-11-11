@@ -219,9 +219,9 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         if (! (res instanceof WNtuple tres))
             return res;
 
-        // Split reduction: if the filter or the guard refer to some tuple's positions,
+        // Split reduction: if the filter refer to some tuple's positions,
         // we can try to split the tuple at those positions, separately for each color.
-        Map<ColorClass, Set<Integer>> targetPositions = FilterIdx(tres);
+        Map<ColorClass, Set<Integer>> targetPositions = filterIdx(tres);
         //System.out.println("\n"+this + "\n" + targetPositions + "\n");
         if (!targetPositions.isEmpty()) {
             ArcFunction splitTuple = tres.splitAtPositions(targetPositions);
@@ -282,12 +282,12 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
 
     /**
-     * Returns the set of positions (1-based) mentioned in the guard and filter of the given tuple.
+     * Returns the set of positions (1-based) mentioned in the filter of the given tuple.
      *
      * @param tres the tuple to analyze
-     * @return the map of positions (1-based) mentioned in the guard and filter
+     * @return the map of positions (1-based) mentioned in the filter
      */
-    private @NotNull Map<ColorClass, Set<Integer>> FilterIdx(@NotNull WNtuple tres) {
+    private @NotNull Map<ColorClass, Set<Integer>> filterIdx(@NotNull WNtuple tres) {
         Map<ColorClass, Set<Integer>> targetPositions = new HashMap<>();
 
         // Collect positions referenced by the filter.
@@ -302,17 +302,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                         for (Equality eq : set) {
                             targetPositions.computeIfAbsent(cc, k -> new HashSet<>()).add(eq.firstIndex());
                             targetPositions.computeIfAbsent(cc, k -> new HashSet<>()).add(eq.secondIndex());
-                        }
-                    }
-                }
-            }
-
-            for (ColorClass cc : membMap.keySet()) {
-                Map<Boolean, Set<Membership>> memberships = membMap.get(cc);
-                if (memberships != null) {
-                    for (Set<Membership> set : memberships.values()) {
-                        for (Membership mb : set) {
-                            targetPositions.computeIfAbsent(cc, k -> new HashSet<>()).add(mb.firstIndex());
                         }
                     }
                 }
@@ -672,34 +661,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
     private boolean isEmptyMulti(@NotNull ColorFunction f) {
         return f instanceof LinearComb lc && lc.asMap().isEmpty();
     }
-
-
-//    /**
-//     * Checks if the given ColorFunction is a set function.
-//     * @param cf the ColorFunction to check
-//     * @return true if the ColorFunction is a set function, false otherwise
-//     */
-//    private boolean isSetFunction(@NotNull ColorFunction cf) {
-//        return switch (cf) {
-//            case SetFunction sf -> true;
-//            case LinearComb lc -> lc.asMap().values().stream().allMatch(k -> k == 1);
-//            default -> false;
-//        };
-//    }
-//
-//    private @NotNull ElementaryFunction singletonElement(@NotNull ColorFunction f) {
-//        if (f instanceof ElementaryFunction ef) {
-//            return ef;
-//        }
-//        if (f instanceof LinearComb lc && lc.asMap().size() == 1) {
-//            var entry = lc.asMap().entrySet().iterator().next();
-//
-//            if (entry.getValue() == 1) {
-//                return entry.getKey();
-//            }
-//        }
-//        throw new IllegalArgumentException("Function is not represented as a singleton: " + f);
-//    }
 
     /**
      * Computes the intersection of two ColorFunctions, treating them as multisets.
