@@ -407,97 +407,151 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * or 'this' if no transformation has been applied.
      */
     @NotNull WNtuple baseGuardReduction() {
-        Guard currentGuard = guard();
+        final Guard currentGuard = guard();
 
-        // If the guard is trivial, there's nothing to reduce
+        // If the guard is trivial, there is nothing to reduce.
         if (currentGuard.isTrivial()) {
             return this;
         }
 
-        // Map from projection indices to their corresponding positions in the tuple (1-based)
-        // Es: <c1, c3, c2> -> {1: pos 1, 3: pos 2, 2: pos 3}
+        // This reduction currently supports only one-sorted tuples.
         final ColorClass cc = getSort();
         if (cc == null) {
-            return this; // this is not a 1-sorted tuple: this global expansion cannot be performed
+            return this;
         }
 
         final List<? extends ColorFunction> comps = getHomSubTuple(cc);
+
+        // Projection index -> representative position in the tuple (1-based).
         final Map<Integer, Integer> projToPosMap = new HashMap<>();
+
+        // Projection index -> projection occurring at the representative position.
+        final Map<Integer, Projection> projToComponentMap = new HashMap<>();
 
         for (int pos = 0; pos < comps.size(); pos++) {
             ColorFunction cf = comps.get(pos);
+            Projection projection = null;
+
             if (cf instanceof Projection p) {
-                projToPosMap.put(p.getIndex(), pos + 1);
+                projection = p;
             } else if (cf instanceof LinearComb lc && lc.size() == 1) {
-                ElementaryFunction ef = lc.asMap().keySet().iterator().next();
+                ElementaryFunction ef =
+                        lc.asMap().keySet().iterator().next();
+
                 if (ef instanceof Projection p) {
-                    projToPosMap.put(p.getIndex(), pos + 1);
+                    projection = p;
+                }
+            }
+
+            if (projection != null) {
+                int idx = projection.getIndex();
+
+                // Keep the first occurrence and its associated successor.
+                if (!projToPosMap.containsKey(idx)) {
+                    projToPosMap.put(idx, pos + 1);
+                    projToComponentMap.put(idx, projection);
                 }
             }
         }
 
-        // Extract the guard clauses (And)
-        final Collection<Guard> guardClauses = (Collection<Guard>) And.getArgs(currentGuard);
+        // Only extract conjuncts; other guard forms are kept as a whole.
+        final Collection<Guard> guardClauses = new LinkedList<>();
+        if (currentGuard instanceof And) {
+            guardClauses.addAll(And.getArgs(currentGuard));
+        } else {
+            guardClauses.add(currentGuard);
+        }
+
         final Collection<Guard> clausesToMoveToFilter = new LinkedList<>();
         final Collection<Guard> newFilterClauses = new LinkedList<>();
 
         for (Guard clause : guardClauses) {
-            if (clause instanceof Equality eq) {
-                int idx1 = eq.getArg1().getIndex();
-                int idx2 = eq.getArg2().getIndex();
-
-                // Check if both indices are present in the projection-to-position map
-                Integer pos1 = projToPosMap.get(idx1);
-                Integer pos2 = projToPosMap.get(idx2);
-
-                if (pos1 != null && pos2 != null) {
-                    // Create a new Equality clause for the filter using the positions instead of the original indices
-                    Projection filterProj1 = Projection.builder(pos1, cc);
-                    Projection filterProj2 = Projection.builder(pos2, cc);
-
-                    Equality filterEq = (Equality) Equality.builder(filterProj1, filterProj2, eq.isEquality(), getCodomain());
-
-                    clausesToMoveToFilter.add(eq);
-                    newFilterClauses.add(filterEq);
-                }
+            if (!(clause instanceof Equality eq)) {
+                continue;
             }
+
+            Projection guardProj1 = eq.getArg1();
+            Projection guardProj2 = eq.getArg2();
+
+            int idx1 = guardProj1.getIndex();
+            int idx2 = guardProj2.getIndex();
+
+            Integer pos1 = projToPosMap.get(idx1);
+            Integer pos2 = projToPosMap.get(idx2);
+
+            // Both variables must be represented by projection components.
+            if (pos1 == null || pos2 == null) {
+                continue;
+            }
+
+            Projection component1 = projToComponentMap.get(idx1);
+            Projection component2 = projToComponentMap.get(idx2);
+
+            // If y_pos = succ^a(x_idx), then
+            // succ^u(x_idx) = succ^(u-a)(y_pos).
+            Projection filterProj1 = Projection.builder(
+                    pos1,
+                    guardProj1.getSucc() - component1.getSucc(),
+                    cc
+            );
+
+            Projection filterProj2 = Projection.builder(
+                    pos2,
+                    guardProj2.getSucc() - component2.getSucc(),
+                    cc
+            );
+
+            // The builder may also return True or False.
+            Guard filterClause = Equality.builder(
+                    filterProj1,
+                    filterProj2,
+                    eq.isEquality(),
+                    getCodomain()
+            );
+
+            clausesToMoveToFilter.add(clause);
+            newFilterClauses.add(filterClause);
         }
 
-        // If no clause has been moved, return the tuple unchanged
         if (clausesToMoveToFilter.isEmpty()) {
             return this;
         }
 
-        // Rebuild the new filter by combining the existing filter with the new filter clauses
-        Guard newFilter = filter();
-        if (!newFilterClauses.isEmpty()) {
-            final Set<Guard> args = new LinkedHashSet<>();
+        // Combine the existing filter with the transferred clauses.
+        // Keeping the existing filter also preserves a possible False filter.
+        final Set<Guard> filterArgs = new LinkedHashSet<>();
+        Guard currentFilter = filter();
 
-            if (!newFilter.isTrivial()) {
-                if (newFilter instanceof ElementaryGuard || newFilter instanceof And) {
-                    args.addAll(And.getArgs(newFilter));
-                } else {
-                    args.add(newFilter);
-                }
-            }
-
-            args.addAll(newFilterClauses);
-            newFilter = args.size() == 1 ? args.iterator().next()
-                       : And.buildAndFormWithDom(args, getCodomain());
+        if (currentFilter instanceof And) {
+            filterArgs.addAll(And.getArgs(currentFilter));
+        } else {
+            filterArgs.add(currentFilter);
         }
 
-        // Rebuild the new guard by removing the moved clauses from the original guard
-        Guard newGuard;
-        final Set<Guard> remainingGuardArgs = new LinkedHashSet<>(guardClauses);
-        clausesToMoveToFilter.forEach(remainingGuardArgs::remove);
+        filterArgs.addAll(newFilterClauses);
 
+        Guard newFilter = filterArgs.size() == 1
+                ? filterArgs.iterator().next()
+                : And.buildAndFormWithDom(filterArgs, getCodomain());
+
+        // Remove the transferred clauses from the guard.
+        final Set<Guard> remainingGuardArgs =
+                new LinkedHashSet<>(guardClauses);
+
+        remainingGuardArgs.removeAll(clausesToMoveToFilter);
+
+        Guard newGuard;
         if (remainingGuardArgs.isEmpty()) {
             newGuard = guard.True.getInstance(getDomain());
         } else if (remainingGuardArgs.size() == 1) {
             newGuard = remainingGuardArgs.iterator().next();
         } else {
-            newGuard = And.buildAndFormWithDom(remainingGuardArgs, getDomain());
+            newGuard = And.buildAndFormWithDom(
+                    remainingGuardArgs,
+                    getDomain()
+            );
         }
+
         return new WNtuple(newFilter, getHomSubTuples(), newGuard);
     }
 
@@ -750,25 +804,36 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @return a new ColorFunction with shifted successor exponents, or the original function if it is not a LinearComb
      */
     private @NotNull ColorFunction succMulti(int k, @NotNull ColorFunction f) {
-        if (k == 0 || f instanceof ConstantFunction) {
-            return f;
-        }
-        if (f instanceof Projection p) {
-            return p.setExp(p.getSucc() + k);
-        }
+
+        if (k == 0) return f;
+
         if (f instanceof LinearComb lc) {
             final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>();
+
             for (var entry : lc.asMap().entrySet()) {
-                ElementaryFunction elem = entry.getKey();
-                ElementaryFunction shifted = elem;
-                if (elem instanceof Projection p) {
-                    shifted = p.setExp(p.getSucc() + k);
+                SetFunction shifted = Successor.factory(k, entry.getKey());
+
+                if (!(shifted instanceof ElementaryFunction elementary)) {
+                    throw new IllegalStateException("Successor did not produce an elementary function: " + shifted);
                 }
-                out.merge(shifted, entry.getValue(), Integer::sum);
+
+                out.merge(elementary, entry.getValue(), Integer::sum);
             }
-            return new LinearComb(out, false);
+
+            return out.isEmpty() ? new LinearComb(lc.getSort()) : new LinearComb(out, false);
         }
-        return f;
+
+        if (f instanceof ElementaryFunction ef) {
+            SetFunction shifted = Successor.factory(k, ef);
+
+            if (shifted instanceof ElementaryFunction elementary) {
+                return elementary;
+            }
+
+            throw new IllegalStateException("Successor did not produce an elementary function: " + shifted);
+        }
+
+        throw new IllegalArgumentException("Unsupported function in succMulti: " + f.getClass().getName());
     }
 
     /**
@@ -946,33 +1011,55 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param filterDomain the domain of the filter
      * @return a Guard representing the equality constraints for repeated indices
      */
-    private @NotNull Guard buildRepeatedIndexFilter(List<Set<Integer>> indexPositions, @NotNull Domain filterDomain) {
+    private @NotNull Guard buildRepeatedIndexFilter(@NotNull List<Set<Integer>> indexPositions, @NotNull Domain filterDomain) {
+
         final ColorClass cc = getSort();
+        final List<? extends ColorFunction> comps = getHomSubTuple(cc);
         final Collection<Guard> equalityGuards = new ArrayList<>();
 
-        // For each index that appears in multiple positions
-        for (Set<Integer> positions : indexPositions) {
+        for (int index = 0; index < indexPositions.size(); index++) {
+            Set<Integer> positions = indexPositions.get(index);
 
-            // If index appears more than once, create equality guards
-            if (positions.size() > 1) {
-                final List<Integer> posList = new ArrayList<>(positions);
+            if (positions.size() <= 1) {
+                continue;
+            }
 
-                // Create equality between the first position and all other positions
-                final int firstPos = posList.getFirst();
-                final Projection firstProj = Projection.builder(firstPos, cc);
+            // indexPositions uses index - 1 as the list position.
+            final int projectionIndex = index + 1;
+            Projection firstFilterProjection = null;
 
-                for (int i = 1; i < posList.size(); i++) {
-                    final int pos = posList.get(i);
-                    final Projection otherProj = Projection.builder(pos, cc);
+            for (int pos : positions) {
+                ColorFunction component = comps.get(pos - 1);
+                Projection projection = null;
 
-                    // Add equality: component at firstPos == component at pos
-                    equalityGuards.add(Equality.builder(firstProj, otherProj, true, filterDomain));
+                if (component instanceof Projection p) {
+                    projection = p;
+                } else if (component instanceof LinearComb lc && lc.size() == 1) {
+                    ElementaryFunction term = lc.asMap().keySet().iterator().next();
+
+                    if (term instanceof Projection p) {
+                        projection = p;
+                    }
+                }
+
+                // A single exponent must be identifiable for this position.
+                if (projection == null || projection.getIndex() != projectionIndex) {
+                    throw new IllegalStateException("Cannot build a repeated-index filter for component " + component + " at position " + pos + ": expected a single projection term");
+                }
+
+                // If y_pos = succ^a(x_index), then
+                // x_index = succ^-a(y_pos).
+                Projection filterProjection = Projection.builder(pos, -projection.getSucc(), cc);
+
+                if (firstFilterProjection == null) {
+                    firstFilterProjection = filterProjection;
+                } else {
+                    equalityGuards.add(Equality.builder(firstFilterProjection, filterProjection, true, filterDomain));
                 }
             }
         }
-        return equalityGuards.isEmpty() ?
-                guard.True.getInstance(filterDomain) :
-                guard.And.factory(equalityGuards);
+
+        return equalityGuards.isEmpty() ? True.getInstance(filterDomain) : And.factory(equalityGuards);
     }
 
     /**

@@ -175,6 +175,54 @@ class WNtupleTest {
     }
 
     @Test
+    void succMulti_shiftsProjectionComplement() throws Exception {
+        ColorClass cc = new ColorClass(2, 9, true);
+        Domain domain = new Domain(cc);
+
+        Projection p = Projection.builder(1, cc);
+        WNtuple tuple = new WNtuple(List.of(p), domain);
+
+        // S_C \ {s(x1)}
+        ElementaryFunction complement = (ElementaryFunction)
+                ProjectionComp.factory(Projection.builder(1, 1, cc));
+
+        ColorFunction result = invokeSuccMulti(tuple, 2, complement);
+
+        // S_C \ {s^3(x1)}
+        ElementaryFunction expected = (ElementaryFunction)
+                ProjectionComp.factory(Projection.builder(1, 3, cc));
+
+        assertEquals(
+                expected,
+                result,
+                "Il successore deve spostare la proiezione esclusa dal complemento"
+        );
+    }
+
+    @Test
+    void succMulti_shiftsComplementInsideLinearComb() throws Exception {
+        ColorClass cc = new ColorClass(2, 9, true);
+        Domain domain = new Domain(cc);
+
+        Projection p = Projection.builder(1, cc);
+        WNtuple tuple = new WNtuple(List.of(p), domain);
+
+        // 4 * (S_C \ {!c1})
+        ElementaryFunction complement = ProjectionComp.factory(Projection.builder(1, 1, cc));
+
+        LinearComb input = new LinearComb(complement, 4);
+
+        ColorFunction result = invokeSuccMulti(tuple, 2, input);
+
+        // 4 * (S_C \ {!3(c1)})
+        ElementaryFunction shiftedComplement = ProjectionComp.factory(Projection.builder(1, 3, cc));
+
+        LinearComb expected = new LinearComb(shiftedComplement, 4);
+
+        assertEquals(expected, result, "Il successore deve spostare il complemento preservandone il coefficiente");
+    }
+
+    @Test
     void toLinearComb_returnsSameLinearCombWhenFunctionIsLinearComb() throws Exception {
         ColorClass cc = new ColorClass(2, 9);
         Domain domain = new Domain(cc);
@@ -893,6 +941,115 @@ class WNtupleTest {
         assertEquals(expectedFilter, composed.filter());
     }
 
+    @Test
+    void repetedIndexCompose_preservesSuccessorBetweenRepeatedIndices() {
+        ColorClass cc = new ColorClass(2, 9, true);
+
+        Domain inputDomain = new Domain(cc);
+        Domain intermediateDomain = new Domain(cc);
+        Domain outputDomain = new Domain(cc, cc);
+
+        // <c1, !(c1)>
+        WNtuple left = new WNtuple(
+                True.getInstance(outputDomain),
+                List.of(Projection.builder(1, cc), Projection.builder(1, 1, cc)),
+                True.getInstance(intermediateDomain),
+                true
+        );
+
+        // <S_C>
+        WNtuple right = new WNtuple(
+                True.getInstance(intermediateDomain),
+                List.of(All.getInstance(cc)),
+                True.getInstance(inputDomain),
+                true
+        );
+
+        ArcFunction composed = left.repetedIndexCompose(right);
+
+        assertInstanceOf(WNtuple.class, composed);
+        WNtuple result = (WNtuple) composed;
+
+        // c1 = !-1(c2), equivalente a c2 = !(c1).
+        Guard expectedFilter = Equality.builder(Projection.builder(1, cc), Projection.builder(2, -1, cc), true, outputDomain);
+
+        assertAll(
+                () -> assertEquals(expectedFilter, result.filter(), "Gli indici ripetuti devono mantenere " + "la differenza tra i successori"),
+
+                () -> assertEquals(List.of(All.getInstance(cc), All.getInstance(cc)), result.getComponents(), "Il successore dell'insieme universale è ancora S_C"),
+
+                () -> assertEquals(True.getInstance(inputDomain), result.guard()),
+
+                () -> assertEquals(inputDomain, result.getDomain()),
+
+                () -> assertEquals(outputDomain, result.getCodomain())
+        );
+    }
+
+    @Test
+    void composition_expandsRepeatedIndexWithDifferentSuccessors() {
+        ColorClass cc = new ColorClass(2, 9, true);
+
+        Domain inputDomain = new Domain(cc);
+        Domain intermediateDomain = new Domain(cc);
+        Domain outputDomain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection succP1 = Projection.builder(1, 1, cc);
+
+        WNtuple left = new WNtuple(
+                True.getInstance(outputDomain),
+                List.of(new LinearComb(p1, succP1), new LinearComb(p1)),
+                True.getInstance(intermediateDomain),
+                true
+        );
+
+        WNtuple right = new WNtuple(
+                True.getInstance(intermediateDomain),
+                List.of(new LinearComb(All.getInstance(cc))),
+                True.getInstance(inputDomain),
+                true
+        );
+
+        Guard equalFilter = Equality.builder(
+                Projection.builder(1, cc),
+                Projection.builder(2, cc),
+                true,
+                outputDomain
+        );
+
+        WNtuple equalPairs = new WNtuple(
+                equalFilter,
+                List.of(All.getInstance(cc), All.getInstance(cc)),
+                True.getInstance(inputDomain),
+                true
+        );
+
+        Guard successorFilter = Equality.builder(
+                Projection.builder(1, cc),
+                Projection.builder(2, 1, cc),
+                true,
+                outputDomain
+        );
+
+        WNtuple successorPairs = new WNtuple(
+                successorFilter,
+                List.of(All.getInstance(cc), All.getInstance(cc)),
+                True.getInstance(inputDomain),
+                true
+        );
+
+        ArcFunction expected = ArcFunSum.factory(equalPairs, successorPairs).normalize();
+
+        ArcFunction result = assertDoesNotThrow(() -> new ArcFunComp(left, right).normalize(), "La componente con più termini deve essere espansa " + "prima di costruire il filtro degli indici ripetuti");
+
+        assertAll(
+                () -> assertEquals(expected, result, "La composizione deve conservare entrambi i contributi: " + "uguaglianza e relazione di successore"),
+                () -> assertEquals(inputDomain, result.getDomain()),
+                () -> assertEquals(outputDomain, result.getCodomain())
+        );
+    }
+
     private ArcFunction invokeSplitAtPositions(WNtuple tuple, Map<ColorClass, Set<Integer>> targetPositions) throws Exception {
         return (ArcFunction) splitAtPositionsMethod.invoke(tuple, targetPositions);
     }
@@ -1314,6 +1471,53 @@ class WNtupleTest {
         assertEquals(2, remainingClauses.size());
         assertTrue(remainingClauses.contains(remaining1));
         assertTrue(remainingClauses.contains(remaining2));
+    }
+
+    @ParameterizedTest(name = "equality={0}, linearComb={1}")
+    @MethodSource("baseGuardReductionSuccessorCases")
+    void baseGuardReduction_movesRelationWithSuccessors(boolean equality, boolean linearComb) {
+        ColorClass cc = new ColorClass(2, 9, true);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p2 = Projection.builder(2, 2, cc);
+        Projection p1 = Projection.builder(1, 1, cc);
+
+        // <!2(c2), !c1>
+        List<ColorFunction> components = linearComb ? List.of(new LinearComb(p2, 2), new LinearComb(p1, 3)) : List.of(p2, p1);
+
+        // !c1 =/!= !3(c2)
+        Guard originalGuard = Equality.builder(p1, Projection.builder(2, 3, cc), equality, domain);
+
+        WNtuple tuple = new WNtuple(True.getInstance(domain), components, originalGuard, true);
+
+        WNtuple result = tuple.baseGuardReduction();
+
+        // c1 =/!= !-1(c2).
+        Guard expectedFilter = Equality.builder(Projection.builder(1, cc), Projection.builder(2, -1, cc), equality, tuple.getCodomain());
+
+        assertAll(
+                () -> assertNotSame(tuple, result),
+
+                () -> assertEquals(expectedFilter, result.filter(), "Il filtro deve compensare i successori e usare le posizioni"),
+
+                () -> assertEquals(True.getInstance(domain), result.guard(), "La clausola trasferita deve essere rimossa dalla guardia"),
+
+                () -> assertEquals(tuple.getComponents(), result.getComponents(), "Le componenti e le molteplicità devono essere preservate"),
+
+                () -> assertEquals(tuple.getDomain(), result.getDomain()),
+                () -> assertEquals(tuple.getCodomain(), result.getCodomain()),
+
+                () -> assertEquals(originalGuard, tuple.guard(), "La tupla originale non deve essere modificata")
+        );
+    }
+
+    static Stream<Arguments> baseGuardReductionSuccessorCases() {
+        return Stream.of(
+                Arguments.of(true, false),
+                Arguments.of(false, false),
+                Arguments.of(true, true),
+                Arguments.of(false, true)
+        );
     }
 
     @Test
