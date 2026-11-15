@@ -405,9 +405,11 @@ class WNtupleTest {
     }
 
     @Test
-    void interMulti_returnsCommonElementsWithMultiplicityOne() throws Exception {
+    void interMulti_preservesUnknownOverlapBetweenLinearCombinations()
+            throws Exception {
+
         ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
+        Domain domain = new Domain(cc, cc, cc);
 
         Projection p1 = Projection.builder(1, cc);
         Projection p2 = Projection.builder(2, cc);
@@ -418,16 +420,14 @@ class WNtupleTest {
 
         WNtuple tuple = new WNtuple(List.of(p1), domain);
 
-        LinearComb result = (LinearComb) invokeInterMulti(tuple, lc1, lc2);
-
-        assertEquals(1, result.asMap().size());
-        assertEquals(1, result.asMap().get(p1));
+        assertNull(invokeInterMulti(tuple, lc1, lc2), "Le chiavi comuni non determinano l'intersezione " + "quando le proiezioni possono coincidere");
     }
 
     @Test
-    void interMulti_returnsEmptyLinearCombWhenThereAreNoCommonElements() throws Exception {
+    void interMulti_doesNotAssumeDifferentProjectionsAreDisjoint() throws Exception {
+
         ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
+        Domain domain = new Domain(cc, cc);
 
         Projection p1 = Projection.builder(1, cc);
         Projection p2 = Projection.builder(2, cc);
@@ -437,9 +437,30 @@ class WNtupleTest {
 
         WNtuple tuple = new WNtuple(List.of(p1), domain);
 
-        LinearComb result = (LinearComb) invokeInterMulti(tuple, lc1, lc2);
+        assertNull(invokeInterMulti(tuple, lc1, lc2), "Indici diversi non garantiscono valori diversi");
+    }
 
-        assertTrue(result.asMap().isEmpty());
+    @Test
+    void interMulti_intersectsProjectionWithComplementOfItsSuccessor() throws Exception {
+
+        ColorClass cc = new ColorClass(2, 9, true);
+        Domain domain = new Domain(cc);
+
+        Projection p = Projection.builder(1, cc);
+        Projection successor = Projection.builder(1, 1, cc);
+
+        ElementaryFunction complement = ProjectionComp.factory(successor);
+
+        WNtuple tuple = new WNtuple(List.of(p), domain);
+
+        ColorFunction result = invokeInterMulti(tuple, p, complement);
+        ColorFunction reversed = invokeInterMulti(tuple, complement, p);
+
+        assertAll(
+                () -> assertEquals(p, result, "x1 appartiene al complemento di s(x1): " + "l'intersezione deve essere x1"),
+
+                () -> assertEquals(p, reversed, "L'intersezione deve dare lo stesso risultato " + "anche invertendo gli operandi")
+        );
     }
 
     private ArcFunction invokeBaseFilterReduction(WNtuple tuple, Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap, Map<ColorClass, Map<Boolean, Set<Membership>>> membMap) throws Exception {
@@ -448,7 +469,7 @@ class WNtupleTest {
 
     @ParameterizedTest(name = "singletonFirst={0}, equality={1}")
     @MethodSource("baseFilterReductionCases")
-    void baseFilterReduction_restrictsComponents(boolean singletonFirst, boolean equalitySign) throws Exception {
+    void baseFilterReduction_preservesUnsupportedLinearCombination(boolean singletonFirst, boolean equalitySign) throws Exception {
 
         ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3), new Interval(4, 4)});
 
@@ -481,8 +502,14 @@ class WNtupleTest {
 
         ArcFunction result = invokeBaseFilterReduction(tuple, equalityMap, membMap);
 
-        assertNotSame(tuple, result);
         assertInstanceOf(WNtuple.class, result);
+        WNtuple reduced = (WNtuple) result;
+
+        assertAll(
+                () -> assertEquals(tuple.filter(), reduced.filter()),
+                () -> assertEquals(tuple.getComponents(), reduced.getComponents()),
+                () -> assertEquals(tuple.guard(), reduced.guard())
+        );
     }
 
     static Stream<Arguments> baseFilterReductionCases() {
@@ -547,7 +574,7 @@ class WNtupleTest {
     }
 
     @Test
-    void baseFilterReduction_removesInequalityBetweenDisjointComponents() throws Exception {
+    void baseFilterReduction_preservesConstraintsWithWeightedProjection() throws Exception {
         ColorClass cc = new ColorClass(2, 9, true);
         Domain domain = new Domain(cc, cc);
 
@@ -572,8 +599,14 @@ class WNtupleTest {
 
         ArcFunction result = invokeBaseFilterReduction(tuple, equalityMap, membMap);
 
-        assertNotSame(tuple, result);
         assertInstanceOf(WNtuple.class, result);
+        WNtuple reduced = (WNtuple) result;
+
+        assertAll(
+                () -> assertEquals(tuple.filter(), reduced.filter(), "I vincoli devono essere conservati"),
+                () -> assertEquals(tuple.getComponents(), reduced.getComponents(), "Le componenti e le molteplicità devono essere preservate"),
+                () -> assertEquals(tuple.guard(), reduced.guard())
+        );
     }
 
     @Test
@@ -726,7 +759,7 @@ class WNtupleTest {
     }
 
     @Test
-    void baseFilterReduction_membershipDoesNotChangeConstant() throws Exception {
+    void baseFilterReduction_removesRedundantMembershipOnConstant() throws Exception {
         ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3), new Interval(4, 4)});
         Domain domain = new Domain(cc);
 
@@ -744,7 +777,14 @@ class WNtupleTest {
 
         ArcFunction result = invokeBaseFilterReduction(tuple, equalityMap, membMap);
 
-        assertSame(tuple, result);
+        assertInstanceOf(WNtuple.class, result);
+        WNtuple reduced = (WNtuple) result;
+
+        assertAll(
+                () -> assertEquals(True.getInstance(tuple.getCodomain()), reduced.filter()),
+                () -> assertEquals(tuple.getComponents(), reduced.getComponents()),
+                () -> assertEquals(tuple.guard(), reduced.guard())
+        );
     }
 
     @Test
@@ -788,6 +828,88 @@ class WNtupleTest {
         ArcFunction result = invokeBaseFilterReduction(tuple, equalityMap, membMap);
 
         assertSame(tuple, result);
+    }
+
+    @Test
+    void baseFilterReduction_preservesInequalityBetweenUnknownSingletons() throws Exception {
+
+        ColorClass cc = new ColorClass(2, 9);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Equality inequality = (Equality) Equality.builder(p1, p2, false, domain);
+
+        WNtuple tuple = new WNtuple(inequality, List.of(p1, p2), True.getInstance(domain), true);
+
+        SortedSet<Equality> inequalities = new TreeSet<>();
+        inequalities.add(inequality);
+
+        Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap = new TreeMap<>();
+
+        equalityMap.put(cc, Map.of(false, inequalities));
+
+        Map<ColorClass, Map<Boolean, Set<Membership>>> membershipMap = new TreeMap<>();
+
+        ArcFunction reduced = invokeBaseFilterReduction(tuple, equalityMap, membershipMap);
+
+        assertInstanceOf(WNtuple.class, reduced);
+        WNtuple result = (WNtuple) reduced;
+
+        assertAll(
+                () -> assertEquals(inequality, result.filter(), "La disuguaglianza deve rimanere nel filtro " + "quando la relazione tra i valori è sconosciuta"),
+
+                () -> assertEquals(tuple.getComponents(), result.getComponents(), "La restrizione del filtro non deve essere sostituita " + "con una sottrazione tra proiezioni"),
+
+                () -> assertEquals(True.getInstance(domain), result.guard()),
+
+                () -> assertEquals(domain, result.getDomain()),
+
+                () -> assertEquals(domain, result.getCodomain())
+        );
+    }
+
+    @Test
+    void baseFilterReduction_preservesInequalityWithUnknownComplementOverlap() throws Exception {
+
+        ColorClass cc = new ColorClass(2, 9, true);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        ElementaryFunction complement = ProjectionComp.factory(p2);
+
+        Equality inequality = (Equality) Equality.builder(Projection.builder(1, cc), Projection.builder(2, cc), false, domain);
+
+        WNtuple tuple = new WNtuple(inequality, List.of(p1, complement), True.getInstance(domain), true);
+
+        SortedSet<Equality> inequalities = new TreeSet<>();
+        inequalities.add(inequality);
+
+        Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap = new TreeMap<>();
+
+        equalityMap.put(cc, Map.of(false, inequalities));
+
+        Map<ColorClass, Map<Boolean, Set<Membership>>> membershipMap = new TreeMap<>();
+
+        ArcFunction reduced = invokeBaseFilterReduction(tuple, equalityMap, membershipMap);
+
+        assertInstanceOf(WNtuple.class, reduced);
+        WNtuple result = (WNtuple) reduced;
+
+        assertAll(
+                () -> assertEquals(inequality, result.filter(), "Il filtro deve essere conservato quando " + "la sovrapposizione tra le componenti è sconosciuta"),
+
+                () -> assertEquals(tuple.getComponents(), result.getComponents(), "La riduzione conservativa deve lasciare " + "invariate le componenti"),
+
+                () -> assertEquals(True.getInstance(domain), result.guard()),
+
+                () -> assertEquals(domain, result.getDomain()),
+
+                () -> assertEquals(domain, result.getCodomain())
+        );
     }
 
     @Test
@@ -885,18 +1007,8 @@ class WNtupleTest {
 
         LinearComb empty = new LinearComb(cc);
 
-        WNtuple left = new WNtuple(
-                List.of(empty),
-                True.getInstance(domain),
-                false
-        );
-
-        WNtuple right = new WNtuple(
-                List.of(new LinearComb(cc)),
-                True.getInstance(domain),
-                false
-        );
-
+        WNtuple left = new WNtuple(List.of(empty), True.getInstance(domain), false);
+        WNtuple right = new WNtuple(List.of(new LinearComb(cc)), True.getInstance(domain), false);
         WNtuple result = (WNtuple) left.baseCompose(right);
 
         LinearComb actual = (LinearComb) result.getComponents().getFirst();
@@ -1544,6 +1656,27 @@ class WNtupleTest {
         assertEquals(expected, result);
     }
 
+    @Test
+    void normalize_reducesFilteredLinearCombinationPreservingMultiplicity() {
+        ColorClass cc = new ColorClass(2, 9, true);
+        Domain domain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        Guard inequality = Equality.builder(p1, p2, false, domain);
+
+        WNtuple tuple = new WNtuple(inequality, List.of(p1, new LinearComb(Map.of(p1, 2, p2, 3))), True.getInstance(domain), true);
+
+        WNtuple survivingTuple = new WNtuple(inequality, List.of(p1, p2), True.getInstance(domain), true);
+
+        ArcFunction expected = new ArcFunScalar(survivingTuple, 3).normalize();
+
+        ArcFunction result = tuple.normalize();
+
+        assertEquals(expected, result, "La normalizzazione deve eliminare il contributo <x1,x1> " + "e conservare il coefficiente 3 del contributo <x1,x2>");
+    }
+
     private static Stream<Arguments> specSimplifyCases() {
         System.out.println("\nBase Case\n");
 
@@ -1581,7 +1714,7 @@ class WNtupleTest {
                         "ineq - p2, p1",
                         ineq,
                         List.of(new LinearComb(p2), new LinearComb(p1)),
-                        "<1c_1_2-1c_1_1,c_1_1>"
+                        "[c_1_1 != c_1_2]<c_1_2,c_1_1>"
                 ),
                 Arguments.of(
                         "ineq - All, All",

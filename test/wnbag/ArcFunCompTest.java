@@ -413,6 +413,60 @@ class ArcFunCompTest {
     }
 
     @Test
+    void normalize_preservesRightEqualityWithAndWithoutSuccessor() {
+        ColorClass cc = new ColorClass(2, 9, true);
+
+        Domain inputDomain = new Domain(cc);
+        Domain intermediateDomain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+
+        WNtuple left = new WNtuple(True.getInstance(intermediateDomain), List.of(new LinearComb(p1), new LinearComb(p2)), True.getInstance(intermediateDomain), true);
+
+        for (int exponent : new int[]{0, 1}) {
+            Guard relation = Equality.builder(p1, Projection.builder(2, exponent, cc), true, intermediateDomain);
+
+            WNtuple right = new WNtuple(relation, List.of(All.getInstance(cc), All.getInstance(cc)), True.getInstance(inputDomain), true);
+
+            ArcFunction expected = right.normalize();
+            ArcFunction result = new ArcFunComp(left, right).normalize();
+
+            assertEquals(expected, result, "La composizione con l'identità deve preservare " + "l'uguaglianza destra, con esponente " + exponent);
+        }
+    }
+
+    @Test
+    void normalize_preservesInequalityAfterEqualitySubstitution() {
+        ColorClass cc = new ColorClass(2, 9);
+
+        Domain inputDomain = new Domain(cc);
+        Domain intermediateDomain = new Domain(cc, cc, cc);
+        Domain outputDomain = new Domain(cc, cc);
+
+        Projection p1 = Projection.builder(1, cc);
+        Projection p2 = Projection.builder(2, cc);
+        Projection p3 = Projection.builder(3, cc);
+
+        Guard equality = Equality.builder(p1, p2, true, intermediateDomain);
+
+        Guard inequality = Equality.builder(p2, p3, false, intermediateDomain);
+
+        Guard rightFilter = And.factory(List.of(equality, inequality), true);
+
+        WNtuple left = new WNtuple(True.getInstance(outputDomain), List.of(new LinearComb(Map.of(p2, 1)), new LinearComb(Map.of(p3, 1))), True.getInstance(intermediateDomain), false);
+        WNtuple right = new WNtuple(rightFilter, List.of(All.getInstance(cc), All.getInstance(cc), All.getInstance(cc)), True.getInstance(inputDomain), false);
+
+        Guard expectedFilter = Equality.builder(p1, p2, false, outputDomain);
+
+        WNtuple expected = new WNtuple(expectedFilter, List.of(All.getInstance(cc), All.getInstance(cc)), True.getInstance(inputDomain), false);
+
+        ArcFunction actual = new ArcFunComp(left, right).normalize();
+
+        assertEquals(expected.normalize(), actual, "L'eliminazione di X1 = X2 deve preservare " + "la disuguaglianza tra le uscite, " + "senza introdurre fattori moltiplicativi");
+    }
+
+    @Test
     void property2_multipliesCardinalityOfProjectedOutComponents() throws Exception {
         ColorClass cc = new ColorClass(2, 9);
         Domain domain = new Domain(cc, cc);

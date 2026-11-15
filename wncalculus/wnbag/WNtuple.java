@@ -8,6 +8,7 @@ import color.ColorClass;
 import expr.*;
 import guard.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import tuple.AbstractTuple;
 import util.Pair;
 import util.Util;
@@ -564,7 +565,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param membMap    the filter's precomputed membership map
      * @return an equivalent reduced tuple, or this if no reduction happened
      */
-
     private @NotNull ArcFunction baseFilterReduction(@NotNull Map<ColorClass, @NotNull Map<Boolean, SortedSet<Equality>>> equalityMap, @NotNull Map<ColorClass, @NotNull Map<Boolean, Set<Membership>>> membMap) {
 
         final Collection<Guard> to_remove = new LinkedList<>();
@@ -586,12 +586,16 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                         if (oldCf instanceof ConstantFunction cf) {
                             ColorFunction newCf = restrictConstantByMembership(cf, m);
 
+                            if (isEmptyMulti(newCf)) {
+                                return getEmpty().cast();
+                            }
+
                             if (!newCf.equals(oldCf)) {
                                 h_tuple.set(i, newCf);
-                                reduced = true;
                             }
 
                             to_remove.add(m);
+                            reduced = true;
                         }
                     }
                 }
@@ -620,6 +624,16 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                     final ColorFunction f_i = h_tuple.get(i);
                     final ColorFunction f_j = h_tuple.get(j);
 
+                    if (isEmptyMulti(f_i) || isEmptyMulti(f_j)) {
+                        return getEmpty().cast();
+                    }
+
+                    // A relation between two successors of the same output
+                    // position needs a separate treatment.
+                    if (i == j) {
+                        continue;
+                    }
+
                     // Align successor exponents for ordered color classes.
                     int exp_diff = eq.getArg2().getSucc() - eq.getArg1().getSucc();
 
@@ -634,56 +648,76 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                     boolean fi_card_leq_1 = cardLeq1(f_i);
                     boolean fj_card_leq_1 = cardLeq1(f_j);
 
-                    // Both components have cardinality at most 1.
-                    if (fi_card_leq_1 && fj_card_leq_1) {
-
-                        if (f_i.specSimplify().equals(succ_fj.specSimplify())) {
-                            if (equality) {// c = c is always true.
-                                to_remove.add(eq);
-                                reduced = true;
-                            } else {// c != c is impossible.
-                                return getEmpty().cast();
-                            }
-                        }
-                        if (equality) {
-                            // Distinct symbolic singleton components: preserve the filter because their values are unknown.
-                            continue;
-                        } else {
-                            ColorFunction diff_i = differMulti(f_i, succ_fj);
-                            h_tuple.set(i, diff_i);
-                            to_remove.add(eq);
-                            reduced = true;
-                        }
-                    }
-
                     if (!fi_card_leq_1 && !fj_card_leq_1) {
                         continue;
                     }
 
-                    // Compute intersection only after handling singleton cases.
+                    // null means unknown intersection, not empty.
                     ColorFunction inter = interMulti(f_i, succ_fj);
 
+                    if (inter == null) {
+                        continue;
+                    }
+
                     if (isEmptyMulti(inter)) {
-                        if (!equality) {
-                            // Disjoint components always satisfy the inequality.
-                            to_remove.add(eq);
-                            reduced = true;
+                        if (equality) {
+                            // No output pair can satisfy the equality.
+                            return getEmpty().cast();
                         }
+
+                        // Disjoint components always satisfy the inequality.
+                        to_remove.add(eq);
+                        reduced = true;
+                        continue;
+                    }
+
+                    // Both components are nonempty singletons.
+                    // A known nonempty intersection means their values coincide.
+                    // The current interMulti handles only unit elementary
+                    // functions, possibly wrapped in a LinearComb.
+                    if (fi_card_leq_1 && fj_card_leq_1) {
+                        if (!equality) {
+                            return getEmpty().cast();
+                        }
+
+                        to_remove.add(eq);
+                        reduced = true;
                         continue;
                     }
 
                     if (fi_card_leq_1) {
                         // Restrict the second component.
-                        ColorFunction restricted = equality ? interMulti(f_j, succ_fi) : differMulti(f_j, succ_fi);
+                        ColorFunction restricted;
+
+                        if (equality) {
+                            restricted = interMulti(f_j, succ_fi);
+
+                            if (restricted == null) {
+                                continue;
+                            }
+                        } else {
+                            // The known nonempty intersection proves that
+                            // the singleton belongs to the second component.
+                            restricted = differMulti(f_j, succ_fi);
+                        }
+
+                        if (isEmptyMulti(restricted)) {
+                            return getEmpty().cast();
+                        }
 
                         h_tuple.set(j, restricted);
 
                     } else {
                         // Restrict the first component.
-                        ColorFunction restricted = equality ? inter : differMulti(f_i, succ_fj);
+                        ColorFunction restricted = equality
+                                ? inter
+                                : differMulti(f_i, succ_fj);
+
+                        if (isEmptyMulti(restricted)) {
+                            return getEmpty().cast();
+                        }
 
                         h_tuple.set(i, restricted);
-
                     }
 
                     to_remove.add(eq);
@@ -700,8 +734,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
         Guard newFilter = rebuildFilterAfterReduction(filter(), to_remove);
 
-        SortedMap<ColorClass, List<? extends ColorFunction>> rebuilt =
-                rebuildHomParts(getHomSubTuples(), tuple_copy);
+        SortedMap<ColorClass, List<? extends ColorFunction>> rebuilt = rebuildHomParts(getHomSubTuples(), tuple_copy);
 
         return new WNtuple(newFilter, rebuilt, guard());
     }
@@ -724,7 +757,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      * @param f2 the second ColorFunction
      * @return the intersection of the two ColorFunctions as a multiset
      */
-    private @NotNull ColorFunction interMulti(@NotNull ColorFunction f1, @NotNull ColorFunction f2) {
+    private @Nullable ColorFunction interMulti(@NotNull ColorFunction f1, @NotNull ColorFunction f2) {
         if (f1.equals(f2)) {
             return f1;
         }
@@ -734,16 +767,77 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         if (f2 instanceof All) {
             return f1;
         }
-        LinearComb lc1 = toLinearComb(f1);
-        LinearComb lc2 = toLinearComb(f2);
-        final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>();
-        for (var entry : lc1.asMap().entrySet()) {
-            ElementaryFunction key = entry.getKey();
-            if (lc2.asMap().containsKey(key)) {
-                out.put(key, 1);
+
+        if (isEmptyMulti(f1) || isEmptyMulti(f2)) {
+            return new LinearComb(f1.getSort());
+        }
+
+        // Unwrap only unit elementary functions.
+        // General linear combinations require a semantic intersection, not an intersection between their map keys.
+        if (f1 instanceof LinearComb lc1) {
+            if (lc1.size() != 1) {
+                return null;
+            }
+            var entry = lc1.asMap().entrySet().iterator().next();
+            if (entry.getValue() != 1) {
+                return null;
+            }
+            f1 = entry.getKey();
+        }
+
+        if (f2 instanceof LinearComb lc2) {
+            if (lc2.size() != 1) {
+                return null;
+            }
+            var entry = lc2.asMap().entrySet().iterator().next();
+
+            if (entry.getValue() != 1) {
+                return null;
+            }
+            f2 = entry.getKey();
+        }
+
+        // Restrict this implementation to elementary set functions.
+        if (!(f1 instanceof ElementaryFunction)
+                || !(f2 instanceof ElementaryFunction)) {
+            return null;
+        }
+
+        // Distinct successors of the same projection, for a fixed class.
+        if (f1 instanceof Projection p1 && f2 instanceof Projection p2) {
+            if (p1.getSort().equals(p2.getSort()) && p1.getSort().hasFixedSize() && p1.getIndex() == p2.getIndex()) {
+                return new LinearComb(f1.getSort());
+            }
+            // Different input variables may denote the same value.
+            return null;
+        }
+
+        Projection projection = null;
+        ProjectionComp complement = null;
+
+        if (f1 instanceof Projection p && f2 instanceof ProjectionComp pc) {
+            projection = p;
+            complement = pc;
+
+        } else if (f2 instanceof Projection p && f1 instanceof ProjectionComp pc) {
+            projection = p;
+            complement = pc;
+        }
+
+        if (projection != null) {
+            Projection excluded = complement.opposite();
+
+            if (projection.equals(excluded)) {
+                return new LinearComb(projection.getSort());
+            }
+
+            if (projection.getSort().equals(excluded.getSort()) && projection.getSort().hasFixedSize() && projection.getIndex() == excluded.getIndex()) {
+                return projection;
             }
         }
-        return out.isEmpty() ? new LinearComb(f1.getSort()) : new LinearComb(out, false);
+
+        // Unknown intersection: preserve the original filter.
+        return null;
     }
 
 
@@ -926,7 +1020,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             }
         }
         //System.out.println("Compose Result: " + resultComps);
-        return new WNtuple(resultComps, other.guard(), true);
+        return new WNtuple(this.filter(), resultComps, other.guard(), true);
     }
 
     /**

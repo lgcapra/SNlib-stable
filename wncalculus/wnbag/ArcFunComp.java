@@ -240,6 +240,7 @@ public final class ArcFunComp extends BagComp<WNtuple> implements ArcFunction {
         collectIneq(rightFilter, crightF);
 
         WNtuple left = ccr.left().cast();
+        left=left.joinGuard(rightFilter).normalize().cast();
         var cleftComps = left.getComponents();
 
         // Collect the indices of the components occurring in the left tuple.
