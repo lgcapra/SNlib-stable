@@ -290,12 +290,9 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
      */
     private @NotNull Map<ColorClass, Set<Integer>> filterIdx(@NotNull WNtuple tres) {
         Map<ColorClass, Set<Integer>> targetPositions = new HashMap<>();
-
         // Collect positions referenced by the filter.
         if (tres.filter().isElemAndForm()) {
             var equalityMap = tres.filter().equalityMap();
-            var membMap = tres.filter().membMap();
-
             for (ColorClass cc : equalityMap.keySet()) {
                 Map<Boolean, SortedSet<Equality>> equalities = equalityMap.get(cc);
                 if (equalities != null) {
@@ -308,12 +305,19 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                 }
             }
         }
-
         // Remove colors for which no position needs to be expanded.
         targetPositions.entrySet().removeIf(entry -> entry.getValue().isEmpty());
-
-
         return targetPositions;
+    }
+
+    private static @NotNull Map<? extends ElementaryFunction, Integer> elementaryTerms(@NotNull ColorFunction function) {
+        if (function instanceof LinearComb combination) {
+            return combination.asMap();
+        }
+        if (function instanceof ElementaryFunction elementary) {
+            return Map.of(elementary, 1);
+        }
+        throw new IllegalArgumentException("Unsupported linear component: " + function);
     }
 
     /**
@@ -411,15 +415,11 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         final Guard currentGuard = guard();
 
         // If the guard is trivial, there is nothing to reduce.
-        if (currentGuard.isTrivial()) {
-            return this;
-        }
+        if (currentGuard.isTrivial()) return this;
 
         // This reduction currently supports only one-sorted tuples.
         final ColorClass cc = getSort();
-        if (cc == null) {
-            return this;
-        }
+        if (cc == null) return this;
 
         final List<? extends ColorFunction> comps = getHomSubTuple(cc);
 
@@ -436,12 +436,10 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             if (cf instanceof Projection p) {
                 projection = p;
             } else if (cf instanceof LinearComb lc && lc.size() == 1) {
-                ElementaryFunction ef =
-                        lc.asMap().keySet().iterator().next();
+                ElementaryFunction ef = lc.asMap().keySet().iterator().next();
 
-                if (ef instanceof Projection p) {
+                if (ef instanceof Projection p)
                     projection = p;
-                }
             }
 
             if (projection != null) {
@@ -467,9 +465,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         final Collection<Guard> newFilterClauses = new LinkedList<>();
 
         for (Guard clause : guardClauses) {
-            if (!(clause instanceof Equality eq)) {
-                continue;
-            }
+            if (!(clause instanceof Equality eq)) continue;
 
             Projection guardProj1 = eq.getArg1();
             Projection guardProj2 = eq.getArg2();
@@ -481,42 +477,24 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             Integer pos2 = projToPosMap.get(idx2);
 
             // Both variables must be represented by projection components.
-            if (pos1 == null || pos2 == null) {
-                continue;
-            }
+            if (pos1 == null || pos2 == null) continue;
 
             Projection component1 = projToComponentMap.get(idx1);
             Projection component2 = projToComponentMap.get(idx2);
 
             // If y_pos = succ^a(x_idx), then
             // succ^u(x_idx) = succ^(u-a)(y_pos).
-            Projection filterProj1 = Projection.builder(
-                    pos1,
-                    guardProj1.getSucc() - component1.getSucc(),
-                    cc
-            );
-
-            Projection filterProj2 = Projection.builder(
-                    pos2,
-                    guardProj2.getSucc() - component2.getSucc(),
-                    cc
-            );
+            Projection filterProj1 = Projection.builder(pos1, guardProj1.getSucc() - component1.getSucc(), cc);
+            Projection filterProj2 = Projection.builder(pos2, guardProj2.getSucc() - component2.getSucc(), cc);
 
             // The builder may also return True or False.
-            Guard filterClause = Equality.builder(
-                    filterProj1,
-                    filterProj2,
-                    eq.isEquality(),
-                    getCodomain()
-            );
+            Guard filterClause = Equality.builder(filterProj1, filterProj2, eq.isEquality(), getCodomain());
 
             clausesToMoveToFilter.add(clause);
             newFilterClauses.add(filterClause);
         }
 
-        if (clausesToMoveToFilter.isEmpty()) {
-            return this;
-        }
+        if (clausesToMoveToFilter.isEmpty()) return this;
 
         // Combine the existing filter with the transferred clauses.
         // Keeping the existing filter also preserves a possible False filter.
@@ -536,8 +514,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
                 : And.buildAndFormWithDom(filterArgs, getCodomain());
 
         // Remove the transferred clauses from the guard.
-        final Set<Guard> remainingGuardArgs =
-                new LinkedHashSet<>(guardClauses);
+        final Set<Guard> remainingGuardArgs = new LinkedHashSet<>(guardClauses);
 
         remainingGuardArgs.removeAll(clausesToMoveToFilter);
 
@@ -547,10 +524,7 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
         } else if (remainingGuardArgs.size() == 1) {
             newGuard = remainingGuardArgs.iterator().next();
         } else {
-            newGuard = And.buildAndFormWithDom(
-                    remainingGuardArgs,
-                    getDomain()
-            );
+            newGuard = And.buildAndFormWithDom(remainingGuardArgs, getDomain());
         }
 
         return new WNtuple(newFilter, getHomSubTuples(), newGuard);
@@ -558,404 +532,247 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
 
     /**
      * Performs the tuple's filter reduction for WNtuple, following the same logic
-     * as Tuple.baseFilterReduction(...), but using multiset operations instead of
-     * set operations.
+     * as Tuple.baseFilterReduction(...), reusing SetFunction operation where possible.
      *
      * @param equalityMap the filter's precomputed equality map
-     * @param membMap    the filter's precomputed membership map
+     * @param membMap the filter's precomputed membership map
      * @return an equivalent reduced tuple, or this if no reduction happened
      */
     private @NotNull ArcFunction baseFilterReduction(@NotNull Map<ColorClass, @NotNull Map<Boolean, SortedSet<Equality>>> equalityMap, @NotNull Map<ColorClass, @NotNull Map<Boolean, Set<Membership>>> membMap) {
-
-        final Collection<Guard> to_remove = new LinkedList<>();
-        final SortedMap<ColorClass, List<? extends ColorFunction>> tuple_copy = new TreeMap<>();
-        boolean reduced = false;
-
-        // Membership reductions
-        for (var mx : membMap.entrySet()) {
-            ColorClass cc = mx.getKey();
-            List<ColorFunction> h_tuple = new ArrayList<>(getHomSubTuple(cc));
-
-            for (var my : mx.getValue().entrySet()) {
-                for (var m : my.getValue()) {
-                    int i = m.firstIndex() - 1;
-
-                    if (i >= 0 && i < h_tuple.size()) {
-                        ColorFunction oldCf = h_tuple.get(i);
-
-                        if (oldCf instanceof ConstantFunction cf) {
-                            ColorFunction newCf = restrictConstantByMembership(cf, m);
-
-                            if (isEmptyMulti(newCf)) {
-                                return getEmpty().cast();
-                            }
-
-                            if (!newCf.equals(oldCf)) {
-                                h_tuple.set(i, newCf);
-                            }
-
-                            to_remove.add(m);
-                            reduced = true;
-                        }
+        // Assert that the tuple is type-set
+        for (var entry : membMap.entrySet()) {
+            for (var signed : entry.getValue().entrySet()) {
+                for (Membership membership : signed.getValue()) {
+                    int position = membership.firstIndex() - 1;
+                    var parts = getHomSubTuple(entry.getKey());
+                    if (position < 0 || position >= parts.size()) continue;
+                    ColorFunction component = parts.get(position);
+                    if (!(component instanceof ElementaryFunction || component instanceof LinearComb)) continue;
+                    List<FilterTerm> selected = new ArrayList<>();
+                    for (var term : elementaryTerms(component).entrySet()) {
+                        if (term.getValue() == 0) continue;
+                        SetFunction intersection = normalizedIntersection(term.getKey(), membership.getArg2());
+                        for (FilterTerm restricted : setIntersectionTerms(term.getKey(), membership.getArg2(), intersection))
+                            selected.add(new FilterTerm(restricted.function(), restricted.condition(), Math.multiplyExact(term.getValue(), restricted.coefficient())));
                     }
+                    return replaceFilteredComponent(entry.getKey(), position, membership, selected, !signed.getKey());
                 }
             }
-
-            tuple_copy.put(cc, h_tuple);
         }
 
-        // Equality / inequality reductions
-        for (var ex : equalityMap.entrySet()) {
-            ColorClass cc = ex.getKey();
-
-            List<ColorFunction> h_tuple = tuple_copy.containsKey(cc) ? new ArrayList<>(tuple_copy.get(cc)) : new ArrayList<>(getHomSubTuple(cc));
-
-            for (var ey : ex.getValue().entrySet()) {
-                boolean equality = ey.getKey();
-
-                for (var eq : ey.getValue()) {
-                    int i = eq.firstIndex() - 1;
-                    int j = eq.secondIndex() - 1;
-
-                    if (i < 0 || j < 0 || i >= h_tuple.size() || j >= h_tuple.size()) {
-                        continue;
+        for (var entry : equalityMap.entrySet()) {
+            ColorClass cc = entry.getKey();
+            var parts = getHomSubTuple(cc);
+            for (var signed : entry.getValue().entrySet()) {
+                for (Equality equality : signed.getValue()) {
+                    int i = equality.firstIndex() - 1;
+                    int j = equality.secondIndex() - 1;
+                    if (i < 0 || j < 0 || i >= parts.size() || j >= parts.size()) continue;
+                    if (i == j) continue; // normalized by the guard implementation
+                    ElementaryFunction fi = unitSetFunction(parts.get(i));
+                    ElementaryFunction fj = unitSetFunction(parts.get(j));
+                    if (fi == null || fj == null) continue;
+                    if (fi.isFalse() || fj.isFalse()) return getEmpty();
+                    int shift = equality.getArg2().getSucc() - equality.getArg1().getSucc();
+                    SetFunction shiftedJ = (SetFunction) Successor.factory(shift, fj).normalize();
+                    SetFunction intersection = normalizedIntersection(fi, shiftedJ);
+                    // Disjointness must be checked even when both cardinalities exceed one.
+                    if (intersection.isFalse()) {
+                        return signed.getKey() ? getEmpty() : build(rebuildFilterAfterReduction(filter(), List.of(equality)), guard());
                     }
-
-                    final ColorFunction f_i = h_tuple.get(i);
-                    final ColorFunction f_j = h_tuple.get(j);
-
-                    if (isEmptyMulti(f_i) || isEmptyMulti(f_j)) {
-                        return getEmpty().cast();
+                    if (!fi.cardLeq1() && !fj.cardLeq1()) {
+                        if (!signed.getKey() || fi.equals(shiftedJ)) continue;
+                        SetFunction shiftedI = (SetFunction) Successor.factory(-shift, fi).normalize();
+                        SetFunction intersectionJ = normalizedIntersection(fj, shiftedI);
+                        if (intersection.equals(fi) && intersectionJ.equals(fj)) continue;
+                        return restrictEqualComponents(cc, i, j, setIntersectionTerms(fi, shiftedJ, intersection), setIntersectionTerms(fj, shiftedI, intersectionJ));
                     }
-
-                    // A relation between two successors of the same output
-                    // position needs a separate treatment.
-                    if (i == j) {
-                        continue;
-                    }
-
-                    // Align successor exponents for ordered color classes.
-                    int exp_diff = eq.getArg2().getSucc() - eq.getArg1().getSucc();
-
-                    ColorFunction succ_fi = f_i;
-                    ColorFunction succ_fj = f_j;
-
-                    if (cc.isOrdered() && exp_diff != 0) {
-                        succ_fi = succMulti(-exp_diff, f_i);
-                        succ_fj = succMulti(exp_diff, f_j);
-                    }
-
-                    boolean fi_card_leq_1 = cardLeq1(f_i);
-                    boolean fj_card_leq_1 = cardLeq1(f_j);
-
-                    if (!fi_card_leq_1 && !fj_card_leq_1) {
-                        continue;
-                    }
-
-                    // null means unknown intersection, not empty.
-                    ColorFunction inter = interMulti(f_i, succ_fj);
-
-                    if (inter == null) {
-                        continue;
-                    }
-
-                    if (isEmptyMulti(inter)) {
-                        if (equality) {
-                            // No output pair can satisfy the equality.
-                            return getEmpty().cast();
-                        }
-
-                        // Disjoint components always satisfy the inequality.
-                        to_remove.add(eq);
-                        reduced = true;
-                        continue;
-                    }
-
-                    // Both components are nonempty singletons.
-                    // A known nonempty intersection means their values coincide.
-                    // The current interMulti handles only unit elementary
-                    // functions, possibly wrapped in a LinearComb.
-                    if (fi_card_leq_1 && fj_card_leq_1) {
-                        if (!equality) {
-                            return getEmpty().cast();
-                        }
-
-                        to_remove.add(eq);
-                        reduced = true;
-                        continue;
-                    }
-
-                    if (fi_card_leq_1) {
-                        // Restrict the second component.
-                        ColorFunction restricted;
-
-                        if (equality) {
-                            restricted = interMulti(f_j, succ_fi);
-
-                            if (restricted == null) {
-                                continue;
-                            }
-                        } else {
-                            // The known nonempty intersection proves that
-                            // the singleton belongs to the second component.
-                            restricted = differMulti(f_j, succ_fi);
-                        }
-
-                        if (isEmptyMulti(restricted)) {
-                            return getEmpty().cast();
-                        }
-
-                        h_tuple.set(j, restricted);
-
+                    int target;
+                    ElementaryFunction original;
+                    SetFunction singleton;
+                    if (fi.cardLeq1()) {
+                        target = j;
+                        original = fj;
+                        singleton = (SetFunction) Successor.factory(-shift, fi).normalize();
+                        intersection = normalizedIntersection(original, singleton);
                     } else {
-                        // Restrict the first component.
-                        ColorFunction restricted = equality
-                                ? inter
-                                : differMulti(f_i, succ_fj);
-
-                        if (isEmptyMulti(restricted)) {
-                            return getEmpty().cast();
-                        }
-
-                        h_tuple.set(i, restricted);
+                        target = i;
+                        original = fi;
+                        singleton = shiftedJ;
                     }
-
-                    to_remove.add(eq);
-                    reduced = true;
+                    // If the remaining component is a projection, the set rewrite
+                    // can represent the difference directly by an input guard.
+                    if (!signed.getKey() && original instanceof Projection && singleton instanceof ProjectionBased projectionBased) {
+                        SetFunction complement = projectionBased.opposite();
+                        return replaceFilteredComponent(cc, target, equality,
+                                setIntersectionTerms(original, complement,
+                                        normalizedIntersection(original, complement)), false);
+                    }
+                    // Difference of characteristic functions: A - (A intersect B).
+                    // Subtracting B directly would be wrong when B is outside A.
+                    return replaceFilteredComponent(cc, target, equality,
+                            setIntersectionTerms(original, singleton, intersection), !signed.getKey());
                 }
             }
-
-            tuple_copy.put(cc, h_tuple);
         }
-
-        if (!reduced) {
-            return this;
-        }
-
-        Guard newFilter = rebuildFilterAfterReduction(filter(), to_remove);
-
-        SortedMap<ColorClass, List<? extends ColorFunction>> rebuilt = rebuildHomParts(getHomSubTuples(), tuple_copy);
-
-        return new WNtuple(newFilter, rebuilt, guard());
-    }
-
-
-    /**
-     * Checks if the given ColorFunction is empty when treated as a multiset.
-     * @param f the ColorFunction to check
-     * @return true if the ColorFunction is empty as a multiset, false otherwise
-     */
-    private boolean isEmptyMulti(@NotNull ColorFunction f) {
-        return f instanceof LinearComb lc && lc.asMap().isEmpty();
+        return this;
     }
 
     /**
-     * Computes the intersection of two ColorFunctions, treating them as multisets.
-     * The intersection is defined as the multiset containing each term present in both functions,
-     * with multiplicity equal to the minimum of the multiplicities in the two functions.
-     * @param f1 the first ColorFunction
-     * @param f2 the second ColorFunction
-     * @return the intersection of the two ColorFunctions as a multiset
+     * Restricts both components while retaining the equality in the output filter.
+     *
+     * @param cc the color class
+     * @param i the index of the first component
+     * @param j the index of the second component
+     * @param leftTerms the terms for the left component
+     * @param rightTerms the terms for the right component
+     * @return the restricted arc function
      */
-    private @Nullable ColorFunction interMulti(@NotNull ColorFunction f1, @NotNull ColorFunction f2) {
-        if (f1.equals(f2)) {
-            return f1;
-        }
-        if (f1 instanceof All) {
-            return f2;
-        }
-        if (f2 instanceof All) {
-            return f1;
-        }
-
-        if (isEmptyMulti(f1) || isEmptyMulti(f2)) {
-            return new LinearComb(f1.getSort());
-        }
-
-        // Unwrap only unit elementary functions.
-        // General linear combinations require a semantic intersection, not an intersection between their map keys.
-        if (f1 instanceof LinearComb lc1) {
-            if (lc1.size() != 1) {
-                return null;
-            }
-            var entry = lc1.asMap().entrySet().iterator().next();
-            if (entry.getValue() != 1) {
-                return null;
-            }
-            f1 = entry.getKey();
-        }
-
-        if (f2 instanceof LinearComb lc2) {
-            if (lc2.size() != 1) {
-                return null;
-            }
-            var entry = lc2.asMap().entrySet().iterator().next();
-
-            if (entry.getValue() != 1) {
-                return null;
-            }
-            f2 = entry.getKey();
-        }
-
-        // Restrict this implementation to elementary set functions.
-        if (!(f1 instanceof ElementaryFunction)
-                || !(f2 instanceof ElementaryFunction)) {
-            return null;
-        }
-
-        // Distinct successors of the same projection, for a fixed class.
-        if (f1 instanceof Projection p1 && f2 instanceof Projection p2) {
-            if (p1.getSort().equals(p2.getSort()) && p1.getSort().hasFixedSize() && p1.getIndex() == p2.getIndex()) {
-                return new LinearComb(f1.getSort());
-            }
-            // Different input variables may denote the same value.
-            return null;
-        }
-
-        Projection projection = null;
-        ProjectionComp complement = null;
-
-        if (f1 instanceof Projection p && f2 instanceof ProjectionComp pc) {
-            projection = p;
-            complement = pc;
-
-        } else if (f2 instanceof Projection p && f1 instanceof ProjectionComp pc) {
-            projection = p;
-            complement = pc;
-        }
-
-        if (projection != null) {
-            Projection excluded = complement.opposite();
-
-            if (projection.equals(excluded)) {
-                return new LinearComb(projection.getSort());
-            }
-
-            if (projection.getSort().equals(excluded.getSort()) && projection.getSort().hasFixedSize() && projection.getIndex() == excluded.getIndex()) {
-                return projection;
+    private @NotNull ArcFunction restrictEqualComponents(@NotNull ColorClass cc, int i, int j, @NotNull List<FilterTerm> leftTerms, @NotNull List<FilterTerm> rightTerms) {
+        List<ArcFunction> result = new ArrayList<>();
+        for (FilterTerm left : leftTerms) {
+            for (FilterTerm right : rightTerms) {
+                Guard newGuard = (Guard) And.factory(guard(), left.condition(), right.condition()).normalize();
+                if (newGuard.isFalse()) {
+                    continue;
+                }
+                int coefficient = Math.multiplyExact(left.coefficient(), right.coefficient());
+                if (coefficient == 0) continue;
+                SortedMap<ColorClass, List<? extends ColorFunction>> updated = new TreeMap<>(getHomSubTuples());
+                List<ColorFunction> parts = new ArrayList<>(getHomSubTuple(cc));
+                parts.set(i, left.function());
+                parts.set(j, right.function());
+                updated.put(cc, parts);
+                WNtuple restricted = new WNtuple(filter(), updated, newGuard);
+                result.add(coefficient == 1 ? restricted : new ArcFunScalar(restricted, coefficient));
             }
         }
+        return result.isEmpty() ? getEmpty() : ArcFunSum.factory(result);
+    }
 
-        // Unknown intersection: preserve the original filter.
+    /**
+     * Returns the elementary function if the given function is an elementary function or a linear combination with a single term; otherwise, returns null.
+     *
+     * @param function the color function to check
+     * @return the elementary function or null
+     */
+    private @Nullable ElementaryFunction unitSetFunction(@NotNull ColorFunction function) {
+        if (function instanceof ElementaryFunction elementary) return elementary;
+        if (function instanceof LinearComb combination) {
+            if (combination.asMap().isEmpty()) return Empty.getInstance(function.getSort());
+            if (combination.size() == 1) {
+                var term = combination.asMap().entrySet().iterator().next();
+                if (term.getValue() == 1) return term.getKey();
+            }
+        }
         return null;
     }
 
-
     /**
-     * Computes the difference of two ColorFunctions, treating them as multisets.
-     * The difference is defined as the multiset containing each term present in the first function,
-     * with multiplicity equal to the multiplicity in the first function minus the multiplicity in the second function.
-     * If a term's multiplicity becomes zero or negative, it is removed from the resulting multiset.
+     * Computes the normalized intersection of two set functions.
      *
-     * @param f1 the first ColorFunction
-     * @param f2 the second ColorFunction
-     * @return a new ColorFunction representing the difference of f1 and f2 as multisets
+     * @param left  the left set function
+     * @param right the right set function
+     * @return the normalized intersection of the two set functions
      */
-    private @NotNull ColorFunction differMulti(@NotNull ColorFunction f1, @NotNull ColorFunction f2) {
-        if (f1.equals(f2)) {
-            return new LinearComb(f1.getSort());
+    private @NotNull SetFunction normalizedIntersection(@NotNull SetFunction left, @NotNull SetFunction right) {
+        return (SetFunction) Intersection.factory(left, right).normalize();
+    }
+
+    private record FilterTerm(ElementaryFunction function, Guard condition, int coefficient) { }
+
+    /** Reuses the set implementation, including its projection-to-guard rewrite.
+     *
+     *  @param left the left set function
+     *  @param right the right set function
+     *  @param intersection the intersection of the two set functions
+     *  @return the list of filter terms
+     */
+    private @NotNull List<FilterTerm> setIntersectionTerms(@NotNull SetFunction left, @NotNull SetFunction right, @NotNull SetFunction intersection) {
+        if (intersection.isFalse()) return List.of();
+        if (intersection instanceof ElementaryFunction elementary) {
+            return List.of(new FilterTerm(elementary, True.getInstance(getDomain()), 1));
         }
-        LinearComb lc1 = toLinearComb(f1);
-        LinearComb lc2 = toLinearComb(f2);
-        final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>(lc1.asMap());
-        for (var entry : lc2.asMap().entrySet()) {
-            ElementaryFunction key = entry.getKey();
-            int newValue = out.getOrDefault(key, 0) - entry.getValue();
-            if (newValue == 0) {
-                out.remove(key);
+        if (intersection instanceof Intersection product
+                && product.getArgs().stream().anyMatch(Projection.class::isInstance)) {
+            var simple = product.toSimpleFunctions(Collections.emptySet(),
+                    Collections.emptyMap(), Collections.emptyMap(), getDomain());
+            List<FilterTerm> result = new ArrayList<>();
+            for (var term : simple) {
+                if (!(term.getKey() instanceof ElementaryFunction elementary)) {
+                    throw new IllegalStateException("Non-elementary projection intersection: " + term);
+                }
+                result.add(new FilterTerm(elementary, term.getValue(), 1));
+            }
+            if (result.isEmpty()) throw new IllegalStateException("Untranslated intersection: " + product);
+            return result;
+        }
+        // A complement is the signed characteristic function All - projection.
+        // This also covers a singleton subclass intersected with a complement.
+        if (left instanceof ProjectionComp complement) {
+            List<FilterTerm> result = new ArrayList<>();
+            if (!(right instanceof ElementaryFunction elementary)) {
+                throw new IllegalStateException("Non-elementary type-set operand: " + right);
+            }
+            if (elementary instanceof ProjectionComp other) {
+                result.add(new FilterTerm(All.getInstance(other.getSort()), True.getInstance(getDomain()), 1));
+                result.add(new FilterTerm(other.getArg(), True.getInstance(getDomain()), -1));
             } else {
-                out.put(key, newValue);
+                result.add(new FilterTerm(elementary, True.getInstance(getDomain()), 1));
             }
+            for (FilterTerm term : setIntersectionTerms(complement.getArg(), right,
+                    normalizedIntersection(complement.getArg(), right))) {
+                result.add(new FilterTerm(term.function(), term.condition(), -term.coefficient()));
+            }
+            return result;
         }
-        return out.isEmpty() ? new LinearComb(f1.getSort()) : new LinearComb(out, false);
+        if (right instanceof ProjectionComp) return setIntersectionTerms(right, left, intersection);
+        throw new IllegalStateException("Unsupported type-set intersection: " + intersection);
     }
 
-    /**
-     * Converts a ColorFunction to a LinearComb representation.
-     * If the ColorFunction is already a LinearComb, it returns it as is.
-     * If it is an ElementaryFunction, it creates a LinearComb with that function and multiplicity 1.
-     * If it is neither, it creates an empty LinearComb with the same sort as the original ColorFunction.
+    /** Applies one rewrite to the whole tuple: generated conditions belong to its input domain.
      *
-     * @param cf the ColorFunction to convert
-     * @return the LinearComb representation of the ColorFunction
+     *  @param cc the color class
+     *  @param position the position of the component to be replaced
+     *  @param removed the guard to be removed
+     *  @param intersection the intersection of the guards
+     *  @param subtract whether to subtract or add the coefficients
+     *  @return the resulting arc function
      */
-    private @NotNull LinearComb toLinearComb(@NotNull ColorFunction cf) {
-        if (cf instanceof LinearComb lc) {
-            return lc;
+    private @NotNull ArcFunction replaceFilteredComponent(@NotNull ColorClass cc, int position, @NotNull Guard removed, @NotNull List<FilterTerm> intersection, boolean subtract) {
+        Guard newFilter = rebuildFilterAfterReduction(filter(), List.of(removed));
+        List<FilterTerm> terms = new ArrayList<>();
+        if (subtract) {
+            ColorFunction original = getHomSubTuple(cc).get(position);
+            for (var term : elementaryTerms(original).entrySet())
+                terms.add(new FilterTerm(term.getKey(), True.getInstance(getDomain()), term.getValue()));
         }
-        // Convert the single elementary function to a LinearComb with multiplicity 1
-        if (cf instanceof ElementaryFunction ef) {
-            return new LinearComb(ef);
+        for (FilterTerm term : intersection)
+            terms.add(new FilterTerm(term.function(), term.condition(),
+                    subtract ? -term.coefficient() : term.coefficient()));
+
+        Map<Guard, Map<ElementaryFunction, Integer>> grouped = new LinkedHashMap<>();
+        for (FilterTerm term : terms) {
+            Guard condition = (Guard) And.factory(guard(), term.condition()).normalize();
+            if (!condition.isFalse())
+                grouped.computeIfAbsent(condition, key -> new LinkedHashMap<>())
+                        .merge(term.function(), term.coefficient(), Integer::sum);
         }
-        return new LinearComb(cf.getSort());
-    }
-
-    /**
-     * Shifts the successor exponent of a ColorFunction by a given amount.
-     *
-     * @param k the amount to shift the successor exponent
-     * @param f the ColorFunction to shift
-     * @return a new ColorFunction with shifted successor exponents, or the original function if it is not a LinearComb
-     */
-    private @NotNull ColorFunction succMulti(int k, @NotNull ColorFunction f) {
-
-        if (k == 0) return f;
-
-        if (f instanceof LinearComb lc) {
-            final Map<ElementaryFunction, Integer> out = new LinkedHashMap<>();
-
-            for (var entry : lc.asMap().entrySet()) {
-                SetFunction shifted = Successor.factory(k, entry.getKey());
-
-                if (!(shifted instanceof ElementaryFunction elementary)) {
-                    throw new IllegalStateException("Successor did not produce an elementary function: " + shifted);
-                }
-
-                out.merge(elementary, entry.getValue(), Integer::sum);
-            }
-
-            return out.isEmpty() ? new LinearComb(lc.getSort()) : new LinearComb(out, false);
+        List<ArcFunction> result = new ArrayList<>();
+        for (var group : grouped.entrySet()) {
+            var coefficients = group.getValue();
+            coefficients.entrySet().removeIf(term -> term.getValue() == 0 || term.getKey().isFalse());
+            if (coefficients.isEmpty()) continue;
+            ColorFunction component = coefficients.size() == 1
+                    && coefficients.values().iterator().next() == 1
+                    ? coefficients.keySet().iterator().next() : new LinearComb(coefficients, false);
+            SortedMap<ColorClass, List<? extends ColorFunction>> updated = new TreeMap<>(getHomSubTuples());
+            List<ColorFunction> parts = new ArrayList<>(getHomSubTuple(cc));
+            parts.set(position, component);
+            updated.put(cc, parts);
+            result.add(new WNtuple(newFilter, updated, group.getKey()));
         }
-
-        if (f instanceof ElementaryFunction ef) {
-            SetFunction shifted = Successor.factory(k, ef);
-
-            if (shifted instanceof ElementaryFunction elementary) {
-                return elementary;
-            }
-
-            throw new IllegalStateException("Successor did not produce an elementary function: " + shifted);
-        }
-
-        throw new IllegalArgumentException("Unsupported function in succMulti: " + f.getClass().getName());
-    }
-
-    /**
-     * Cardinality <= 1 test for multiset components.
-     */
-    private boolean cardLeq1(@NotNull ColorFunction f) {
-        switch (f) {
-            // If the function is a Projection, it is considered to have cardinality <= 1
-            case Projection projection -> {
-                return true;
-            }
-            // If the function is a LinearComb, we check its map representation
-            case LinearComb lc -> {
-                var map = lc.asMap();
-                if (map.isEmpty()) {
-                    return true; // empty: <= 1
-                }
-                if(map.size() == 1) {
-                    var entry = map.entrySet().iterator().next();
-                    // If the multiplicity is 1 and the key has cardinality <= 1, then the whole function has cardinality <= 1
-                    return (entry.getValue() == 1 && cardLeq1(entry.getKey()));
-                }
-            }
-            default -> {
-                return false;
-            }
-        }
-        return false;
+        return result.isEmpty() ? getEmpty() : ArcFunSum.factory(result);
     }
 
     @Override
@@ -1185,48 +1002,6 @@ public final class WNtuple extends AbstractTuple<ColorFunction>  implements ArcF
             }
         }
         return result;
-    }
-
-    private @NotNull ColorFunction restrictConstantByMembership(@NotNull ConstantFunction cf, @NotNull Membership m) {
-
-        ColorClass cc = cf.getSort();
-
-        // The empty multiset remains empty.
-        switch (cf) {
-            case Empty empty -> {
-                return Empty.getInstance(cc);
-            }
-
-            // Restrict the universal multiset.
-            case All all -> {
-                if (m.sign()) {
-                    // Positive membership: keep only the selected subclass.
-                    return m.getArg2();
-                }
-
-                // Negative membership: sum all subclasses except the selected one.
-                Map<ElementaryFunction, Integer> terms = new LinkedHashMap<>();
-                for (int i = 1; i <= cc.subclasses(); i++) {
-                    if (i != m.getArg2().index()) {
-                        terms.put(Subcl.factory(i, cc), 1);
-                    }
-                }
-                return terms.isEmpty() ? new LinearComb(cc) : new LinearComb(terms, false);
-            }
-
-            // Restrict a multiset already belonging to one subclass.
-            case Subcl sc -> {
-                boolean belongsToSelectedSubclass =
-                        sc.index() == m.getArg2().index();
-
-                boolean keep = m.sign() == belongsToSelectedSubclass;
-
-                return keep ? sc : Empty.getInstance(cc);
-            }
-            default -> {
-            }
-        }
-        throw new IllegalArgumentException("Unsupported constant function: " + cf.getClass().getSimpleName());
     }
 
     @Override

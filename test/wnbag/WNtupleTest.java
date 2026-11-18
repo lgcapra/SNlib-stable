@@ -25,442 +25,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WNtupleTest {
 
-    private Method cardLeq1Method;
     private Method baseFilterReductionMethod;
-    private Method succMultiMethod;
-    private Method differMultiMethod;
-    private Method interMultiMethod;
     private Method splitAtPositionsMethod;
     private Method filterIdxMethod;
 
     @BeforeEach
     void setUp() throws Exception {
-        cardLeq1Method = WNtuple.class.getDeclaredMethod("cardLeq1", ColorFunction.class);
-        cardLeq1Method.setAccessible(true);
         baseFilterReductionMethod = WNtuple.class.getDeclaredMethod("baseFilterReduction", Map.class, Map.class);
         baseFilterReductionMethod.setAccessible(true);
-        succMultiMethod = WNtuple.class.getDeclaredMethod("succMulti", int.class, ColorFunction.class);
-        succMultiMethod.setAccessible(true);
-        differMultiMethod = WNtuple.class.getDeclaredMethod("differMulti", ColorFunction.class, ColorFunction.class);
-        differMultiMethod.setAccessible(true);
-        interMultiMethod = WNtuple.class.getDeclaredMethod("interMulti", ColorFunction.class, ColorFunction.class);
-        interMultiMethod.setAccessible(true);
         splitAtPositionsMethod = WNtuple.class.getDeclaredMethod("splitAtPositions", Map.class);
         splitAtPositionsMethod.setAccessible(true);
         filterIdxMethod = WNtuple.class.getDeclaredMethod("filterIdx", WNtuple.class);
         filterIdxMethod.setAccessible(true);
-    }
-
-    private boolean invokeCardLeq1(WNtuple tuple, ColorFunction cf) throws Exception {
-        return (boolean) cardLeq1Method.invoke(tuple, cf);
-    }
-
-    @ParameterizedTest
-    @MethodSource("cardLeq1Cases")
-    void cardLeq1_returnsExpectedResult(WNtuple tuple, ColorFunction function, boolean expected) throws Exception {
-        assertEquals(expected, invokeCardLeq1(tuple, function));
-    }
-
-    static Stream<Arguments> cardLeq1Cases() {
-        // Caso 1: Projection
-        ColorClass cc1 = new ColorClass(2, 9);
-        Domain domain1 = new Domain(cc1);
-        Projection p1 = Projection.builder(1, cc1);
-        WNtuple tuple1 = new WNtuple(List.of(p1), domain1);
-
-        // Caso 2: LinearComb vuota
-        ColorClass cc2 = new ColorClass(2, 9);
-        Domain domain2 = new Domain(cc2);
-        LinearComb lc2 = new LinearComb(cc2);
-        WNtuple tuple2 = new WNtuple(
-                List.of(Projection.builder(1, cc2)), domain2);
-
-        // Caso 3: LinearComb con una Projection e coefficiente 1
-        ColorClass cc3 = new ColorClass(2, 9, true);
-        Domain domain3 = new Domain(cc3);
-        Projection p3 = Projection.builder(1, cc3);
-        LinearComb lc3 = new LinearComb(p3, 1);
-        WNtuple tuple3 = new WNtuple(List.of(p3), domain3);
-
-        // Caso 4: LinearComb con una Projection e coefficiente 2
-        ColorClass cc4 = new ColorClass(2, 9, true);
-        Domain domain4 = new Domain(cc4);
-        Projection p4 = Projection.builder(1, cc4);
-        LinearComb lc4 = new LinearComb(p4, 2);
-        WNtuple tuple4 = new WNtuple(List.of(p4), domain4);
-
-        // Caso 5: LinearComb con più elementi
-        ColorClass cc5 = new ColorClass(2, 9, true);
-        Domain domain5 = new Domain(cc5);
-        Projection p5a = Projection.builder(1, cc5);
-        Projection p5b = Projection.builder(2, cc5);
-        LinearComb lc5 = new LinearComb(p5a, p5b);
-        WNtuple tuple5 = new WNtuple(List.of(p5a), domain5);
-
-        return Stream.of(
-                Arguments.of(tuple1, p1, true),
-                Arguments.of(tuple2, lc2, true),
-                Arguments.of(tuple3, lc3, true),
-                Arguments.of(tuple4, lc4, false),
-                Arguments.of(tuple5, lc5, false)
-        );
-    }
-
-    private ColorFunction invokeSuccMulti(WNtuple tuple, int k, ColorFunction cf) throws Exception {
-        return (ColorFunction) succMultiMethod.invoke(tuple, k, cf);
-    }
-
-    @Test
-    void succMulti_returnsSameFunctionWhenKIsZero() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        ColorFunction result = invokeSuccMulti(tuple, 0, p);
-
-        assertSame(p, result);
-    }
-
-    @Test
-    void succMulti_incrementsProjectionSuccessor() throws Exception {
-        ColorClass cc = new ColorClass(2, 9, true);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        int initialSucc = p.getSucc();
-
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        int k = 2;
-        Projection result = (Projection) invokeSuccMulti(tuple, k, p);
-
-        assertEquals(initialSucc + k, result.getSucc());
-    }
-
-    @Test
-    void succMulti_incrementsProjectionsInsideLinearComb() throws Exception {
-        ColorClass cc = new ColorClass(2, 9, true);
-        Domain domain = new Domain(cc);
-
-        Projection p1 = Projection.builder(1, cc);
-        Projection p2 = Projection.builder(2, cc);
-        LinearComb lc = new LinearComb(p1, p2);
-
-        WNtuple tuple = new WNtuple(List.of(p1), domain);
-
-        LinearComb result = (LinearComb) invokeSuccMulti(tuple, 1, lc);
-
-        assertEquals(2, result.asMap().size());
-        assertTrue(result.asMap().containsKey(p1.setExp(p1.getSucc() + 1)));
-        assertTrue(result.asMap().containsKey(p2.setExp(p2.getSucc() + 1)));
-    }
-
-    @Test
-    void succMulti_preservesMultiplicitiesInsideLinearComb() throws Exception {
-        ColorClass cc = new ColorClass(2, 9, true);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        LinearComb lc = new LinearComb(p, 3);
-
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        LinearComb result = (LinearComb) invokeSuccMulti(tuple, 1, lc);
-
-        Projection shifted = p.setExp(p.getSucc() + 1);
-
-        assertEquals(3, result.asMap().get(shifted));
-    }
-
-    @Test
-    void succMulti_shiftsProjectionComplement() throws Exception {
-        ColorClass cc = new ColorClass(2, 9, true);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        // S_C \ {s(x1)}
-        ElementaryFunction complement = (ElementaryFunction)
-                ProjectionComp.factory(Projection.builder(1, 1, cc));
-
-        ColorFunction result = invokeSuccMulti(tuple, 2, complement);
-
-        // S_C \ {s^3(x1)}
-        ElementaryFunction expected = (ElementaryFunction)
-                ProjectionComp.factory(Projection.builder(1, 3, cc));
-
-        assertEquals(
-                expected,
-                result,
-                "Il successore deve spostare la proiezione esclusa dal complemento"
-        );
-    }
-
-    @Test
-    void succMulti_shiftsComplementInsideLinearComb() throws Exception {
-        ColorClass cc = new ColorClass(2, 9, true);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        // 4 * (S_C \ {!c1})
-        ElementaryFunction complement = ProjectionComp.factory(Projection.builder(1, 1, cc));
-
-        LinearComb input = new LinearComb(complement, 4);
-
-        ColorFunction result = invokeSuccMulti(tuple, 2, input);
-
-        // 4 * (S_C \ {!3(c1)})
-        ElementaryFunction shiftedComplement = ProjectionComp.factory(Projection.builder(1, 3, cc));
-
-        LinearComb expected = new LinearComb(shiftedComplement, 4);
-
-        assertEquals(expected, result, "Il successore deve spostare il complemento preservandone il coefficiente");
-    }
-
-    @Test
-    void toLinearComb_returnsSameLinearCombWhenFunctionIsLinearComb() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        LinearComb lc = new LinearComb(p, 2);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        Method method = WNtuple.class.getDeclaredMethod("toLinearComb", ColorFunction.class);
-        method.setAccessible(true);
-
-        LinearComb result = (LinearComb) method.invoke(tuple, lc);
-
-        assertSame(lc, result);
-    }
-
-    @Test
-    void toLinearComb_convertsElementaryFunctionToLinearCombWithMultiplicityOne() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        Method method = WNtuple.class.getDeclaredMethod("toLinearComb", ColorFunction.class);
-        method.setAccessible(true);
-
-        LinearComb result = (LinearComb) method.invoke(tuple, p);
-
-        assertEquals(1, result.asMap().size());
-        assertEquals(1, result.asMap().get(p));
-    }
-
-    private LinearComb invokeDifferMulti(WNtuple tuple, ColorFunction f1, ColorFunction f2) throws Exception {
-        return (LinearComb) differMultiMethod.invoke(tuple, f1, f2);
-    }
-
-    @Test
-    void differMulti_returnsEmptyLinearCombWhenFunctionsAreEqual() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        LinearComb result = invokeDifferMulti(tuple, p, p);
-
-        assertTrue(result.asMap().isEmpty());
-    }
-
-    @Test
-    void differMulti_subtractsCoefficientsOfCommonElements() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        LinearComb lc1 = new LinearComb(p, 3);
-        LinearComb lc2 = new LinearComb(p, 1);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        LinearComb result = invokeDifferMulti(tuple, lc1, lc2);
-
-        assertEquals(1, result.asMap().size());
-        assertEquals(2, result.asMap().get(p));
-    }
-
-    @Test
-    void differMulti_removesElementWhenDifferenceOfCoefficientsIsZero() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p1 = Projection.builder(1, cc);
-        Projection p2 = Projection.builder(2, cc);
-        Projection p3 = Projection.builder(3, cc);
-
-        LinearComb lc1 = new LinearComb(new Pair<>(p1, 2), new Pair<>(p2, 1));
-        LinearComb lc2 = new LinearComb(new Pair<>(p1, 2), new Pair<>(p3, 1));
-
-        WNtuple tuple = new WNtuple(List.of(p1), domain);
-
-        LinearComb result = invokeDifferMulti(tuple, lc1, lc2);
-
-        assertFalse(result.asMap().containsKey(p1));
-        assertEquals(1, result.asMap().get(p2));
-        assertEquals(-1, result.asMap().get(p3));
-    }
-
-    @Test
-    void differMulti_returnsNegativeCoefficientWhenSecondMultiplicityIsGreater() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        LinearComb lc1 = new LinearComb(p, 1);
-        LinearComb lc2 = new LinearComb(p, 3);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        LinearComb result = invokeDifferMulti(tuple, lc1, lc2);
-
-        assertEquals(1, result.asMap().size());
-        assertEquals(-2, result.asMap().get(p));
-    }
-
-    @Test
-    void differMulti_preservesElementsPresentOnlyInFirstFunction() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p1 = Projection.builder(1, cc);
-        Projection p2 = Projection.builder(2, cc);
-        LinearComb lc1 = new LinearComb(p1, 2);
-        LinearComb lc2 = new LinearComb(p2, 1);
-        WNtuple tuple = new WNtuple(List.of(p1), domain);
-
-        LinearComb result = invokeDifferMulti(tuple, lc1, lc2);
-
-        assertEquals(2, result.asMap().get(p1));
-        assertEquals(-1, result.asMap().get(p2));
-    }
-
-    @Test
-    void differMulti_convertsElementaryFunctionsToLinearCombs() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p1 = Projection.builder(1, cc);
-        Projection p2 = Projection.builder(2, cc);
-        WNtuple tuple = new WNtuple(List.of(p1), domain);
-
-        LinearComb result = invokeDifferMulti(tuple, p1, p2);
-
-        assertEquals(1, result.asMap().get(p1));
-        assertEquals(-1, result.asMap().get(p2));
-    }
-
-    private ColorFunction invokeInterMulti(WNtuple tuple, ColorFunction f1, ColorFunction f2) throws Exception {
-        return (ColorFunction) interMultiMethod.invoke(tuple, f1, f2);
-    }
-
-    @Test
-    void interMulti_returnsFirstFunctionWhenFunctionsAreEqual() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        LinearComb lc = new LinearComb(p, 2);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        ColorFunction result = invokeInterMulti(tuple, lc, lc);
-
-        assertSame(lc, result);
-    }
-
-    @Test
-    void interMulti_returnsSecondFunctionWhenFirstIsAll() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        All all = All.getInstance(cc);
-        Projection p = Projection.builder(1, cc);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        ColorFunction result = invokeInterMulti(tuple, all, p);
-
-        assertSame(p, result);
-    }
-
-    @Test
-    void interMulti_returnsFirstFunctionWhenSecondIsAll() throws Exception {
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc);
-
-        All all = All.getInstance(cc);
-        Projection p = Projection.builder(1, cc);
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        ColorFunction result = invokeInterMulti(tuple, p, all);
-
-        assertSame(p, result);
-    }
-
-    @Test
-    void interMulti_preservesUnknownOverlapBetweenLinearCombinations()
-            throws Exception {
-
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc, cc, cc);
-
-        Projection p1 = Projection.builder(1, cc);
-        Projection p2 = Projection.builder(2, cc);
-        Projection p3 = Projection.builder(3, cc);
-
-        LinearComb lc1 = new LinearComb(new Pair<>(p1, 3), new Pair<>(p2, 2));
-        LinearComb lc2 = new LinearComb(new Pair<>(p1, 1), new Pair<>(p3, 4));
-
-        WNtuple tuple = new WNtuple(List.of(p1), domain);
-
-        assertNull(invokeInterMulti(tuple, lc1, lc2), "Le chiavi comuni non determinano l'intersezione " + "quando le proiezioni possono coincidere");
-    }
-
-    @Test
-    void interMulti_doesNotAssumeDifferentProjectionsAreDisjoint() throws Exception {
-
-        ColorClass cc = new ColorClass(2, 9);
-        Domain domain = new Domain(cc, cc);
-
-        Projection p1 = Projection.builder(1, cc);
-        Projection p2 = Projection.builder(2, cc);
-
-        LinearComb lc1 = new LinearComb(p1, 2);
-        LinearComb lc2 = new LinearComb(p2, 3);
-
-        WNtuple tuple = new WNtuple(List.of(p1), domain);
-
-        assertNull(invokeInterMulti(tuple, lc1, lc2), "Indici diversi non garantiscono valori diversi");
-    }
-
-    @Test
-    void interMulti_intersectsProjectionWithComplementOfItsSuccessor() throws Exception {
-
-        ColorClass cc = new ColorClass(2, 9, true);
-        Domain domain = new Domain(cc);
-
-        Projection p = Projection.builder(1, cc);
-        Projection successor = Projection.builder(1, 1, cc);
-
-        ElementaryFunction complement = ProjectionComp.factory(successor);
-
-        WNtuple tuple = new WNtuple(List.of(p), domain);
-
-        ColorFunction result = invokeInterMulti(tuple, p, complement);
-        ColorFunction reversed = invokeInterMulti(tuple, complement, p);
-
-        assertAll(
-                () -> assertEquals(p, result, "x1 appartiene al complemento di s(x1): " + "l'intersezione deve essere x1"),
-
-                () -> assertEquals(p, reversed, "L'intersezione deve dare lo stesso risultato " + "anche invertendo gli operandi")
-        );
     }
 
     private ArcFunction invokeBaseFilterReduction(WNtuple tuple, Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap, Map<ColorClass, Map<Boolean, Set<Membership>>> membMap) throws Exception {
@@ -710,16 +286,15 @@ class WNtupleTest {
     }
 
     @Test
-    void baseFilterReduction_distinctSingletons_preservesEquality() throws Exception {
+    void baseFilterReduction_distinctSingletons_movesEqualityToGuard() throws Exception {
         ColorClass cc = new ColorClass(2, 9);
         Domain domain = new Domain(cc, cc);
 
         Projection p1 = Projection.builder(1, cc);
         Projection p2 = Projection.builder(2, cc);
 
-        WNtuple tuple = new WNtuple(List.of(p1, p2), True.getInstance(domain), false);
-
         Equality eq = (Equality) Equality.builder(p1, p2, true, domain);
+        WNtuple tuple = new WNtuple(eq, List.of(p1, p2), True.getInstance(domain), false);
 
         Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap = new TreeMap<>();
         SortedSet<Equality> equalities = new TreeSet<>();
@@ -730,7 +305,10 @@ class WNtupleTest {
 
         ArcFunction result = invokeBaseFilterReduction(tuple, equalityMap, membMap);
 
-        assertSame(tuple, result);
+        WNtuple reduced = assertInstanceOf(WNtuple.class, result);
+        assertTrue(reduced.filter().isTrue());
+        WNtuple expected = new WNtuple(List.of(p1, p1), eq, true);
+        assertEquals(expected.normalize(), reduced.normalize());
     }
 
     @Test
@@ -741,9 +319,8 @@ class WNtupleTest {
         Projection p1 = Projection.builder(1, 0, cc);
         Projection p2 = Projection.builder(2, 1, cc);
 
-        WNtuple tuple = new WNtuple(List.of(p1, p2), True.getInstance(domain), false);
-
         Equality eq = (Equality) Equality.builder(p1, p2, true, domain);
+        WNtuple tuple = new WNtuple(eq, List.of(p1, p2), True.getInstance(domain), false);
 
         Map<ColorClass, Map<Boolean, SortedSet<Equality>>> equalityMap = new TreeMap<>();
         SortedSet<Equality> equalities = new TreeSet<>();
@@ -755,7 +332,11 @@ class WNtupleTest {
 
         ArcFunction result = invokeBaseFilterReduction(tuple, equalityMap, membMap);
 
-        assertSame(tuple, result);
+        WNtuple reduced = assertInstanceOf(WNtuple.class, result);
+        assertTrue(reduced.filter().isTrue());
+        Guard expectedGuard = Equality.builder(p1, p2.setExp(2), true, domain);
+        WNtuple expected = new WNtuple(List.of(p1, p1.setExp(-1)), expectedGuard, true);
+        assertEquals(expected.normalize(), reduced.normalize());
     }
 
     @Test
@@ -827,11 +408,14 @@ class WNtupleTest {
 
         ArcFunction result = invokeBaseFilterReduction(tuple, equalityMap, membMap);
 
-        assertSame(tuple, result);
+        WNtuple reduced = assertInstanceOf(WNtuple.class, result);
+        assertTrue(reduced.filter().isTrue());
+        assertEquals(membership, reduced.guard());
+        assertEquals(tuple.getComponents(), reduced.getComponents());
     }
 
     @Test
-    void baseFilterReduction_preservesInequalityBetweenUnknownSingletons() throws Exception {
+    void baseFilterReduction_movesInequalityBetweenSingletonsToGuard() throws Exception {
 
         ColorClass cc = new ColorClass(2, 9);
         Domain domain = new Domain(cc, cc);
@@ -857,21 +441,15 @@ class WNtupleTest {
         assertInstanceOf(WNtuple.class, reduced);
         WNtuple result = (WNtuple) reduced;
 
-        assertAll(
-                () -> assertEquals(inequality, result.filter(), "La disuguaglianza deve rimanere nel filtro " + "quando la relazione tra i valori è sconosciuta"),
-
-                () -> assertEquals(tuple.getComponents(), result.getComponents(), "La restrizione del filtro non deve essere sostituita " + "con una sottrazione tra proiezioni"),
-
-                () -> assertEquals(True.getInstance(domain), result.guard()),
-
-                () -> assertEquals(domain, result.getDomain()),
-
-                () -> assertEquals(domain, result.getCodomain())
-        );
+        assertTrue(result.filter().isTrue());
+        assertEquals(inequality, result.guard());
+        assertEquals(tuple.getComponents(), result.getComponents());
+        assertEquals(domain, result.getDomain());
+        assertEquals(domain, result.getCodomain());
     }
 
     @Test
-    void baseFilterReduction_preservesInequalityWithUnknownComplementOverlap() throws Exception {
+    void baseFilterReduction_subtractsGuardedIntersectionForComplementOverlap() throws Exception {
 
         ColorClass cc = new ColorClass(2, 9, true);
         Domain domain = new Domain(cc, cc);
@@ -896,19 +474,48 @@ class WNtupleTest {
 
         ArcFunction reduced = invokeBaseFilterReduction(tuple, equalityMap, membershipMap);
 
-        assertInstanceOf(WNtuple.class, reduced);
-        WNtuple result = (WNtuple) reduced;
+        WNtuple unrestricted = tuple.build(True.getInstance(domain), True.getInstance(domain));
+        WNtuple correction = new WNtuple(True.getInstance(domain), List.of(p1, new LinearComb(p1, -1)), inequality, true);
+        ArcFunction expected = ArcFunSum.factory(unrestricted, correction);
+        assertEquals(expected.normalize(), reduced.normalize());
+        assertEquals(domain, reduced.getDomain());
+        assertEquals(domain, reduced.getCodomain());
+    }
 
-        assertAll(
-                () -> assertEquals(inequality, result.filter(), "Il filtro deve essere conservato quando " + "la sovrapposizione tra le componenti è sconosciuta"),
+    @ParameterizedTest
+    @MethodSource("nonSingletonSubclassCases")
+    void baseFilterReduction_restrictsBothComponentsKeepingEquality(boolean equality, boolean reverse) throws Exception {
+        ColorClass cc = new ColorClass(7, new Interval[]{new Interval(2, 2), new Interval(3, 3)});
+        Domain domain = new Domain(cc, cc);
 
-                () -> assertEquals(tuple.getComponents(), result.getComponents(), "La riduzione conservativa deve lasciare " + "invariate le componenti"),
+        All all = All.getInstance(cc);
+        Subcl subclass = Subcl.factory(1, cc);
 
-                () -> assertEquals(True.getInstance(domain), result.guard()),
+        Guard filter = Equality.builder(Projection.builder(1, cc), Projection.builder(2, cc), equality, domain);
 
-                () -> assertEquals(domain, result.getDomain()),
+        List<ColorFunction> components = reverse ? List.of(subclass, all) : List.of(all, subclass);
 
-                () -> assertEquals(domain, result.getCodomain())
+        WNtuple tuple = new WNtuple(filter, components, True.getInstance(domain), true);
+
+        ArcFunction result = invokeBaseFilterReduction(tuple, filter.equalityMap(), filter.membMap());
+
+        if (equality) {
+            WNtuple expected = new WNtuple(filter, List.of(subclass, subclass), True.getInstance(domain), true);
+
+            assertEquals(expected, result);
+            assertEquals(filter, ((WNtuple) result).filter());
+            assertEquals(expected, result.normalize());
+        } else {
+            assertSame(tuple, result);
+        }
+    }
+
+    private static Stream<Arguments> nonSingletonSubclassCases() {
+        return Stream.of(
+                Arguments.of(true, false),
+                Arguments.of(true, true),
+                Arguments.of(false, false),
+                Arguments.of(false, true)
         );
     }
 
@@ -1257,7 +864,6 @@ class WNtupleTest {
 
         Equality equality = (Equality) Equality.builder(p1, p2, true, domain);
         Guard filter = And.factory(equality);
-
         WNtuple tuple = new WNtuple(filter, List.of(p1, p2), True.getInstance(domain), false);
 
         Map<ColorClass, Set<Integer>> result = invokeFilterIdx(tuple);
@@ -1279,7 +885,6 @@ class WNtupleTest {
         Membership membership = Membership.build(p3, Subcl.factory(1, cc), domain);
 
         Guard filter = And.factory(equality, membership);
-
         WNtuple tuple = new WNtuple(filter, List.of(p1, p2, p3), True.getInstance(domain), false);
 
         Map<ColorClass, Set<Integer>> result = invokeFilterIdx(tuple);
@@ -1633,27 +1238,8 @@ class WNtupleTest {
     }
 
     @Test
-    void restrictConstantByMembership_excludesSelectedSubclassFromAll() throws Exception {
-        ColorClass cc = new ColorClass(2, new Interval[]{new Interval(2, 2), new Interval(3, 3), new Interval(4, 4)});
-        Domain dom = new Domain(cc);
-
-        All all = All.getInstance(cc);
-        Subcl selected = Subcl.factory(1, cc);
-        Projection p = Projection.builder(1, cc);
-
-        Membership membership = Membership.build(p, selected, false, dom);
-
-        WNtuple tuple = new WNtuple(True.getInstance(dom), List.of(all), True.getInstance(dom), false);
-
-        Method method = WNtuple.class.getDeclaredMethod("restrictConstantByMembership", ConstantFunction.class, Membership.class);
-        method.setAccessible(true);
-
-        ColorFunction result = (ColorFunction) method.invoke(tuple, all, membership);
-        Map<ElementaryFunction, Integer> expectedTerms = new LinkedHashMap<>();
-        expectedTerms.put(Subcl.factory(2, cc), 1);
-        expectedTerms.put(Subcl.factory(3, cc), 1);
-        LinearComb expected = new LinearComb(expectedTerms, false);
-        assertEquals(expected, result);
+    void typeSetFilterReduction_matchesFiniteDomainSemantics() throws Exception {
+        FilterReductionSemanticTest.main(new String[0]);
     }
 
     @Test
@@ -1678,20 +1264,19 @@ class WNtupleTest {
     }
 
     private static Stream<Arguments> specSimplifyCases() {
-        System.out.println("\nBase Case\n");
-
         ColorClass cc = new ColorClass(1, 3, true);
         Domain domain = new Domain(cc, cc);
 
         Projection p1 = Projection.builder(1, cc);
         Projection p2 = Projection.builder(2, cc);
+        All all = All.getInstance(cc);
+        Guard trueGuard = True.getInstance(domain);
 
-        Equality eq = (Equality) Equality.builder(
-                p1, p2, true, domain
-        );
+        Guard eq = Equality.builder(p1, p2, true, domain);
+        Guard ineq = Equality.builder(p1, p2, false, domain);
 
-        Equality ineq = (Equality) Equality.builder(
-                p1, p2, false, domain
+        WNtuple identical = new WNtuple(
+                trueGuard, List.of(p1, p1), trueGuard, true
         );
 
         return Stream.of(
@@ -1699,76 +1284,85 @@ class WNtupleTest {
                         "eq - p2, p1",
                         eq,
                         List.of(new LinearComb(p2), new LinearComb(p1)),
-                        "[c_1_1 = c_1_2]<c_1_2,c_1_1>"
+                        new WNtuple(
+                                trueGuard, List.of(p2, p1), eq, true
+                        )
                 ),
                 Arguments.of(
                         "eq - All, All",
                         eq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(All.getInstance(cc))
-                        ),
-                        "[c_1_1 = c_1_2]<S_C_1,S_C_1>"
+                        List.of(new LinearComb(all), new LinearComb(all)),
+                        new WNtuple(
+                                eq, List.of(all, all), trueGuard, true
+                        )
                 ),
                 Arguments.of(
                         "ineq - p2, p1",
                         ineq,
                         List.of(new LinearComb(p2), new LinearComb(p1)),
-                        "[c_1_1 != c_1_2]<c_1_2,c_1_1>"
+                        new WNtuple(
+                                trueGuard, List.of(p2, p1), ineq, true
+                        )
                 ),
                 Arguments.of(
                         "ineq - All, All",
                         ineq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(All.getInstance(cc))
-                        ),
-                        "[c_1_1 != c_1_2]<S_C_1,S_C_1>"
+                        List.of(new LinearComb(all), new LinearComb(all)),
+                        new WNtuple(
+                                ineq, List.of(all, all), trueGuard, true
+                        )
                 ),
                 Arguments.of(
                         "eq - p1, p1",
                         eq,
                         List.of(new LinearComb(p1), new LinearComb(p1)),
-                        "<c_1_1,c_1_1>"
+                        identical
                 ),
                 Arguments.of(
                         "ineq - p1, p1",
                         ineq,
                         List.of(new LinearComb(p1), new LinearComb(p1)),
-                        "<null>_@C_1^2"
+                        identical.getEmpty()
                 ),
                 Arguments.of(
                         "eq - All, p1",
                         eq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(p1)
-                        ),
-                        "<c_1_1,c_1_1>"
+                        List.of(new LinearComb(all), new LinearComb(p1)),
+                        identical
                 ),
                 Arguments.of(
                         "ineq - All, p1",
                         ineq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(p1)
-                        ),
-                        "<1S_C_1-1c_1_1,c_1_1>"
+                        List.of(new LinearComb(all), new LinearComb(p1)),
+                        new WNtuple(
+                                trueGuard,
+                                List.of(
+                                        new LinearComb(Map.of(all, 1, p1, -1)),
+                                        p1
+                                ),
+                                trueGuard,
+                                true
+                        )
                 )
         );
     }
 
     @ParameterizedTest(name = "{index} - {0}")
-    @MethodSource("specSimplifyCases")
-    void testSpecSimplify(String description, Guard guard, List<ColorFunction> components, String expected) {
-
-        ColorClass cc = new ColorClass(1, 3, true);
-        Domain domain = new Domain(cc, cc);
-
+    @MethodSource({
+            "specSimplifyCases",
+            "specSimplifyCasesWithSuccessor",
+            "specSimplifyCasesWithTupleSuccessor"
+    })
+    void testSpecSimplify(
+            String description,
+            Guard filter,
+            List<ColorFunction> components,
+            ArcFunction expected
+    ) {
         WNtuple tuple = new WNtuple(
-                guard,
+                filter,
                 components,
-                True.getInstance(domain),
+                True.getInstance(filter.getDomain()),
                 true
         );
 
@@ -1777,165 +1371,191 @@ class WNtupleTest {
         System.out.println(tuple);
         System.out.println("Result: " + result + "\n");
 
-        assertEquals(expected, result.toString());
+        assertEquals(expected.getDomain(), result.getDomain(), description);
+        assertEquals(expected.getCodomain(), result.getCodomain(), description);
+
+        assertEquals(
+                expected.normalize(),
+                result.normalize(),
+                description
+        );
     }
 
     private static Stream<Arguments> specSimplifyCasesWithSuccessor() {
-        System.out.println("\nSuccessor in filter\n");
-
         ColorClass cc = new ColorClass(1, 3, true);
         Domain domain = new Domain(cc, cc);
 
         Projection p1 = Projection.builder(1, cc);
         Projection p2 = Projection.builder(2, cc);
+        Projection p1Succ = Projection.builder(1, 1, cc);
+        Projection p2Succ = Projection.builder(2, 1, cc);
 
-        Projection p2Succ = (Projection) Successor.factory(1, p2);
+        All all = All.getInstance(cc);
+        Guard trueGuard = True.getInstance(domain);
 
-        Equality eq = (Equality) Equality.builder(
-                p1, p2Succ, true, domain
-        );
+        // Filtro sulle uscite: y1 =/!= succ(y2).
+        Guard eq = Equality.builder(p1, p2Succ, true, domain);
+        Guard ineq = Equality.builder(p1, p2Succ, false, domain);
 
-        Equality ineq = (Equality) Equality.builder(
-                p1, p2Succ, false, domain
+        // Per <x2, x1>, la condizione sugli ingressi diventa:
+        // x2 =/!= succ(x1).
+        Guard inputEq = Equality.builder(p2, p1Succ, true, domain);
+        Guard inputIneq = Equality.builder(p2, p1Succ, false, domain);
+
+        WNtuple identical = new WNtuple(
+                trueGuard, List.of(p1, p1), trueGuard, true
         );
 
         return Stream.of(
                 Arguments.of(
-                        "eq - p2, p1",
+                        "successor in filter: eq - p2, p1",
                         eq,
-                        List.of(new LinearComb(p2), new LinearComb(p1))
-                ),
-                Arguments.of(
-                        "eq - All, All",
-                        eq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(All.getInstance(cc))
+                        List.of(new LinearComb(p2), new LinearComb(p1)),
+                        new WNtuple(
+                                trueGuard, List.of(p2, p1), inputEq, true
                         )
                 ),
                 Arguments.of(
-                        "ineq - p2, p1",
-                        ineq,
-                        List.of(new LinearComb(p2), new LinearComb(p1))
-                ),
-                Arguments.of(
-                        "ineq - All, All",
-                        ineq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(All.getInstance(cc))
+                        "successor in filter: eq - All, All",
+                        eq,
+                        List.of(new LinearComb(all), new LinearComb(all)),
+                        new WNtuple(
+                                eq, List.of(all, all), trueGuard, true
                         )
                 ),
                 Arguments.of(
-                        "eq - p1, p1",
-                        eq,
-                        List.of(new LinearComb(p1), new LinearComb(p1))
-                ),
-                Arguments.of(
-                        "ineq - p1, p1",
+                        "successor in filter: ineq - p2, p1",
                         ineq,
-                        List.of(new LinearComb(p1), new LinearComb(p1))
-                ),
-                Arguments.of(
-                        "eq - All, p1",
-                        eq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(p1)
+                        List.of(new LinearComb(p2), new LinearComb(p1)),
+                        new WNtuple(
+                                trueGuard, List.of(p2, p1), inputIneq, true
                         )
                 ),
                 Arguments.of(
-                        "ineq - All, p1",
+                        "successor in filter: ineq - All, All",
                         ineq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(p1)
+                        List.of(new LinearComb(all), new LinearComb(all)),
+                        new WNtuple(
+                                ineq, List.of(all, all), trueGuard, true
+                        )
+                ),
+                Arguments.of(
+                        "successor in filter: eq - p1, p1",
+                        eq,
+                        List.of(new LinearComb(p1), new LinearComb(p1)),
+                        identical.getEmpty()
+                ),
+                Arguments.of(
+                        "successor in filter: ineq - p1, p1",
+                        ineq,
+                        List.of(new LinearComb(p1), new LinearComb(p1)),
+                        identical
+                ),
+                Arguments.of(
+                        "successor in filter: eq - All, p1",
+                        eq,
+                        List.of(new LinearComb(all), new LinearComb(p1)),
+                        new WNtuple(
+                                trueGuard, List.of(p1Succ, p1), trueGuard, true
+                        )
+                ),
+                Arguments.of(
+                        "successor in filter: ineq - All, p1",
+                        ineq,
+                        List.of(new LinearComb(all), new LinearComb(p1)),
+                        new WNtuple(
+                                trueGuard,
+                                List.of(
+                                        new LinearComb(Map.of(all, 1, p1Succ, -1)),
+                                        p1
+                                ),
+                                trueGuard,
+                                true
                         )
                 )
         );
     }
 
-    @ParameterizedTest(name = "{index} - {0}")
-    @MethodSource("specSimplifyCasesWithSuccessor")
-    void testSpecSimplify_WithSuccessor(String description, Guard guard, List<ColorFunction> components) {
-
-        ColorClass cc = new ColorClass(1, 3, true);
-        Domain domain = new Domain(cc, cc);
-
-        WNtuple tuple = new WNtuple(
-                guard,
-                components,
-                True.getInstance(domain),
-                true
-        );
-
-        System.out.println(tuple);
-        System.out.println("Result: " + tuple.specSimplify() + "\n");
-    }
-
     private static Stream<Arguments> specSimplifyCasesWithTupleSuccessor() {
-        System.out.println("\nSuccessor in tuple\n");
-
         ColorClass cc = new ColorClass(1, 3, true);
         Domain domain = new Domain(cc, cc);
 
         Projection p1 = Projection.builder(1, cc);
         Projection p2 = Projection.builder(2, cc);
+        Projection p1Succ = Projection.builder(1, 1, cc);
+        Projection p2Succ = Projection.builder(2, 1, cc);
 
-        Projection p1Succ = (Projection) Successor.factory(1, p1);
-        Projection p2Succ = (Projection) Successor.factory(1, p2);
+        All all = All.getInstance(cc);
+        Guard trueGuard = True.getInstance(domain);
 
-        Equality eq = (Equality) Equality.builder(
-                p1, p2, true, domain
-        );
+        // Filtro sulle uscite: y1 =/!= y2.
+        Guard eq = Equality.builder(p1, p2, true, domain);
+        Guard ineq = Equality.builder(p1, p2, false, domain);
 
-        Equality ineq = (Equality) Equality.builder(
-                p1, p2, false, domain
+        // Per <succ(x2), x1>, la condizione sugli ingressi diventa:
+        // succ(x2) =/!= x1.
+        Guard inputEq = Equality.builder(p2Succ, p1, true, domain);
+        Guard inputIneq = Equality.builder(p2Succ, p1, false, domain);
+
+        WNtuple shifted = new WNtuple(
+                trueGuard, List.of(p1Succ, p1), trueGuard, true
         );
 
         return Stream.of(
-                Arguments.of("eq - p2', p1", eq,
-                        List.of(new LinearComb(p2Succ), new LinearComb(p1))),
-
-                Arguments.of("ineq - p2', p1", ineq,
-                        List.of(new LinearComb(p2Succ), new LinearComb(p1))),
-
-                Arguments.of("eq - p1', p1", eq,
-                        List.of(new LinearComb(p1Succ), new LinearComb(p1))),
-
-                Arguments.of("ineq - p1', p1", ineq,
-                        List.of(new LinearComb(p1Succ), new LinearComb(p1))),
-
-                Arguments.of("eq - All, p1'", eq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(p1Succ)
-                        )),
-
-                Arguments.of("ineq - All, p1'", ineq,
-                        List.of(
-                                new LinearComb(All.getInstance(cc)),
-                                new LinearComb(p1Succ)
-                        ))
+                Arguments.of(
+                        "successor in tuple: eq - p2', p1",
+                        eq,
+                        List.of(new LinearComb(p2Succ), new LinearComb(p1)),
+                        new WNtuple(
+                                trueGuard, List.of(p2Succ, p1), inputEq, true
+                        )
+                ),
+                Arguments.of(
+                        "successor in tuple: ineq - p2', p1",
+                        ineq,
+                        List.of(new LinearComb(p2Succ), new LinearComb(p1)),
+                        new WNtuple(
+                                trueGuard, List.of(p2Succ, p1), inputIneq, true
+                        )
+                ),
+                Arguments.of(
+                        "successor in tuple: eq - p1', p1",
+                        eq,
+                        List.of(new LinearComb(p1Succ), new LinearComb(p1)),
+                        shifted.getEmpty()
+                ),
+                Arguments.of(
+                        "successor in tuple: ineq - p1', p1",
+                        ineq,
+                        List.of(new LinearComb(p1Succ), new LinearComb(p1)),
+                        shifted
+                ),
+                Arguments.of(
+                        "successor in tuple: eq - All, p1'",
+                        eq,
+                        List.of(new LinearComb(all), new LinearComb(p1Succ)),
+                        new WNtuple(
+                                trueGuard,
+                                List.of(p1Succ, p1Succ),
+                                trueGuard,
+                                true
+                        )
+                ),
+                Arguments.of(
+                        "successor in tuple: ineq - All, p1'",
+                        ineq,
+                        List.of(new LinearComb(all), new LinearComb(p1Succ)),
+                        new WNtuple(
+                                trueGuard,
+                                List.of(
+                                        new LinearComb(Map.of(all, 1, p1Succ, -1)),
+                                        p1Succ
+                                ),
+                                trueGuard,
+                                true
+                        )
+                )
         );
-    }
-
-    @ParameterizedTest(name = "{index} - {0}")
-    @MethodSource("specSimplifyCasesWithTupleSuccessor")
-    void testSpecSimplify_WithTupleSuccessor(String description, Guard guard, List<ColorFunction> components) {
-
-        ColorClass cc = new ColorClass(1, 3, true);
-        Domain domain = new Domain(cc, cc);
-
-        WNtuple tuple = new WNtuple(
-                guard,
-                components,
-                True.getInstance(domain),
-                true
-        );
-
-        System.out.println(tuple);
-        System.out.println("Result: " + tuple.specSimplify() + "\n");
     }
 
 }
