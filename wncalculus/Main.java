@@ -67,6 +67,7 @@ public class Main {
         // multiset -- modificata dopo ultimi cambiamenti di bag expressions
         //testBaseComposeWithSuccessorAndMultiplicity();
         //testCompositionSuccessorMembership();
+        testComposition();
         test();
         testComplexComposition();
         testSplitSumInRightTupleGuard();
@@ -1346,6 +1347,59 @@ public class Main {
         );
         System.out.println(t);
         System.out.println("result:" + t.specSimplify());
+        Util.getChar();
+    }
+
+    public static void testComposition() {
+        ColorClass c1 = new ColorClass(1, 3);
+        ColorClass c2 = new ColorClass(2, 3, true);
+
+        Domain ingresso = new Domain(c1, c2, c2);
+        Domain intermedio = new Domain(c1, c1, c1, c1, c1, c1, c2);
+        Domain uscita = new Domain(c1, c1, c2, c2, c2);
+
+        Projection p1 = Projection.builder(1, c1);
+        Projection p2 = Projection.builder(2, c1);
+        Projection p3 = Projection.builder(3, c1);
+        Projection p4 = Projection.builder(4, c1);
+        Projection p5 = Projection.builder(5, c1);
+        Projection p6 = Projection.builder(6, c1);
+
+        Projection q1 = Projection.builder(1, c2);
+        Projection q2 = Projection.builder(2, c2);
+
+        All s1 = All.getInstance(c1);
+        All s2 = All.getInstance(c2);
+
+        // I vincoli esterni restano sulle uscite e sugli ingressi della composizione.
+        Guard filtroSinistro = Equality.builder(q1, q2, true, uscita);
+        Guard guardiaDestra = Equality.builder(q1, q2, false, ingresso);
+
+        // I vincoli intermedi si riuniscono sul filtro della tupla destra.
+        Guard guardiaSinistra = And.factory(
+                Equality.builder(p1, p4, true, intermedio),
+                Equality.builder(p1, p3, false, intermedio));
+        Guard filtroDestro = And.factory(
+                Equality.builder(p1, p2, false, intermedio),
+                Equality.builder(p5, p6, false, intermedio));
+
+        WNtuple sinistra = new WNtuple(
+                filtroSinistro,
+                List.of(new LinearComb(p1, 2), new LinearComb(p2, 3),
+                        new LinearComb(s2), new LinearComb(s2), new LinearComb(q1.setExp(1))),
+                guardiaSinistra, true);
+        WNtuple destra = new WNtuple(
+                filtroDestro,
+                List.of(new LinearComb(s1), new LinearComb(s1), new LinearComb(s1),
+                        new LinearComb(s1), new LinearComb(s1, p1), new LinearComb(p1),
+                        new LinearComb(q2)),
+                guardiaDestra, true);
+
+        ArcFunComp composizione = new ArcFunComp(sinistra, destra);
+        System.out.println("\nnormalizzo\n" + composizione);
+        ArcFunction risultato = composizione.normalize();
+        System.out.println("\n" + risultato + "\n");
+
         Util.getChar();
     }
 
